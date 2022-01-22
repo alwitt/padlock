@@ -1,180 +1,129 @@
 package match
 
 import (
-	"regexp"
 	"testing"
 
 	"github.com/apex/log"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestRegrexBehaviour(t *testing.T) {
+func TestRegexCheck(t *testing.T) {
 	assert := assert.New(t)
 	log.SetLevel(log.DebugLevel)
 
 	type testCase struct {
-		input    string
-		testFunc func(s []byte)
+		input string
+		match bool
 	}
 
 	// Case 0: basic path
 	{
 		cases := []testCase{
-			{input: "/path", testFunc: func(s []byte) {
-				assert.NotNilf(s, "/path")
-			}},
-			{input: "/paths", testFunc: func(s []byte) {
-				assert.Nilf(s, "/paths")
-			}},
-			{input: "hello", testFunc: func(s []byte) {
-				assert.Nilf(s, "hello")
-			}},
+			{input: "/path", match: true},
+			{input: "/paths", match: false},
+			{input: "hello", match: false},
 		}
-		reg, err := regexp.Compile("^/path$")
+		uut, err := NewRegexCheck("^/path$")
 		assert.Nil(err)
 		for _, aTest := range cases {
-			aTest.testFunc(reg.Find([]byte(aTest.input)))
+			m, err := uut.Match([]byte(aTest.input))
+			assert.Nil(err)
+			assert.Equalf(aTest.match, m, aTest.input)
 		}
 	}
 
 	// Case 1: path prefix
 	{
 		cases := []testCase{
-			{input: "/path", testFunc: func(s []byte) {
-				assert.NotNilf(s, "/path")
-			}},
-			{input: "/paths", testFunc: func(s []byte) {
-				assert.NotNilf(s, "/paths")
-			}},
-			{input: "hello", testFunc: func(s []byte) {
-				assert.Nilf(s, "hello")
-			}},
+			{input: "/path", match: true},
+			{input: "/paths", match: true},
+			{input: "hello", match: false},
 		}
-		reg, err := regexp.Compile("^/path")
+		uut, err := NewRegexCheck("^/path")
 		assert.Nil(err)
 		for _, aTest := range cases {
-			aTest.testFunc(reg.Find([]byte(aTest.input)))
+			m, err := uut.Match([]byte(aTest.input))
+			assert.Nil(err)
+			assert.Equalf(aTest.match, m, aTest.input)
 		}
 	}
 
 	// Case 2: path parameter in middle
 	{
 		cases := []testCase{
-			{input: "/path", testFunc: func(s []byte) {
-				assert.Nilf(s, "/path")
-			}},
-			{input: "/path/jwf944", testFunc: func(s []byte) {
-				assert.NotNilf(s, "/path/jwf944")
-			}},
-			{input: "/path/jwf944/", testFunc: func(s []byte) {
-				assert.NotNilf(s, "/path/jwf944/")
-			}},
-			{input: "/path/jwf944//", testFunc: func(s []byte) {
-				assert.Nilf(s, "/path/jwf944//")
-			}},
-			{input: "hello", testFunc: func(s []byte) {
-				assert.Nilf(s, "hello")
-			}},
-			{input: "/path/jwf944/path2", testFunc: func(s []byte) {
-				assert.Nilf(s, "/path/jwf944/path2")
-			}},
+			{input: "/path", match: false},
+			{input: "/path/jwf944", match: true},
+			{input: "/path/jwf944/", match: true},
+			{input: "/path/jwf944//", match: false},
+			{input: "hello", match: false},
+			{input: "/path/jwf944/path2", match: false},
 		}
-		reg, err := regexp.Compile(`^/path/\w+/{0,1}$`)
+		uut, err := NewRegexCheck(`^/path/\w+/{0,1}$`)
 		assert.Nil(err)
 		for _, aTest := range cases {
-			aTest.testFunc(reg.Find([]byte(aTest.input)))
+			m, err := uut.Match([]byte(aTest.input))
+			assert.Nil(err)
+			assert.Equalf(aTest.match, m, aTest.input)
 		}
 	}
 
 	// Case 3: multiple path parameter in middle
 	{
 		cases := []testCase{
-			{input: "/path", testFunc: func(s []byte) {
-				assert.Nilf(s, "/path")
-			}},
-			{input: "/path/jwf944", testFunc: func(s []byte) {
-				assert.Nilf(s, "/path/jwf944")
-			}},
-			{input: "/path/jwf944/", testFunc: func(s []byte) {
-				assert.Nilf(s, "/path/jwf944/")
-			}},
-			{input: "/path/jwf944//", testFunc: func(s []byte) {
-				assert.Nilf(s, "/path/jwf944//")
-			}},
-			{input: "hello", testFunc: func(s []byte) {
-				assert.Nilf(s, "hello")
-			}},
-			{input: "/path1/jwf944/path2/89qf23", testFunc: func(s []byte) {
-				assert.NotNilf(s, "/path1/jwf944/path2/89qf23")
-			}},
-			{input: "/path1/jwf944/path/89qf23", testFunc: func(s []byte) {
-				assert.Nilf(s, "/path1/jwf944/path/89qf23")
-			}},
-			{input: "/path1/jwf944/path2/.(*0#", testFunc: func(s []byte) {
-				assert.Nilf(s, "/path1/jwf944/path2/.(*0#")
-			}},
-			{input: "/path1/jwf944/path2/89qf23/", testFunc: func(s []byte) {
-				assert.NotNilf(s, "/path1/jwf944/path2/89qf23/")
-			}},
-			{input: "/path1//jwf944/path2/89qf23/", testFunc: func(s []byte) {
-				assert.Nilf(s, "/path1//jwf944/path2/89qf23/")
-			}},
-			{input: "/path1/jwf944/path2/89qf23//", testFunc: func(s []byte) {
-				assert.Nilf(s, "/path1/jwf944/path2/89qf23//")
-			}},
+			{input: "/path", match: false},
+			{input: "/path/jwf944", match: false},
+			{input: "/path/jwf944/", match: false},
+			{input: "/path/jwf944//", match: false},
+			{input: "hello", match: false},
+			{input: "/path1/jwf944/path2/89qf23", match: true},
+			{input: "/path1/jwf944/path/89qf23", match: false},
+			{input: "/path1/jwf944/path2/.(*0#", match: false},
+			{input: "/path1/jwf944/path2/89qf23/", match: true},
+			{input: "/path1//jwf944/path2/89qf23/", match: false},
+			{input: "/path1/jwf944/path2/89qf23//", match: false},
 		}
-		reg, err := regexp.Compile(`^/path1/\w+/path2/\w+/{0,1}$`)
+		uut, err := NewRegexCheck(`^/path1/\w+/path2/\w+/{0,1}$`)
 		assert.Nil(err)
 		for _, aTest := range cases {
-			aTest.testFunc(reg.Find([]byte(aTest.input)))
+			m, err := uut.Match([]byte(aTest.input))
+			assert.Nil(err)
+			assert.Equalf(aTest.match, m, aTest.input)
 		}
 	}
 
 	// Case 4: path parameter at start of path
 	{
 		cases := []testCase{
-			{input: "/q48ma8/path", testFunc: func(s []byte) {
-				assert.NotNilf(s, "/q48ma8/path")
-			}},
-			{input: "/path", testFunc: func(s []byte) {
-				assert.Nilf(s, "/path")
-			}},
-			{input: "/path/path/", testFunc: func(s []byte) {
-				assert.NotNilf(s, "/path/path/")
-			}},
+			{input: "/q48ma8/path", match: true},
+			{input: "/path", match: false},
+			{input: "/path/path/", match: true},
 		}
-		reg, err := regexp.Compile(`^/\w+/path/{0,1}$`)
+		uut, err := NewRegexCheck(`^/\w+/path/{0,1}$`)
 		assert.Nil(err)
 		for _, aTest := range cases {
-			aTest.testFunc(reg.Find([]byte(aTest.input)))
+			m, err := uut.Match([]byte(aTest.input))
+			assert.Nil(err)
+			assert.Equalf(aTest.match, m, aTest.input)
 		}
 	}
 
 	// Case 5: path parameter support UUID or alphanumeric + "."
 	{
 		cases := []testCase{
-			{input: "/path/2b44aafc-544e-45a0-bfd5-9018cae4849d", testFunc: func(s []byte) {
-				assert.NotNilf(s, "/path/2b44aafc-544e-45a0-bfd5-9018cae4849d")
-			}},
-			{input: "/path/this.is.valid", testFunc: func(s []byte) {
-				assert.NotNilf(s, "/path/this.is.valid")
-			}},
-			{input: "/path/this-is.not.valid", testFunc: func(s []byte) {
-				assert.Nilf(s, "/path/this-is.not.valid")
-			}},
-			{input: "/path/this.is,not.valid", testFunc: func(s []byte) {
-				assert.Nilf(s, "/path/this.is,not.valid")
-			}},
-			{input: "/path/not.valid.2b44aafc-544e-45a0-bfd5-9018cae4849d", testFunc: func(s []byte) {
-				assert.Nilf(s, "/path/not.valid.2b44aafc-544e-45a0-bfd5-9018cae4849d")
-			}},
+			{input: "/path/2b44aafc-544e-45a0-bfd5-9018cae4849d", match: true},
+			{input: "/path/this.is.valid", match: true},
+			{input: "/path/this-is.not.valid", match: false},
+			{input: "/path/this.is,not.valid", match: false},
+			{input: "/path/not.valid.2b44aafc-544e-45a0-bfd5-9018cae4849d", match: false},
 		}
-		reg, err := regexp.Compile(
+		uut, err := NewRegexCheck(
 			`^/path/([\w\.]+|[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12})/{0,1}$`,
 		)
 		assert.Nil(err)
 		for _, aTest := range cases {
-			aTest.testFunc(reg.Find([]byte(aTest.input)))
+			m, err := uut.Match([]byte(aTest.input))
+			assert.Nil(err)
+			assert.Equalf(aTest.match, m, aTest.input)
 		}
 	}
 }

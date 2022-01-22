@@ -1,20 +1,18 @@
 package match
 
 import (
-	"fmt"
 	"regexp"
 )
 
-// RegexCheck accepts a string
+// RegexCheck is a wrapper object to perform a regex check against a string
 type RegexCheck interface {
 	/*
 		Match checks whether this regex finds a match against the input
 
 		 @param s []byte - the string against
-		 @return nil if a match is found
-		         an error otherwise
+		 @return wheher the input matchs against the regex
 	*/
-	Match(s []byte) error
+	Match(s []byte) (bool, error)
 }
 
 // regexCheckImpl implements RegexCheck
@@ -27,14 +25,13 @@ type regexCheckImpl struct {
 Match checks whether this regex finds a match against the input
 
  @param s []byte - the string against
- @return nil if a match is found
-         an error otherwise
+ @return wheher the input matchs against the regex
 */
-func (c *regexCheckImpl) Match(s []byte) error {
+func (c *regexCheckImpl) Match(s []byte) (bool, error) {
 	if c.core.Find(s) == nil {
-		return fmt.Errorf("'%s' =/= '%s'", s, c.pattern)
+		return false, nil
 	}
-	return nil
+	return true, nil
 }
 
 /*
