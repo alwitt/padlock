@@ -1,6 +1,7 @@
 package match
 
 import (
+	"fmt"
 	"regexp"
 )
 
@@ -13,6 +14,13 @@ type RegexCheck interface {
 		 @return wheher the input matchs against the regex
 	*/
 	Match(s []byte) (bool, error)
+
+	/*
+		String returns an ASCII description of the object
+
+		 @return an ASCII description of the object
+	*/
+	String() string
 }
 
 // regexCheckImpl implements RegexCheck
@@ -32,6 +40,15 @@ func (c *regexCheckImpl) Match(s []byte) (bool, error) {
 		return false, nil
 	}
 	return true, nil
+}
+
+/*
+String returns an ASCII description of the object
+
+ @return an ASCII description of the object
+*/
+func (c *regexCheckImpl) String() string {
+	return fmt.Sprintf("REGEX['%s']", c.pattern)
 }
 
 /*
