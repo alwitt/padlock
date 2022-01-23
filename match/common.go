@@ -48,6 +48,8 @@ type TargetURISpec struct {
 
 // TargetHostSpec is a single host to check against defined by multiple associated URIs
 type TargetHostSpec struct {
+	// TargetHost is the host value the URI are associated with
+	TargetHost string `validate:"required"`
 	// AllowedURIsForHost is the list of URIs associated with this host
 	AllowedURIsForHost []TargetURISpec `validate:"required,min=1,dive"`
 }

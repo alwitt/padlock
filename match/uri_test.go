@@ -30,7 +30,7 @@ func TestTargetURIMatcher(t *testing.T) {
 				"POST": {"spec0.2"},
 			},
 		}
-		uut, err := defineTargetURIMatcher(spec)
+		uut, err := defineTargetURIMatcher("unit-test", spec)
 		assert.Nil(err)
 
 		cases := []testCase{
@@ -86,7 +86,7 @@ func TestTargetURIMatcher(t *testing.T) {
 				"*":   {"spec1.2"},
 			},
 		}
-		uut, err := defineTargetURIMatcher(spec)
+		uut, err := defineTargetURIMatcher("unit-test", spec)
 		assert.Nil(err)
 
 		cases := []testCase{
@@ -116,14 +116,14 @@ func TestTargetURIMatcher(t *testing.T) {
 	// Case 2: complex path matching
 	{
 		spec := TargetURISpec{
-			Pattern: `^/part1/[\w\.]+/part2/[\w-]+$`,
+			Pattern: `^/part1/([\w\.]+)/part2/([\w-]+)$`,
 			PermissionsForMethod: map[string][]user.Permission{
 				"GET":    {"spec2.0", "spec2.1"},
 				"DELETE": {"spec2.2"},
 				"*":      {"spec2.3"},
 			},
 		}
-		uut, err := defineTargetURIMatcher(spec)
+		uut, err := defineTargetURIMatcher("unit-test", spec)
 		assert.Nil(err)
 
 		cases := []testCase{

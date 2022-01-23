@@ -10,7 +10,7 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-// targetURIMatcher implements RequestMatch
+// targetURIMatcher implements RequestMatch for URI level matching
 type targetURIMatcher struct {
 	common.Component
 	TargetURISpec
@@ -20,8 +20,12 @@ type targetURIMatcher struct {
 
 /*
 defineTargetURIMatcher defines a new RequestMatch for matching request at URI level
+
+ @param targetHost string - the host name this matcher is associated with
+ @param spec TargetURISpec - the matcher specification
+ @return new targetURIMatcher instance
 */
-func defineTargetURIMatcher(spec TargetURISpec) (*targetURIMatcher, error) {
+func defineTargetURIMatcher(targetHost string, spec TargetURISpec) (*targetURIMatcher, error) {
 	validate := validator.New()
 	if err := validate.Struct(&spec); err != nil {
 		return nil, err
@@ -31,7 +35,10 @@ func defineTargetURIMatcher(spec TargetURISpec) (*targetURIMatcher, error) {
 		return nil, err
 	}
 	logTags := log.Fields{
-		"module": "match", "component": "uri-matcher", "instance": spec.Pattern,
+		"module":             "match",
+		"component":          "uri-matcher",
+		"target_host":        targetHost,
+		"target_uri_pattern": spec.Pattern,
 	}
 	return &targetURIMatcher{
 		Component:     common.Component{LogTags: logTags},
@@ -46,7 +53,6 @@ func (m *targetURIMatcher) checkURI(requestURI string) (bool, error) {
 	return m.regex.Match([]byte(requestURI))
 }
 
-// match is core logic for targetURIMatcher.Match
 /*
 match is core logic for targetURIMatcher.Match
 
@@ -60,7 +66,7 @@ func (m *targetURIMatcher) match(ctxt context.Context, request RequestParam, ski
 	[]user.Permission, error,
 ) {
 	logTags := m.GetLogTagsForContext(ctxt)
-	// Verify the request is still considered valid
+	// Verify the request is considered valid
 	if err := request.validate(m.validate); err != nil {
 		log.WithError(err).WithFields(logTags).
 			WithField("check_request", request.String()).
