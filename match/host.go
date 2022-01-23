@@ -91,7 +91,7 @@ func (m *targetHostMatcher) Match(ctxt context.Context, request RequestParam) (
 		if uriOK {
 			log.WithFields(logTags).WithField("check_request", request.String()).
 				Debugf("Matches %s", uriMatcher.Pattern)
-			permissions, err := uriMatcher.match(ctxt, request, false)
+			permissions, err := uriMatcher.match(ctxt, request, true)
 			if err != nil {
 				log.WithError(err).
 					WithFields(logTags).

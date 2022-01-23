@@ -40,6 +40,21 @@ func defineTargetURIMatcher(targetHost string, spec TargetURISpec) (*targetURIMa
 		"target_host":        targetHost,
 		"target_uri_pattern": spec.Pattern,
 	}
+
+	// Verify that the methods listed in the PermissionsForMethod are permitted
+	type methodCheck struct {
+		Methods []string `validate:"required,dive,oneof=GET HEAD PUT POST PATCH DELETE OPTIONS *"`
+	}
+	{
+		check := methodCheck{Methods: make([]string, 0)}
+		for method := range spec.PermissionsForMethod {
+			check.Methods = append(check.Methods, method)
+		}
+		if err := validate.Struct(&check); err != nil {
+			return nil, err
+		}
+	}
+
 	return &targetURIMatcher{
 		Component:     common.Component{LogTags: logTags},
 		TargetURISpec: spec,
