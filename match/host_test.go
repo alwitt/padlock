@@ -157,6 +157,14 @@ func TestTargetHostMatcher(t *testing.T) {
 				expectedErr:         false,
 				expectedPermissions: []user.Permission{"spec1.6"},
 			},
+			{
+				request: RequestParam{
+					URI:    fmt.Sprintf("/part3/%s/part2/%s", "8xzvkm4r0j94t2m0", uuid.New().String()),
+					Method: "GET",
+				},
+				expectedErr:         false,
+				expectedPermissions: nil,
+			},
 		}
 
 		for _, oneCase := range cases {
