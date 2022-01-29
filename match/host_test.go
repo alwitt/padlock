@@ -27,35 +27,35 @@ func TestTargetHostMatcher(t *testing.T) {
 			TargetHost: "unit-test",
 			AllowedURIsForHost: []TargetURISpec{
 				{
-					Pattern: `^/path1/very/very/very/long&`,
+					Pattern: `^/path1/very/very/very/long$`,
 					PermissionsForMethod: map[string][]user.Permission{
 						"GET":  {"spec0.0", "spec0.1"},
 						"POST": {"spec0.2"},
 					},
 				},
 				{
-					Pattern: `^/path1/short&`,
+					Pattern: `^/path1/short$`,
 					PermissionsForMethod: map[string][]user.Permission{
 						"GET":  {"spec0.0", "spec0.1"},
 						"POST": {"spec0.2"},
 					},
 				},
 				{
-					Pattern: `^/shortest&`,
+					Pattern: `^/shortest$`,
 					PermissionsForMethod: map[string][]user.Permission{
 						"GET":  {"spec0.0", "spec0.1"},
 						"POST": {"spec0.2"},
 					},
 				},
 				{
-					Pattern: `^/path1/very/very/long&`,
+					Pattern: `^/path1/very/very/long$`,
 					PermissionsForMethod: map[string][]user.Permission{
 						"GET":  {"spec0.0", "spec0.1"},
 						"POST": {"spec0.2"},
 					},
 				},
 				{
-					Pattern: `^/path1/very/long&`,
+					Pattern: `^/path1/very/long$`,
 					PermissionsForMethod: map[string][]user.Permission{
 						"GET":  {"spec0.0", "spec0.1"},
 						"POST": {"spec0.2"},
@@ -64,11 +64,11 @@ func TestTargetHostMatcher(t *testing.T) {
 			},
 		}
 		expectedOrder := []string{
-			`^/path1/very/very/very/long&`,
-			`^/path1/very/very/long&`,
-			`^/path1/very/long&`,
-			`^/path1/short&`,
-			`^/shortest&`,
+			`^/path1/very/very/very/long$`,
+			`^/path1/very/very/long$`,
+			`^/path1/very/long$`,
+			`^/path1/short$`,
+			`^/shortest$`,
 		}
 		uut, err := defineTargetHostMatcher(spec)
 		assert.Nil(err)
