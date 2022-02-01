@@ -27,11 +27,11 @@ type UserConfig struct {
 
 // UserInfo is information regarding a user
 type UserInfo struct {
-	UserConfig
 	// CreatedAt is when the user entry is created
 	CreatedAt time.Time `json:"created_at"`
 	// UpdatedAt is when the user entry was last updated
 	UpdatedAt time.Time `json:"updated_at"`
+	UserConfig
 }
 
 // UserDetails is information regarding a user with additional information

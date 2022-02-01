@@ -15,11 +15,11 @@ import (
 
 // dbUser is a DB entry recording a user
 type dbUser struct {
-	UserInfo
 	// ID the DB table entry ID
-	ID uint `json:"id" gorm:"type:primaryKey"`
+	ID uint `json:"id" gorm:"primaryKey"`
 	// Roles is the list roles assigned to the user
-	Roles []*dbRole `gorm:"many2many:user_roles;"`
+	Roles []dbRole `gorm:"many2many:user_roles;"`
+	UserInfo
 }
 
 // String is toString for userInfo
@@ -33,7 +33,7 @@ func (e dbUser) String() string {
 // dbRole is a DB entry recording an in-use user role
 type dbRole struct {
 	// ID the DB table entry ID
-	ID uint `json:"id" gorm:"type:primaryKey"`
+	ID uint `json:"id" gorm:"primaryKey"`
 	// CreatedAt is when the table entry is created
 	CreatedAt time.Time `json:"created_at"`
 	// UpdatedAt is when the table entry was last updated
@@ -41,7 +41,7 @@ type dbRole struct {
 	// RoleName is the role's name
 	RoleName string `json:"role_name" gorm:"uniqueIndex" validate:"required,alphanum|uuid_rfc4122"`
 	// Users is the list of users with this role
-	Users []*dbUser `gorm:"many2many:user_roles;"`
+	Users []dbUser `gorm:"many2many:user_roles;"`
 }
 
 // String is toString for roleInfo
@@ -172,15 +172,10 @@ type managementDBClientImpl struct {
 /*
 CreateManagementDBClient create a new DB client
 
- @param dbDialector gorm.Dialector - GORM DB connect parameter
+ @param db *gorm.DB - GORM DB client
  @return client
 */
-func CreateManagementDBClient(dbDialector gorm.Dialector) (ManagementDBClient, error) {
-	db, err := gorm.Open(dbDialector, &gorm.Config{})
-	if err != nil {
-		return nil, err
-	}
-
+func CreateManagementDBClient(db *gorm.DB) (ManagementDBClient, error) {
 	validate := validator.New()
 
 	logTags := log.Fields{"module": "user", "component": "db-client"}
@@ -304,6 +299,9 @@ func (c *managementDBClientImpl) createRoles(ctxt context.Context, tx *gorm.DB, 
 ) {
 	var results []dbRole
 	logTags := c.GetLogTagsForContext(ctxt)
+	if len(roles) == 0 {
+		return nil, nil
+	}
 	return results, tx.Transaction(func(tx *gorm.DB) error {
 		entries := []dbRole{}
 		for _, newRole := range roles {
@@ -576,7 +574,12 @@ func (c *managementDBClientImpl) UpdateUser(
 		// Change the core parameters
 		userEntry.UserInfo.UserConfig = newConfig
 		if err := c.validate.Struct(&userEntry); err != nil {
-			log.WithError(err).WithFields(logTags)
+			log.WithError(err).WithFields(logTags).Errorf("Updated entry for user %s is invalid", id)
+			return err
+		}
+		if tmp := tx.Save(&userEntry); tmp.Error != nil {
+			log.WithError(err).WithFields(logTags).Errorf("Failed to update %s", userEntry.String())
+			return err
 		}
 		return nil
 	})
@@ -595,7 +598,7 @@ func (c *managementDBClientImpl) AddRolesToUser(
 ) error {
 	logTags := c.GetLogTagsForContext(ctxt)
 	return c.db.Transaction(func(tx *gorm.DB) error {
-		userEntry, err := c.fetchUser(tx, id)
+		userEntry, err := c.fetchUserWithRoles(tx, id)
 		if err != nil {
 			log.WithError(err).WithFields(logTags).Errorf("Failed to query user %s", id)
 			return err
@@ -640,7 +643,7 @@ func (c *managementDBClientImpl) RemoveRolesFromUser(
 			return err
 		}
 		// Determine which role entry need to remove
-		removeRoles := []*dbRole{}
+		removeRoles := []dbRole{}
 		for _, roleEntry := range userEntry.Roles {
 			if _, ok := rolesAsMap[roleEntry.RoleName]; ok {
 				removeRoles = append(removeRoles, roleEntry)
