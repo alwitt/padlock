@@ -54,15 +54,9 @@ func TestRoleManagement(t *testing.T) {
 		assert.Nil(uut.AlignRolesWithConfig(context.Background(), oneTest.expectedRoles))
 		readRoles, err := uut.ListAllRoles(context.Background())
 		assert.Nil(err)
-		expected := map[string]bool{}
-		for _, e := range oneTest.expectedRoles {
-			expected[e] = true
-		}
-		gotten := map[string]bool{}
-		for _, g := range readRoles {
-			gotten[g] = true
-		}
-		assert.EqualValuesf(expected, gotten, "Case %d", idx)
+		assert.EqualValuesf(
+			roleListToMap(oneTest.expectedRoles), roleListToMap(readRoles), "Case %d", idx,
+		)
 	}
 }
 
@@ -175,6 +169,64 @@ func TestUserManagement(t *testing.T) {
 		assert.Nil(err)
 		assert.Len(users, 1)
 		assert.Equal(user5, users[0].UserID)
+	}
+}
+
+func TestUserAndRoleManagement(t *testing.T) {
+	assert := assert.New(t)
+	log.SetLevel(log.DebugLevel)
+
+	dbName := fmt.Sprintf("/tmp/models_test_%s.db", uuid.New().String())
+	log.Debugf("Unit-test DB %s", dbName)
+	db, err := gorm.Open(sqlite.Open(dbName), &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Info),
+	})
+	assert.Nil(err)
+	uut, err := CreateManagementDBClient(db)
+	assert.Nil(err)
+	assert.Nil(uut.Ready())
+
+	roles := []string{uuid.New().String(), uuid.New().String(), uuid.New().String()}
+
+	// Case 1: add user
+	user1 := uuid.New().String()
+	{
+		param := UserConfig{UserID: user1}
+		assert.Nil(uut.DefineUser(context.Background(), param, []string{roles[0], roles[1]}))
+	}
+	{
+		user, err := uut.GetUser(context.Background(), user1)
+		assert.Nil(err)
+		assert.Equal(user1, user.UserID)
+		assert.EqualValues(roleListToMap([]string{roles[0], roles[1]}), roleListToMap(user.Roles))
+	}
+
+	// Case 2: add user
+	user2 := uuid.New().String()
+	{
+		param := UserConfig{UserID: user2}
+		assert.Nil(uut.DefineUser(context.Background(), param, []string{roles[0], roles[2]}))
+	}
+	{
+		user, err := uut.GetUser(context.Background(), user2)
+		assert.Nil(err)
+		assert.Equal(user2, user.UserID)
+		assert.EqualValues(roleListToMap([]string{roles[0], roles[2]}), roleListToMap(user.Roles))
+	}
+
+	// Case 3: resync roles
+	assert.Nil(uut.AlignRolesWithConfig(context.Background(), []string{roles[0]}))
+	{
+		user, err := uut.GetUser(context.Background(), user1)
+		assert.Nil(err)
+		assert.Equal(user1, user.UserID)
+		assert.EqualValues(roleListToMap([]string{roles[0]}), roleListToMap(user.Roles))
+	}
+	{
+		user, err := uut.GetUser(context.Background(), user2)
+		assert.Nil(err)
+		assert.Equal(user2, user.UserID)
+		assert.EqualValues(roleListToMap([]string{roles[0]}), roleListToMap(user.Roles))
 	}
 }
 
