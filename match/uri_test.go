@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/alwitt/padlock/user"
+	"github.com/alwitt/padlock/models"
 	"github.com/apex/log"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
@@ -18,14 +18,14 @@ func TestTargetURIMatcher(t *testing.T) {
 	type testCase struct {
 		request             RequestParam
 		expectedErr         bool
-		expectedPermissions []user.Permission
+		expectedPermissions []models.Permission
 	}
 
 	// Case 0: simple case
 	{
 		spec := TargetURISpec{
 			Pattern: `^/path$`,
-			PermissionsForMethod: map[string][]user.Permission{
+			PermissionsForMethod: map[string][]models.Permission{
 				"GET":  {"spec0.0", "spec0.1"},
 				"POST": {"spec0.2"},
 			},
@@ -37,7 +37,7 @@ func TestTargetURIMatcher(t *testing.T) {
 			{
 				request:             RequestParam{URI: "/path", Method: "GET"},
 				expectedErr:         false,
-				expectedPermissions: []user.Permission{"spec0.0", "spec0.1"},
+				expectedPermissions: []models.Permission{"spec0.0", "spec0.1"},
 			},
 			{
 				request:             RequestParam{URI: "/path", Method: "DELETE"},
@@ -47,7 +47,7 @@ func TestTargetURIMatcher(t *testing.T) {
 			{
 				request:             RequestParam{URI: "/path", Method: "POST"},
 				expectedErr:         false,
-				expectedPermissions: []user.Permission{"spec0.2"},
+				expectedPermissions: []models.Permission{"spec0.2"},
 			},
 			{
 				request:             RequestParam{URI: "/paths", Method: "POST"},
@@ -81,7 +81,7 @@ func TestTargetURIMatcher(t *testing.T) {
 	{
 		spec := TargetURISpec{
 			Pattern: `^/paths$`,
-			PermissionsForMethod: map[string][]user.Permission{
+			PermissionsForMethod: map[string][]models.Permission{
 				"GET": {"spec1.0", "spec1.1"},
 				"*":   {"spec1.2"},
 			},
@@ -93,12 +93,12 @@ func TestTargetURIMatcher(t *testing.T) {
 			{
 				request:             RequestParam{URI: "/paths", Method: "GET"},
 				expectedErr:         false,
-				expectedPermissions: []user.Permission{"spec1.0", "spec1.1"},
+				expectedPermissions: []models.Permission{"spec1.0", "spec1.1"},
 			},
 			{
 				request:             RequestParam{URI: "/paths", Method: "DELETE"},
 				expectedErr:         false,
-				expectedPermissions: []user.Permission{"spec1.2"},
+				expectedPermissions: []models.Permission{"spec1.2"},
 			},
 		}
 
@@ -117,7 +117,7 @@ func TestTargetURIMatcher(t *testing.T) {
 	{
 		spec := TargetURISpec{
 			Pattern: `^/part1/([\w\.]+)/part2/([\w-]+)$`,
-			PermissionsForMethod: map[string][]user.Permission{
+			PermissionsForMethod: map[string][]models.Permission{
 				"GET":    {"spec2.0", "spec2.1"},
 				"DELETE": {"spec2.2"},
 				"*":      {"spec2.3"},
@@ -133,7 +133,7 @@ func TestTargetURIMatcher(t *testing.T) {
 					Method: "GET",
 				},
 				expectedErr:         false,
-				expectedPermissions: []user.Permission{"spec2.0", "spec2.1"},
+				expectedPermissions: []models.Permission{"spec2.0", "spec2.1"},
 			},
 			{
 				request: RequestParam{
@@ -149,7 +149,7 @@ func TestTargetURIMatcher(t *testing.T) {
 					Method: "DELETE",
 				},
 				expectedErr:         false,
-				expectedPermissions: []user.Permission{"spec2.2"},
+				expectedPermissions: []models.Permission{"spec2.2"},
 			},
 			{
 				request: RequestParam{

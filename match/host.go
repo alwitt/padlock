@@ -6,7 +6,7 @@ import (
 	"sort"
 
 	"github.com/alwitt/padlock/common"
-	"github.com/alwitt/padlock/user"
+	"github.com/alwitt/padlock/models"
 	"github.com/apex/log"
 	"github.com/go-playground/validator/v10"
 )
@@ -61,13 +61,13 @@ func defineTargetHostMatcher(spec TargetHostSpec) (*targetHostMatcher, error) {
 /*
 Match checks whether a request matches against defined parameters
 
- @param ctxt context.Context - contexting calling this API
+ @param ctxt context.Context - context calling this API
  @param request RequestParam - request parameters
  @return if a match, the list permissions needed to proceed
          an error otherwise
 */
 func (m *targetHostMatcher) Match(ctxt context.Context, request RequestParam) (
-	[]user.Permission, error,
+	[]models.Permission, error,
 ) {
 	logTags := m.GetLogTagsForContext(ctxt)
 	// Verify the request is considered valid

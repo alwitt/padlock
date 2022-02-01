@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/alwitt/padlock/common"
-	"github.com/alwitt/padlock/user"
+	"github.com/alwitt/padlock/models"
 	"github.com/apex/log"
 	"github.com/go-playground/validator/v10"
 )
@@ -71,14 +71,14 @@ func (m *targetURIMatcher) checkURI(requestURI string) (bool, error) {
 /*
 match is core logic for targetURIMatcher.Match
 
- @param ctxt context.Context - contexting calling this API
+ @param ctxt context.Context - context calling this API
  @param request RequestParam - request parameters
  @param skipURICheck bool - whether to skip the URI REGEX matching
  @return if a match, the list permissions needed to proceed
          an error otherwise
 */
 func (m *targetURIMatcher) match(ctxt context.Context, request RequestParam, skipURICheck bool) (
-	[]user.Permission, error,
+	[]models.Permission, error,
 ) {
 	logTags := m.GetLogTagsForContext(ctxt)
 	// Verify the request is considered valid
@@ -126,13 +126,13 @@ func (m *targetURIMatcher) match(ctxt context.Context, request RequestParam, ski
 /*
 Match checks whether a request matches against defined parameters
 
- @param ctxt context.Context - contexting calling this API
+ @param ctxt context.Context - context calling this API
  @param request RequestParam - request parameters
  @return if a match, the list permissions needed to proceed
          an error otherwise
 */
 func (m *targetURIMatcher) Match(ctxt context.Context, request RequestParam) (
-	[]user.Permission, error,
+	[]models.Permission, error,
 ) {
 	return m.match(ctxt, request, false)
 }
