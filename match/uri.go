@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/alwitt/padlock/common"
-	"github.com/alwitt/padlock/models"
 	"github.com/apex/log"
 	"github.com/go-playground/validator/v10"
 )
@@ -14,7 +13,7 @@ import (
 type targetURIMatcher struct {
 	common.Component
 	TargetURISpec
-	regex    RegexCheck
+	regex    common.RegexCheck
 	validate *validator.Validate
 }
 
@@ -30,7 +29,7 @@ func defineTargetURIMatcher(targetHost string, spec TargetURISpec) (*targetURIMa
 	if err := validate.Struct(&spec); err != nil {
 		return nil, err
 	}
-	regex, err := NewRegexCheck(spec.Pattern)
+	regex, err := common.NewRegexCheck(spec.Pattern)
 	if err != nil {
 		return nil, err
 	}
@@ -78,7 +77,7 @@ match is core logic for targetURIMatcher.Match
          an error otherwise
 */
 func (m *targetURIMatcher) match(ctxt context.Context, request RequestParam, skipURICheck bool) (
-	[]models.Permission, error,
+	[]string, error,
 ) {
 	logTags := m.GetLogTagsForContext(ctxt)
 	// Verify the request is considered valid
@@ -131,9 +130,7 @@ Match checks whether a request matches against defined parameters
  @return if a match, the list permissions needed to proceed
          an error otherwise
 */
-func (m *targetURIMatcher) Match(ctxt context.Context, request RequestParam) (
-	[]models.Permission, error,
-) {
+func (m *targetURIMatcher) Match(ctxt context.Context, request RequestParam) ([]string, error) {
 	return m.match(ctxt, request, false)
 }
 

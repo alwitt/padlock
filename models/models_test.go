@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/alwitt/padlock/common"
 	"github.com/apex/log"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
@@ -23,7 +24,11 @@ func TestRoleManagement(t *testing.T) {
 		Logger: logger.Default.LogMode(logger.Info),
 	})
 	assert.Nil(err)
-	uut, err := CreateManagementDBClient(db)
+	supportMatch, err := common.GetCustomFieldValidator(
+		`^[a-zA-Z0-9-]+$`, `^[a-zA-Z0-9-]+$`, `^[a-zA-Z0-9-]+$`, `^[a-zA-Z0-9-]+$`,
+	)
+	assert.Nil(err)
+	uut, err := CreateManagementDBClient(db, supportMatch)
 	assert.Nil(err)
 	assert.Nil(uut.Ready())
 
@@ -70,7 +75,11 @@ func TestUserManagement(t *testing.T) {
 		Logger: logger.Default.LogMode(logger.Info),
 	})
 	assert.Nil(err)
-	uut, err := CreateManagementDBClient(db)
+	supportMatch, err := common.GetCustomFieldValidator(
+		`^[a-zA-Z0-9-]+$`, `^[a-zA-Z0-9-]+$`, `^[a-zA-Z0-9-]+$`, `^[a-zA-Z0-9-]+$`,
+	)
+	assert.Nil(err)
+	uut, err := CreateManagementDBClient(db, supportMatch)
 	assert.Nil(err)
 	assert.Nil(uut.Ready())
 
@@ -182,7 +191,11 @@ func TestUserAndRoleManagement(t *testing.T) {
 		Logger: logger.Default.LogMode(logger.Info),
 	})
 	assert.Nil(err)
-	uut, err := CreateManagementDBClient(db)
+	supportMatch, err := common.GetCustomFieldValidator(
+		`^[a-zA-Z0-9-]+$`, `^[a-zA-Z0-9-]+$`, `^[a-zA-Z0-9-]+$`, `^[a-zA-Z0-9-]+$`,
+	)
+	assert.Nil(err)
+	uut, err := CreateManagementDBClient(db, supportMatch)
 	assert.Nil(err)
 	assert.Nil(uut.Ready())
 

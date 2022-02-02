@@ -1,4 +1,4 @@
-package match
+package common
 
 import (
 	"fmt"
@@ -11,7 +11,7 @@ type RegexCheck interface {
 		Match checks whether this regex finds a match against the input
 
 		 @param s []byte - the string against
-		 @return wheher the input matchs against the regex
+		 @return whether the input matchs against the regex
 	*/
 	Match(s []byte) (bool, error)
 
@@ -33,7 +33,7 @@ type regexCheckImpl struct {
 Match checks whether this regex finds a match against the input
 
  @param s []byte - the string against
- @return wheher the input matchs against the regex
+ @return whether the input matchs against the regex
 */
 func (c *regexCheckImpl) Match(s []byte) (bool, error) {
 	if c.core.Find(s) == nil {

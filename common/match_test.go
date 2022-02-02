@@ -1,4 +1,4 @@
-package match
+package common
 
 import (
 	"testing"

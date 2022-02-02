@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/alwitt/padlock/models"
 	"github.com/go-playground/validator/v10"
 )
 
@@ -43,7 +42,7 @@ type TargetURISpec struct {
 	// method that is allowed for this URI. The method key of "*" functions as a wildcard.
 	// If the request method is not explicitly listed here, it may match against "*" if that
 	// key was defined.
-	PermissionsForMethod map[string][]models.Permission `validate:"required,min=1"`
+	PermissionsForMethod map[string][]string `validate:"required,min=1"`
 }
 
 // TargetHostSpec is a single host to check against defined by multiple associated URIs
@@ -72,7 +71,7 @@ type RequestMatch interface {
 		 @return if a match, the list permissions needed to proceed
 		         an error otherwise
 	*/
-	Match(ctxt context.Context, request RequestParam) ([]models.Permission, error)
+	Match(ctxt context.Context, request RequestParam) ([]string, error)
 
 	/*
 		String returns an ASCII description of the object

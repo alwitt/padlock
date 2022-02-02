@@ -4,25 +4,18 @@ import (
 	"time"
 )
 
-/*
-Permission describe an allowed action.
-
-If a user only has permission 'read_only', then this user can only perform 'read_only' actions.
-*/
-type Permission string
-
 // UserConfig is user create / update parameters
 type UserConfig struct {
 	// UserID is the user's ID
-	UserID string `json:"user_id" gorm:"uniqueIndex" validate:"required,alphanum|uuid_rfc4122"`
+	UserID string `json:"user_id" gorm:"uniqueIndex" validate:"required,user_id"`
 	// UserName is the username
-	Username *string `json:"username,omitempty" validate:"omitempty,alphanum|uuid_rfc4122"`
+	Username *string `json:"username,omitempty" validate:"omitempty,username"`
 	// Email is the user's email
 	Email *string `json:"email,omitempty" validate:"omitempty,email"`
 	// FirstName is the user's first name / given name
-	FirstName *string `json:"first_name,omitempty" validate:"omitempty,alpha"`
+	FirstName *string `json:"first_name,omitempty" validate:"omitempty,personal_name"`
 	// LastName is the user's last name / surname / family name
-	LastName *string `json:"last_name,omitempty" validate:"omitempty,alpha"`
+	LastName *string `json:"last_name,omitempty" validate:"omitempty,personal_name"`
 }
 
 // UserInfo is information regarding a user

@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/alwitt/padlock/common"
-	"github.com/alwitt/padlock/models"
 	"github.com/apex/log"
 	"github.com/go-playground/validator/v10"
 )
@@ -55,7 +54,7 @@ Match checks whether a request matches against defined parameters
          an error otherwise
 */
 func (m *targetGroupMatcher) Match(ctxt context.Context, request RequestParam) (
-	[]models.Permission, error,
+	[]string, error,
 ) {
 	logTags := m.GetLogTagsForContext(ctxt)
 	// Verify the request is considered valid

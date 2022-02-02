@@ -39,7 +39,7 @@ type dbRole struct {
 	// UpdatedAt is when the table entry was last updated
 	UpdatedAt time.Time `json:"updated_at"`
 	// RoleName is the role's name
-	RoleName string `json:"role_name" gorm:"uniqueIndex" validate:"required,alphanum|uuid_rfc4122"`
+	RoleName string `json:"role_name" gorm:"uniqueIndex" validate:"required,role_name"`
 	// Users is the list of users with this role
 	Users []dbUser `gorm:"many2many:user_roles;"`
 }
@@ -165,8 +165,9 @@ type ManagementDBClient interface {
 // roleManagementDBClientImpl implements ManagementDBClient
 type managementDBClientImpl struct {
 	common.Component
-	db       *gorm.DB
-	validate *validator.Validate
+	db                    *gorm.DB
+	validate              *validator.Validate
+	customValidateSupport common.CustomFieldValidator
 }
 
 /*
@@ -175,8 +176,13 @@ CreateManagementDBClient create a new DB client
  @param db *gorm.DB - GORM DB client
  @return client
 */
-func CreateManagementDBClient(db *gorm.DB) (ManagementDBClient, error) {
+func CreateManagementDBClient(db *gorm.DB, validateSupport common.CustomFieldValidator) (
+	ManagementDBClient, error,
+) {
 	validate := validator.New()
+	if err := validateSupport.RegisterWithValidator(validate); err != nil {
+		return nil, err
+	}
 
 	logTags := log.Fields{"module": "user", "component": "db-client"}
 
@@ -189,7 +195,10 @@ func CreateManagementDBClient(db *gorm.DB) (ManagementDBClient, error) {
 	}
 
 	return &managementDBClientImpl{
-		Component: common.Component{LogTags: logTags}, db: db, validate: validate,
+		Component:             common.Component{LogTags: logTags},
+		db:                    db,
+		validate:              validate,
+		customValidateSupport: validateSupport,
 	}, nil
 }
 

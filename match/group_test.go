@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/alwitt/padlock/models"
 	"github.com/apex/log"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
@@ -18,7 +17,7 @@ func TestTargetGroupMatcher(t *testing.T) {
 	type testCase struct {
 		request             RequestParam
 		expectedErr         bool
-		expectedPermissions []models.Permission
+		expectedPermissions []string
 	}
 
 	testHost0 := fmt.Sprintf("%s.unit-test.org", uuid.New().String())
@@ -33,7 +32,7 @@ func TestTargetGroupMatcher(t *testing.T) {
 					AllowedURIsForHost: []TargetURISpec{
 						{
 							Pattern: `^/part1/[[:alnum:]]+$`,
-							PermissionsForMethod: map[string][]models.Permission{
+							PermissionsForMethod: map[string][]string{
 								"GET": {"spec0.0", "spec0.1"},
 								"PUT": {"spec0.2"},
 							},
@@ -45,7 +44,7 @@ func TestTargetGroupMatcher(t *testing.T) {
 					AllowedURIsForHost: []TargetURISpec{
 						{
 							Pattern: `^/part2/[[:alnum:]]+$`,
-							PermissionsForMethod: map[string][]models.Permission{
+							PermissionsForMethod: map[string][]string{
 								"GET": {"spec0.3", "spec0.4"},
 								"PUT": {"spec0.5"},
 							},
@@ -65,7 +64,7 @@ func TestTargetGroupMatcher(t *testing.T) {
 					Method: "GET",
 				},
 				expectedErr:         false,
-				expectedPermissions: []models.Permission{"spec0.0", "spec0.1"},
+				expectedPermissions: []string{"spec0.0", "spec0.1"},
 			},
 			{
 				request: RequestParam{
@@ -95,7 +94,7 @@ func TestTargetGroupMatcher(t *testing.T) {
 					Method: "GET",
 				},
 				expectedErr:         false,
-				expectedPermissions: []models.Permission{"spec0.3", "spec0.4"},
+				expectedPermissions: []string{"spec0.3", "spec0.4"},
 			},
 		}
 
@@ -119,7 +118,7 @@ func TestTargetGroupMatcher(t *testing.T) {
 					AllowedURIsForHost: []TargetURISpec{
 						{
 							Pattern: `^/part1/[[:alnum:]]+$`,
-							PermissionsForMethod: map[string][]models.Permission{
+							PermissionsForMethod: map[string][]string{
 								"GET": {"spec1.0", "spec1.1"},
 								"PUT": {"spec1.2"},
 							},
@@ -131,7 +130,7 @@ func TestTargetGroupMatcher(t *testing.T) {
 					AllowedURIsForHost: []TargetURISpec{
 						{
 							Pattern: `^/part2/[[:alnum:]]+$`,
-							PermissionsForMethod: map[string][]models.Permission{
+							PermissionsForMethod: map[string][]string{
 								"GET": {"spec1.3", "spec1.4"},
 								"PUT": {"spec1.5"},
 							},
@@ -143,7 +142,7 @@ func TestTargetGroupMatcher(t *testing.T) {
 					AllowedURIsForHost: []TargetURISpec{
 						{
 							Pattern: `^.+$`,
-							PermissionsForMethod: map[string][]models.Permission{
+							PermissionsForMethod: map[string][]string{
 								"GET": {"spec1.6", "spec1.7"},
 								"PUT": {"spec1.8"},
 							},
@@ -163,7 +162,7 @@ func TestTargetGroupMatcher(t *testing.T) {
 					Method: "GET",
 				},
 				expectedErr:         false,
-				expectedPermissions: []models.Permission{"spec1.0", "spec1.1"},
+				expectedPermissions: []string{"spec1.0", "spec1.1"},
 			},
 			{
 				request: RequestParam{
@@ -175,7 +174,7 @@ func TestTargetGroupMatcher(t *testing.T) {
 					Method: "GET",
 				},
 				expectedErr:         false,
-				expectedPermissions: []models.Permission{"spec1.6", "spec1.7"},
+				expectedPermissions: []string{"spec1.6", "spec1.7"},
 			},
 			{
 				request: RequestParam{
@@ -184,7 +183,7 @@ func TestTargetGroupMatcher(t *testing.T) {
 					Method: "GET",
 				},
 				expectedErr:         false,
-				expectedPermissions: []models.Permission{"spec1.3", "spec1.4"},
+				expectedPermissions: []string{"spec1.3", "spec1.4"},
 			},
 			{
 				request: RequestParam{
@@ -192,7 +191,7 @@ func TestTargetGroupMatcher(t *testing.T) {
 					Method: "PUT",
 				},
 				expectedErr:         false,
-				expectedPermissions: []models.Permission{"spec1.8"},
+				expectedPermissions: []string{"spec1.8"},
 			},
 		}
 
