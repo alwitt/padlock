@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/alwitt/padlock/common"
 	"github.com/go-playground/validator/v10"
 )
 
@@ -79,4 +80,34 @@ type RequestMatch interface {
 		 @return an ASCII description of the object
 	*/
 	String() string
+}
+
+/*
+ConvertConfigToTargetGroupSpec convert a common.AuthorizationConfig into TargetGroupSpec
+
+ @param cfg *common.AuthorizationConfig -  the authorize config section
+ @return the converted TargetGroupSpec
+*/
+func ConvertConfigToTargetGroupSpec(cfg *common.AuthorizationConfig) (TargetGroupSpec, error) {
+	result := TargetGroupSpec{AllowedHosts: make(map[string]TargetHostSpec)}
+
+	// Go through eaach target hosts
+	for _, oneTargetHost := range cfg.TargetHosts {
+		hostSpec := TargetHostSpec{
+			TargetHost: oneTargetHost.Host, AllowedPathsForHost: make([]TargetPathSpec, 0),
+		}
+		for _, oneTargetPath := range oneTargetHost.TargetPaths {
+			pathSpec := TargetPathSpec{
+				PathPattern:          oneTargetPath.PathRegexPattern,
+				PermissionsForMethod: make(map[string][]string),
+			}
+			for _, oneTargetMethod := range oneTargetPath.AllowedMethods {
+				pathSpec.PermissionsForMethod[oneTargetMethod.Method] = oneTargetMethod.Permissions
+			}
+			hostSpec.AllowedPathsForHost = append(hostSpec.AllowedPathsForHost, pathSpec)
+		}
+		result.AllowedHosts[oneTargetHost.Host] = hostSpec
+	}
+
+	return result, nil
 }

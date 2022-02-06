@@ -19,6 +19,17 @@ type CustomValidationsConfig struct {
 	PermissionRegex string `mapstructure:"permission" json:"permission" validate:"required"`
 }
 
+/*
+DefineCustomFieldValidator defines a CustomFieldValidator based on the config parameters
+
+ @return the defined CustomFieldValidator
+*/
+func (c CustomValidationsConfig) DefineCustomFieldValidator() (CustomFieldValidator, error) {
+	return GetCustomFieldValidator(
+		c.UserIDRegex, c.UserNameRegex, c.PersonalNameRegex, c.RoleNameRegex, c.PermissionRegex,
+	)
+}
+
 // UtilConfigs provides common configuration used throughout the system
 type UtilConfigs struct {
 	ValidationSupport CustomValidationsConfig `mapstructure:"custom_validation_regex" json:"custom_validation_regex" validate:"required,dive"`

@@ -23,13 +23,7 @@ func (c AuthorizationServerConfig) Validate() error {
 	}
 
 	// Create a custom validator
-	customValidate, err := GetCustomFieldValidator(
-		c.Common.ValidationSupport.UserIDRegex,
-		c.Common.ValidationSupport.UserNameRegex,
-		c.Common.ValidationSupport.PersonalNameRegex,
-		c.Common.ValidationSupport.RoleNameRegex,
-		c.Common.ValidationSupport.PermissionRegex,
-	)
+	customValidate, err := c.Common.ValidationSupport.DefineCustomFieldValidator()
 	if err != nil {
 		log.WithError(err).Errorf("Unable to define custom validator support")
 		return err
@@ -44,8 +38,6 @@ func (c AuthorizationServerConfig) Validate() error {
 		log.WithError(err).Errorf("General config parse failure")
 		return err
 	}
-
-	// Perform validation of the Map structure keys
 
 	// Validate roles
 	type roleKeyValidate struct {
