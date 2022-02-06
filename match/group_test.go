@@ -29,9 +29,9 @@ func TestTargetGroupMatcher(t *testing.T) {
 			AllowedHosts: map[string]TargetHostSpec{
 				testHost0: {
 					TargetHost: testHost0,
-					AllowedURIsForHost: []TargetURISpec{
+					AllowedPathsForHost: []TargetPathSpec{
 						{
-							Pattern: `^/part1/[[:alnum:]]+$`,
+							PathPattern: `^/part1/[[:alnum:]]+$`,
 							PermissionsForMethod: map[string][]string{
 								"GET": {"spec0.0", "spec0.1"},
 								"PUT": {"spec0.2"},
@@ -41,9 +41,9 @@ func TestTargetGroupMatcher(t *testing.T) {
 				},
 				testHost1: {
 					TargetHost: testHost1,
-					AllowedURIsForHost: []TargetURISpec{
+					AllowedPathsForHost: []TargetPathSpec{
 						{
-							Pattern: `^/part2/[[:alnum:]]+$`,
+							PathPattern: `^/part2/[[:alnum:]]+$`,
 							PermissionsForMethod: map[string][]string{
 								"GET": {"spec0.3", "spec0.4"},
 								"PUT": {"spec0.5"},
@@ -60,7 +60,7 @@ func TestTargetGroupMatcher(t *testing.T) {
 			{
 				request: RequestParam{
 					Host:   &testHost0,
-					URI:    fmt.Sprintf("/part1/%s", "am9j42qmfas"),
+					Path:   fmt.Sprintf("/part1/%s", "am9j42qmfas"),
 					Method: "GET",
 				},
 				expectedErr:         false,
@@ -69,7 +69,7 @@ func TestTargetGroupMatcher(t *testing.T) {
 			{
 				request: RequestParam{
 					Host:   &testHost0,
-					URI:    fmt.Sprintf("/part2/%s", "103kf9wam3"),
+					Path:   fmt.Sprintf("/part2/%s", "103kf9wam3"),
 					Method: "GET",
 				},
 				expectedErr:         false,
@@ -81,7 +81,7 @@ func TestTargetGroupMatcher(t *testing.T) {
 						t := fmt.Sprintf("%s.unit-test.org", uuid.New().String())
 						return &t
 					}(),
-					URI:    fmt.Sprintf("/part1/%s", "am9j42qmfas"),
+					Path:   fmt.Sprintf("/part1/%s", "am9j42qmfas"),
 					Method: "GET",
 				},
 				expectedErr:         false,
@@ -90,7 +90,7 @@ func TestTargetGroupMatcher(t *testing.T) {
 			{
 				request: RequestParam{
 					Host:   &testHost1,
-					URI:    fmt.Sprintf("/part2/%s", "103kf9wam3"),
+					Path:   fmt.Sprintf("/part2/%s", "103kf9wam3"),
 					Method: "GET",
 				},
 				expectedErr:         false,
@@ -115,9 +115,9 @@ func TestTargetGroupMatcher(t *testing.T) {
 			AllowedHosts: map[string]TargetHostSpec{
 				testHost0: {
 					TargetHost: testHost0,
-					AllowedURIsForHost: []TargetURISpec{
+					AllowedPathsForHost: []TargetPathSpec{
 						{
-							Pattern: `^/part1/[[:alnum:]]+$`,
+							PathPattern: `^/part1/[[:alnum:]]+$`,
 							PermissionsForMethod: map[string][]string{
 								"GET": {"spec1.0", "spec1.1"},
 								"PUT": {"spec1.2"},
@@ -127,9 +127,9 @@ func TestTargetGroupMatcher(t *testing.T) {
 				},
 				testHost1: {
 					TargetHost: testHost1,
-					AllowedURIsForHost: []TargetURISpec{
+					AllowedPathsForHost: []TargetPathSpec{
 						{
-							Pattern: `^/part2/[[:alnum:]]+$`,
+							PathPattern: `^/part2/[[:alnum:]]+$`,
 							PermissionsForMethod: map[string][]string{
 								"GET": {"spec1.3", "spec1.4"},
 								"PUT": {"spec1.5"},
@@ -139,9 +139,9 @@ func TestTargetGroupMatcher(t *testing.T) {
 				},
 				"*": {
 					TargetHost: testHost1,
-					AllowedURIsForHost: []TargetURISpec{
+					AllowedPathsForHost: []TargetPathSpec{
 						{
-							Pattern: `^.+$`,
+							PathPattern: `^.+$`,
 							PermissionsForMethod: map[string][]string{
 								"GET": {"spec1.6", "spec1.7"},
 								"PUT": {"spec1.8"},
@@ -158,7 +158,7 @@ func TestTargetGroupMatcher(t *testing.T) {
 			{
 				request: RequestParam{
 					Host:   &testHost0,
-					URI:    fmt.Sprintf("/part1/%s", "am9j42qmfas"),
+					Path:   fmt.Sprintf("/part1/%s", "am9j42qmfas"),
 					Method: "GET",
 				},
 				expectedErr:         false,
@@ -170,7 +170,7 @@ func TestTargetGroupMatcher(t *testing.T) {
 						t := fmt.Sprintf("%s.unit-test.org", uuid.New().String())
 						return &t
 					}(),
-					URI:    fmt.Sprintf("/part1/%s", "am9j42qmfas"),
+					Path:   fmt.Sprintf("/part1/%s", "am9j42qmfas"),
 					Method: "GET",
 				},
 				expectedErr:         false,
@@ -179,7 +179,7 @@ func TestTargetGroupMatcher(t *testing.T) {
 			{
 				request: RequestParam{
 					Host:   &testHost1,
-					URI:    fmt.Sprintf("/part2/%s", "103kf9wam3"),
+					Path:   fmt.Sprintf("/part2/%s", "103kf9wam3"),
 					Method: "GET",
 				},
 				expectedErr:         false,
@@ -187,7 +187,7 @@ func TestTargetGroupMatcher(t *testing.T) {
 			},
 			{
 				request: RequestParam{
-					URI:    "/part3",
+					Path:   "/part3",
 					Method: "PUT",
 				},
 				expectedErr:         false,

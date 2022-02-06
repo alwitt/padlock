@@ -15,9 +15,9 @@ import (
 // targetHostMatcher implements RequestMatch for host level matching
 type targetHostMatcher struct {
 	common.Component
-	targetHost  string
-	uriMatchers []*targetURIMatcher
-	validate    *validator.Validate
+	targetHost   string
+	pathMatchers []*targetPathMatcher
+	validate     *validator.Validate
 }
 
 /*
@@ -34,26 +34,26 @@ func defineTargetHostMatcher(spec TargetHostSpec) (*targetHostMatcher, error) {
 	logTags := log.Fields{
 		"module": "match", "component": "host-matcher", "target_host": spec.TargetHost,
 	}
-	// Build out the URI matchers
-	uriMatchers := make([]*targetURIMatcher, 0)
-	for _, uriMatchSpec := range spec.AllowedURIsForHost {
-		matcher, err := defineTargetURIMatcher(spec.TargetHost, uriMatchSpec)
+	// Build out the path matchers
+	pathMatchers := make([]*targetPathMatcher, 0)
+	for _, pathMatchSpec := range spec.AllowedPathsForHost {
+		matcher, err := defineTargetPathMatcher(spec.TargetHost, pathMatchSpec)
 		if err != nil {
 			log.WithError(err).WithFields(logTags).
-				Errorf("Unable to build URI matcher for %s", uriMatchSpec.Pattern)
+				Errorf("Unable to build path matcher for %s", pathMatchSpec.PathPattern)
 			return nil, err
 		}
-		uriMatchers = append(uriMatchers, matcher)
+		pathMatchers = append(pathMatchers, matcher)
 	}
-	// Sort the URI matcher by length of pattern
-	sort.Slice(uriMatchers, func(i, j int) bool {
-		return len(uriMatchers[i].Pattern) > len(uriMatchers[j].Pattern)
+	// Sort the path matcher by length of pattern
+	sort.Slice(pathMatchers, func(i, j int) bool {
+		return len(pathMatchers[i].PathPattern) > len(pathMatchers[j].PathPattern)
 	})
 	return &targetHostMatcher{
-		Component:   common.Component{LogTags: logTags},
-		targetHost:  spec.TargetHost,
-		uriMatchers: uriMatchers,
-		validate:    validate,
+		Component:    common.Component{LogTags: logTags},
+		targetHost:   spec.TargetHost,
+		pathMatchers: pathMatchers,
+		validate:     validate,
 	}, nil
 }
 
@@ -76,26 +76,26 @@ func (m *targetHostMatcher) Match(ctxt context.Context, request RequestParam) (
 			Error("Invalid request check parameters")
 		return nil, err
 	}
-	// Find a matching URI
-	for _, uriMatcher := range m.uriMatchers {
-		uriOK, err := uriMatcher.checkURI(request.URI)
+	// Find a matching path
+	for _, pathMatcher := range m.pathMatchers {
+		pathOK, err := pathMatcher.checkPath(request.Path)
 		if err != nil {
 			log.WithError(err).
 				WithFields(logTags).
 				WithField("check_request", request.String()).
-				Error("Failed to execute URI REGEX check")
+				Error("Failed to execute path REGEX check")
 			return nil, err
 		}
-		// Run the URI matcher
-		if uriOK {
+		// Run the path matcher
+		if pathOK {
 			log.WithFields(logTags).WithField("check_request", request.String()).
-				Debugf("Matches %s", uriMatcher.Pattern)
-			permissions, err := uriMatcher.match(ctxt, request, true)
+				Debugf("Matches %s", pathMatcher.PathPattern)
+			permissions, err := pathMatcher.match(ctxt, request, true)
 			if err != nil {
 				log.WithError(err).
 					WithFields(logTags).
 					WithField("check_request", request.String()).
-					Error("Failed to execute URI match")
+					Error("Failed to execute path match")
 				return nil, err
 			}
 			if permissions != nil {

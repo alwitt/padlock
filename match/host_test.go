@@ -20,41 +20,41 @@ func TestTargetHostMatcher(t *testing.T) {
 		expectedPermissions []string
 	}
 
-	// Case 0: test URI pattern length sorting
+	// Case 0: test path pattern length sorting
 	{
 		spec := TargetHostSpec{
 			TargetHost: "unit-test",
-			AllowedURIsForHost: []TargetURISpec{
+			AllowedPathsForHost: []TargetPathSpec{
 				{
-					Pattern: `^/path1/very/very/very/long$`,
+					PathPattern: `^/path1/very/very/very/long$`,
 					PermissionsForMethod: map[string][]string{
 						"GET":  {"spec0.0", "spec0.1"},
 						"POST": {"spec0.2"},
 					},
 				},
 				{
-					Pattern: `^/path1/short$`,
+					PathPattern: `^/path1/short$`,
 					PermissionsForMethod: map[string][]string{
 						"GET":  {"spec0.0", "spec0.1"},
 						"POST": {"spec0.2"},
 					},
 				},
 				{
-					Pattern: `^/shortest$`,
+					PathPattern: `^/shortest$`,
 					PermissionsForMethod: map[string][]string{
 						"GET":  {"spec0.0", "spec0.1"},
 						"POST": {"spec0.2"},
 					},
 				},
 				{
-					Pattern: `^/path1/very/very/long$`,
+					PathPattern: `^/path1/very/very/long$`,
 					PermissionsForMethod: map[string][]string{
 						"GET":  {"spec0.0", "spec0.1"},
 						"POST": {"spec0.2"},
 					},
 				},
 				{
-					Pattern: `^/path1/very/long$`,
+					PathPattern: `^/path1/very/long$`,
 					PermissionsForMethod: map[string][]string{
 						"GET":  {"spec0.0", "spec0.1"},
 						"POST": {"spec0.2"},
@@ -71,40 +71,40 @@ func TestTargetHostMatcher(t *testing.T) {
 		}
 		uut, err := defineTargetHostMatcher(spec)
 		assert.Nil(err)
-		uriMatchers := uut.uriMatchers
-		assert.Equal(len(expectedOrder), len(uriMatchers))
-		for idx, matcher := range uriMatchers {
-			assert.Equal(expectedOrder[idx], matcher.Pattern)
+		pathMatchers := uut.pathMatchers
+		assert.Equal(len(expectedOrder), len(pathMatchers))
+		for idx, matcher := range pathMatchers {
+			assert.Equal(expectedOrder[idx], matcher.PathPattern)
 		}
 	}
 
-	// Case 1: test URI selection
+	// Case 1: test path selection
 	{
 		spec := TargetHostSpec{
 			TargetHost: "unit-test",
-			AllowedURIsForHost: []TargetURISpec{
+			AllowedPathsForHost: []TargetPathSpec{
 				{
-					Pattern: `^/part1/[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}/part2/[[:alnum:]]+$`,
+					PathPattern: `^/part1/[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}/part2/[[:alnum:]]+$`,
 					PermissionsForMethod: map[string][]string{
 						"GET":  {"spec1.0", "spec1.1"},
 						"POST": {"spec1.2"},
 					},
 				},
 				{
-					Pattern: `^/part1/[[:alnum:]]+$`,
+					PathPattern: `^/part1/[[:alnum:]]+$`,
 					PermissionsForMethod: map[string][]string{
 						"GET": {"spec1.3", "spec1.4"},
 						"PUT": {"spec1.5"},
 					},
 				},
 				{
-					Pattern: `^/part1`,
+					PathPattern: `^/part1`,
 					PermissionsForMethod: map[string][]string{
 						"*": {"spec1.6"},
 					},
 				},
 				{
-					Pattern: `^/part1/[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}`,
+					PathPattern: `^/part1/[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}`,
 					PermissionsForMethod: map[string][]string{
 						"GET": {"spec1.7", "spec1.8"},
 						"PUT": {"spec1.9"},
@@ -118,7 +118,7 @@ func TestTargetHostMatcher(t *testing.T) {
 		cases := []testCase{
 			{
 				request: RequestParam{
-					URI:    fmt.Sprintf("/part1/%s/part2/%s", uuid.New().String(), "09ma8aImWm"),
+					Path:   fmt.Sprintf("/part1/%s/part2/%s", uuid.New().String(), "09ma8aImWm"),
 					Method: "GET",
 				},
 				expectedErr:         false,
@@ -126,7 +126,7 @@ func TestTargetHostMatcher(t *testing.T) {
 			},
 			{
 				request: RequestParam{
-					URI:    fmt.Sprintf("/part1/%s", "09ma8aImWm"),
+					Path:   fmt.Sprintf("/part1/%s", "09ma8aImWm"),
 					Method: "GET",
 				},
 				expectedErr:         false,
@@ -134,7 +134,7 @@ func TestTargetHostMatcher(t *testing.T) {
 			},
 			{
 				request: RequestParam{
-					URI:    fmt.Sprintf("/part1/%s/part2/%s", uuid.New().String(), uuid.New().String()),
+					Path:   fmt.Sprintf("/part1/%s/part2/%s", uuid.New().String(), uuid.New().String()),
 					Method: "PUT",
 				},
 				expectedErr:         false,
@@ -142,7 +142,7 @@ func TestTargetHostMatcher(t *testing.T) {
 			},
 			{
 				request: RequestParam{
-					URI:    fmt.Sprintf("/part1/%s/part2/%s", uuid.New().String(), uuid.New().String()),
+					Path:   fmt.Sprintf("/part1/%s/part2/%s", uuid.New().String(), uuid.New().String()),
 					Method: "DELETE",
 				},
 				expectedErr:         false,
@@ -150,7 +150,7 @@ func TestTargetHostMatcher(t *testing.T) {
 			},
 			{
 				request: RequestParam{
-					URI:    fmt.Sprintf("/part1/%s/part2/%s", "8xzvkm4r0j94t2m0", uuid.New().String()),
+					Path:   fmt.Sprintf("/part1/%s/part2/%s", "8xzvkm4r0j94t2m0", uuid.New().String()),
 					Method: "GET",
 				},
 				expectedErr:         false,
@@ -158,7 +158,7 @@ func TestTargetHostMatcher(t *testing.T) {
 			},
 			{
 				request: RequestParam{
-					URI:    fmt.Sprintf("/part3/%s/part2/%s", "8xzvkm4r0j94t2m0", uuid.New().String()),
+					Path:   fmt.Sprintf("/part3/%s/part2/%s", "8xzvkm4r0j94t2m0", uuid.New().String()),
 					Method: "GET",
 				},
 				expectedErr:         false,

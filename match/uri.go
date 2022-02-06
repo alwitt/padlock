@@ -9,35 +9,35 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-// targetURIMatcher implements RequestMatch for URI level matching
-type targetURIMatcher struct {
+// targetPathMatcher implements RequestMatch for path level matching
+type targetPathMatcher struct {
 	common.Component
-	TargetURISpec
+	TargetPathSpec
 	regex    common.RegexCheck
 	validate *validator.Validate
 }
 
 /*
-defineTargetURIMatcher defines a new RequestMatch for matching request at URI level
+defineTargetPathMatcher defines a new RequestMatch for matching request at path level
 
  @param targetHost string - the host name this matcher is associated with
- @param spec TargetURISpec - the matcher specification
- @return new targetURIMatcher instance
+ @param spec TargetPathSpec - the matcher specification
+ @return new targetPathMatcher instance
 */
-func defineTargetURIMatcher(targetHost string, spec TargetURISpec) (*targetURIMatcher, error) {
+func defineTargetPathMatcher(targetHost string, spec TargetPathSpec) (*targetPathMatcher, error) {
 	validate := validator.New()
 	if err := validate.Struct(&spec); err != nil {
 		return nil, err
 	}
-	regex, err := common.NewRegexCheck(spec.Pattern)
+	regex, err := common.NewRegexCheck(spec.PathPattern)
 	if err != nil {
 		return nil, err
 	}
 	logTags := log.Fields{
-		"module":             "match",
-		"component":          "uri-matcher",
-		"target_host":        targetHost,
-		"target_uri_pattern": spec.Pattern,
+		"module":              "match",
+		"component":           "path-matcher",
+		"target_host":         targetHost,
+		"target_path_pattern": spec.PathPattern,
 	}
 
 	// Verify that the methods listed in the PermissionsForMethod are permitted
@@ -54,29 +54,29 @@ func defineTargetURIMatcher(targetHost string, spec TargetURISpec) (*targetURIMa
 		}
 	}
 
-	return &targetURIMatcher{
-		Component:     common.Component{LogTags: logTags},
-		TargetURISpec: spec,
-		regex:         regex,
-		validate:      validate,
+	return &targetPathMatcher{
+		Component:      common.Component{LogTags: logTags},
+		TargetPathSpec: spec,
+		regex:          regex,
+		validate:       validate,
 	}, nil
 }
 
-// checkURI helper function to check whether the request URI matches this instance
-func (m *targetURIMatcher) checkURI(requestURI string) (bool, error) {
-	return m.regex.Match([]byte(requestURI))
+// checkPath helper function to check whether the request path matches this instance
+func (m *targetPathMatcher) checkPath(requestPath string) (bool, error) {
+	return m.regex.Match([]byte(requestPath))
 }
 
 /*
-match is core logic for targetURIMatcher.Match
+match is core logic for targetPathMatcher.Match
 
  @param ctxt context.Context - context calling this API
  @param request RequestParam - request parameters
- @param skipURICheck bool - whether to skip the URI REGEX matching
+ @param skipPathCheck bool - whether to skip the path REGEX matching
  @return if a match, the list permissions needed to proceed
          an error otherwise
 */
-func (m *targetURIMatcher) match(ctxt context.Context, request RequestParam, skipURICheck bool) (
+func (m *targetPathMatcher) match(ctxt context.Context, request RequestParam, skipPathCheck bool) (
 	[]string, error,
 ) {
 	logTags := m.GetLogTagsForContext(ctxt)
@@ -87,9 +87,9 @@ func (m *targetURIMatcher) match(ctxt context.Context, request RequestParam, ski
 			Error("Invalid request check parameters")
 		return nil, err
 	}
-	// Verify URI matches
-	if !skipURICheck {
-		uriMatch, err := m.checkURI(request.URI)
+	// Verify path matches
+	if !skipPathCheck {
+		pathMatch, err := m.checkPath(request.Path)
 		if err != nil {
 			log.WithError(err).
 				WithFields(logTags).
@@ -97,11 +97,11 @@ func (m *targetURIMatcher) match(ctxt context.Context, request RequestParam, ski
 				Error("Failed to execute REGEX check")
 			return nil, err
 		}
-		if !uriMatch {
+		if !pathMatch {
 			log.WithFields(logTags).
 				WithField("check_request", request.String()).
-				WithField("miss", "URI").
-				Debug("MISMATCH URI")
+				WithField("miss", "path").
+				Debug("MISMATCH PATH")
 			return nil, nil
 		}
 	}
@@ -130,7 +130,7 @@ Match checks whether a request matches against defined parameters
  @return if a match, the list permissions needed to proceed
          an error otherwise
 */
-func (m *targetURIMatcher) Match(ctxt context.Context, request RequestParam) ([]string, error) {
+func (m *targetPathMatcher) Match(ctxt context.Context, request RequestParam) ([]string, error) {
 	return m.match(ctxt, request, false)
 }
 
@@ -139,6 +139,6 @@ String returns an ASCII description of the object
 
  @return an ASCII description of the object
 */
-func (m *targetURIMatcher) String() string {
-	return fmt.Sprintf("URI-MATCH['%s']", m.Pattern)
+func (m *targetPathMatcher) String() string {
+	return fmt.Sprintf("PATH-MATCH['%s']", m.PathPattern)
 }

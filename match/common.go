@@ -11,8 +11,8 @@ import (
 type RequestParam struct {
 	// Host is the request target "host"
 	Host *string `validate:"omitempty,fqdn"`
-	// URI is the request target URI portion after the Authority
-	URI string `validate:"required,uri"`
+	// Path is the request target Path
+	Path string `validate:"required,uri"`
 	// Method is the request method
 	Method string `validate:"required,oneof=GET HEAD PUT POST PATCH DELETE OPTIONS"`
 }
@@ -24,9 +24,9 @@ String returns an ASCII description of the object
 */
 func (p RequestParam) String() string {
 	if p.Host != nil {
-		return fmt.Sprintf("'%s %s %s'", p.Method, *p.Host, p.URI)
+		return fmt.Sprintf("'%s %s %s'", p.Method, *p.Host, p.Path)
 	}
-	return fmt.Sprintf("'%s %s'", p.Method, p.URI)
+	return fmt.Sprintf("'%s %s'", p.Method, p.Path)
 }
 
 // validate perform the validation
@@ -34,23 +34,23 @@ func (p RequestParam) validate(validate *validator.Validate) error {
 	return validate.Struct(&p)
 }
 
-// TargetURISpec is a single URI pattern to check against
-type TargetURISpec struct {
-	// Pattern is the pattern for matching against a request URI (portion after the Authority)
-	Pattern string `validate:"required"`
+// TargetPathSpec is a single path pattern to check against
+type TargetPathSpec struct {
+	// PathPattern is the pattern for matching against a request URI path
+	PathPattern string `validate:"required"`
 	// PermissionsForMethod is the DICT of required permission for each specified request
-	// method that is allowed for this URI. The method key of "*" functions as a wildcard.
+	// method that is allowed for this path. The method key of "*" functions as a wildcard.
 	// If the request method is not explicitly listed here, it may match against "*" if that
 	// key was defined.
 	PermissionsForMethod map[string][]string `validate:"required,min=1"`
 }
 
-// TargetHostSpec is a single host to check against defined by multiple associated URIs
+// TargetHostSpec is a single host to check against defined by multiple associated paths
 type TargetHostSpec struct {
 	// TargetHost is the host value the URI are associated with
 	TargetHost string `validate:"required"`
-	// AllowedURIsForHost is the list of URIs associated with this host
-	AllowedURIsForHost []TargetURISpec `validate:"required,min=1,dive"`
+	// AllowedPathsForHost is the list of paths associated with this host
+	AllowedPathsForHost []TargetPathSpec `validate:"required,min=1,dive"`
 }
 
 // TargetGroupSpec is a groups of hosts to check against

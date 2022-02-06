@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestTargetURIMatcher(t *testing.T) {
+func TestTargetPathMatcher(t *testing.T) {
 	assert := assert.New(t)
 	log.SetLevel(log.DebugLevel)
 
@@ -22,34 +22,34 @@ func TestTargetURIMatcher(t *testing.T) {
 
 	// Case 0: simple case
 	{
-		spec := TargetURISpec{
-			Pattern: `^/path$`,
+		spec := TargetPathSpec{
+			PathPattern: `^/path$`,
 			PermissionsForMethod: map[string][]string{
 				"GET":  {"spec0.0", "spec0.1"},
 				"POST": {"spec0.2"},
 			},
 		}
-		uut, err := defineTargetURIMatcher("unit-test", spec)
+		uut, err := defineTargetPathMatcher("unit-test", spec)
 		assert.Nil(err)
 
 		cases := []testCase{
 			{
-				request:             RequestParam{URI: "/path", Method: "GET"},
+				request:             RequestParam{Path: "/path", Method: "GET"},
 				expectedErr:         false,
 				expectedPermissions: []string{"spec0.0", "spec0.1"},
 			},
 			{
-				request:             RequestParam{URI: "/path", Method: "DELETE"},
+				request:             RequestParam{Path: "/path", Method: "DELETE"},
 				expectedErr:         false,
 				expectedPermissions: nil,
 			},
 			{
-				request:             RequestParam{URI: "/path", Method: "POST"},
+				request:             RequestParam{Path: "/path", Method: "POST"},
 				expectedErr:         false,
 				expectedPermissions: []string{"spec0.2"},
 			},
 			{
-				request:             RequestParam{URI: "/paths", Method: "POST"},
+				request:             RequestParam{Path: "/paths", Method: "POST"},
 				expectedErr:         false,
 				expectedPermissions: nil,
 			},
@@ -59,7 +59,7 @@ func TestTargetURIMatcher(t *testing.T) {
 				expectedPermissions: nil,
 			},
 			{
-				request:             RequestParam{URI: "/path", Method: "FETCH"},
+				request:             RequestParam{Path: "/path", Method: "FETCH"},
 				expectedErr:         true,
 				expectedPermissions: nil,
 			},
@@ -78,24 +78,24 @@ func TestTargetURIMatcher(t *testing.T) {
 
 	// Case 1: wildcard methods
 	{
-		spec := TargetURISpec{
-			Pattern: `^/paths$`,
+		spec := TargetPathSpec{
+			PathPattern: `^/paths$`,
 			PermissionsForMethod: map[string][]string{
 				"GET": {"spec1.0", "spec1.1"},
 				"*":   {"spec1.2"},
 			},
 		}
-		uut, err := defineTargetURIMatcher("unit-test", spec)
+		uut, err := defineTargetPathMatcher("unit-test", spec)
 		assert.Nil(err)
 
 		cases := []testCase{
 			{
-				request:             RequestParam{URI: "/paths", Method: "GET"},
+				request:             RequestParam{Path: "/paths", Method: "GET"},
 				expectedErr:         false,
 				expectedPermissions: []string{"spec1.0", "spec1.1"},
 			},
 			{
-				request:             RequestParam{URI: "/paths", Method: "DELETE"},
+				request:             RequestParam{Path: "/paths", Method: "DELETE"},
 				expectedErr:         false,
 				expectedPermissions: []string{"spec1.2"},
 			},
@@ -114,21 +114,21 @@ func TestTargetURIMatcher(t *testing.T) {
 
 	// Case 2: complex path matching
 	{
-		spec := TargetURISpec{
-			Pattern: `^/part1/([\w\.]+)/part2/([\w-]+)$`,
+		spec := TargetPathSpec{
+			PathPattern: `^/part1/([\w\.]+)/part2/([\w-]+)$`,
 			PermissionsForMethod: map[string][]string{
 				"GET":    {"spec2.0", "spec2.1"},
 				"DELETE": {"spec2.2"},
 				"*":      {"spec2.3"},
 			},
 		}
-		uut, err := defineTargetURIMatcher("unit-test", spec)
+		uut, err := defineTargetPathMatcher("unit-test", spec)
 		assert.Nil(err)
 
 		cases := []testCase{
 			{
 				request: RequestParam{
-					URI:    fmt.Sprintf("/part1/%s/part2/%s", "af8j90a.8mfas", uuid.New().String()),
+					Path:   fmt.Sprintf("/part1/%s/part2/%s", "af8j90a.8mfas", uuid.New().String()),
 					Method: "GET",
 				},
 				expectedErr:         false,
@@ -136,7 +136,7 @@ func TestTargetURIMatcher(t *testing.T) {
 			},
 			{
 				request: RequestParam{
-					URI:    fmt.Sprintf("/part1/%s/part2/%s", uuid.New().String(), uuid.New().String()),
+					Path:   fmt.Sprintf("/part1/%s/part2/%s", uuid.New().String(), uuid.New().String()),
 					Method: "GET",
 				},
 				expectedErr:         false,
@@ -144,7 +144,7 @@ func TestTargetURIMatcher(t *testing.T) {
 			},
 			{
 				request: RequestParam{
-					URI:    fmt.Sprintf("/part1/%s/part2/%s", "09094.a94.mkva", "mna9-439mkas-"),
+					Path:   fmt.Sprintf("/part1/%s/part2/%s", "09094.a94.mkva", "mna9-439mkas-"),
 					Method: "DELETE",
 				},
 				expectedErr:         false,
@@ -152,7 +152,7 @@ func TestTargetURIMatcher(t *testing.T) {
 			},
 			{
 				request: RequestParam{
-					URI:    fmt.Sprintf("/part1/%s/%s", "af8j90a.8mfas", uuid.New().String()),
+					Path:   fmt.Sprintf("/part1/%s/%s", "af8j90a.8mfas", uuid.New().String()),
 					Method: "GET",
 				},
 				expectedErr:         false,
