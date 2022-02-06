@@ -36,7 +36,7 @@ func (p RequestParam) validate(validate *validator.Validate) error {
 
 // TargetURISpec is a single URI pattern to check against
 type TargetURISpec struct {
-	// Pattern is the pattern for matching against a request URI's portion after the Authority
+	// Pattern is the pattern for matching against a request URI (portion after the Authority)
 	Pattern string `validate:"required"`
 	// PermissionsForMethod is the DICT of required permission for each specified request
 	// method that is allowed for this URI. The method key of "*" functions as a wildcard.

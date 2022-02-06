@@ -47,14 +47,23 @@ type CustomFieldValidator interface {
 		 @return whether is valid
 	*/
 	ValidateRoleName(fl validator.FieldLevel) bool
+
+	/*
+		ValidatePermissionName custom permission name validation function
+
+		 @param fl validator.FieldLevel - the field to validate
+		 @return whether is valid
+	*/
+	ValidatePermissionName(fl validator.FieldLevel) bool
 }
 
 // customValidatorImpl support class for running custom validation of fields
 type customValidatorImpl struct {
-	userIDMatcher       RegexCheck
-	usernameMatcher     RegexCheck
-	personalNameMatcher RegexCheck
-	roleNameMatcher     RegexCheck
+	userIDMatcher         RegexCheck
+	usernameMatcher       RegexCheck
+	personalNameMatcher   RegexCheck
+	roleNameMatcher       RegexCheck
+	permissionNameMatcher RegexCheck
 }
 
 /*
@@ -64,10 +73,15 @@ GetCustomFieldValidator get new CustomFieldValidator instance
  @param usernameRegex string - username validation regex
  @param nameRegex string - personal name validation regex
  @param roleNameRegex string - role name validation regex
+ @param permissionRegex string - permission name validation regex
  @return new CustomFieldValidator instance
 */
 func GetCustomFieldValidator(
-	userIDRegex string, usernameRegex string, nameRegex string, roleNameRegex string,
+	userIDRegex string,
+	usernameRegex string,
+	nameRegex string,
+	roleNameRegex string,
+	permissionRegex string,
 ) (CustomFieldValidator, error) {
 	idMatch, err := NewRegexCheck(userIDRegex)
 	if err != nil {
@@ -85,11 +99,16 @@ func GetCustomFieldValidator(
 	if err != nil {
 		return nil, err
 	}
+	permissionMatch, err := NewRegexCheck(permissionRegex)
+	if err != nil {
+		return nil, err
+	}
 	return &customValidatorImpl{
-		userIDMatcher:       idMatch,
-		usernameMatcher:     unMatch,
-		personalNameMatcher: nameMatch,
-		roleNameMatcher:     roleMatch,
+		userIDMatcher:         idMatch,
+		usernameMatcher:       unMatch,
+		personalNameMatcher:   nameMatch,
+		roleNameMatcher:       roleMatch,
+		permissionNameMatcher: permissionMatch,
 	}, nil
 }
 
@@ -110,6 +129,9 @@ func (m *customValidatorImpl) RegisterWithValidator(v *validator.Validate) error
 		return err
 	}
 	if err := v.RegisterValidation("role_name", m.ValidateRoleName); err != nil {
+		return err
+	}
+	if err := v.RegisterValidation("user_permissions", m.ValidatePermissionName); err != nil {
 		return err
 	}
 	return nil
@@ -181,6 +203,24 @@ func (m *customValidatorImpl) ValidateRoleName(fl validator.FieldLevel) bool {
 	}
 	asString := fl.Field().String()
 	valid, err := m.roleNameMatcher.Match([]byte(asString))
+	if err != nil {
+		return false
+	}
+	return valid
+}
+
+/*
+ValidatePermissionName custom permission name validation function
+
+ @param fl validator.FieldLevel - the field to validate
+ @return whether is valid
+*/
+func (m *customValidatorImpl) ValidatePermissionName(fl validator.FieldLevel) bool {
+	if fl.Field().Kind() != reflect.String {
+		return false
+	}
+	asString := fl.Field().String()
+	valid, err := m.permissionNameMatcher.Match([]byte(asString))
 	if err != nil {
 		return false
 	}

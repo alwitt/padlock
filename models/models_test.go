@@ -25,7 +25,7 @@ func TestRoleManagement(t *testing.T) {
 	})
 	assert.Nil(err)
 	supportMatch, err := common.GetCustomFieldValidator(
-		`^[a-zA-Z0-9-]+$`, `^[a-zA-Z0-9-]+$`, `^[a-zA-Z0-9-]+$`, `^[a-zA-Z0-9-]+$`,
+		`^[a-zA-Z0-9-]+$`, `^[a-zA-Z0-9-]+$`, `^[a-zA-Z0-9-]+$`, `^[a-zA-Z0-9-]+$`, `^.+$`,
 	)
 	assert.Nil(err)
 	uut, err := CreateManagementDBClient(db, supportMatch)
@@ -76,7 +76,7 @@ func TestUserManagement(t *testing.T) {
 	})
 	assert.Nil(err)
 	supportMatch, err := common.GetCustomFieldValidator(
-		`^[a-zA-Z0-9-]+$`, `^[a-zA-Z0-9-]+$`, `^[a-zA-Z0-9-]+$`, `^[a-zA-Z0-9-]+$`,
+		`^[a-zA-Z0-9-]+$`, `^[a-zA-Z0-9-]+$`, `^[a-zA-Z0-9-]+$`, `^[a-zA-Z0-9-]+$`, `^.+$`,
 	)
 	assert.Nil(err)
 	uut, err := CreateManagementDBClient(db, supportMatch)
@@ -192,7 +192,7 @@ func TestUserAndRoleManagement(t *testing.T) {
 	})
 	assert.Nil(err)
 	supportMatch, err := common.GetCustomFieldValidator(
-		`^[a-zA-Z0-9-]+$`, `^[a-zA-Z0-9-]+$`, `^[a-zA-Z0-9-]+$`, `^[a-zA-Z0-9-]+$`,
+		`^[a-zA-Z0-9-]+$`, `^[a-zA-Z0-9-]+$`, `^[a-zA-Z0-9-]+$`, `^[a-zA-Z0-9-]+$`, `^.+$`,
 	)
 	assert.Nil(err)
 	uut, err := CreateManagementDBClient(db, supportMatch)
