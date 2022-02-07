@@ -138,31 +138,41 @@ func TestUserManagement(t *testing.T) {
 		assert.EqualValues(roleListToMap([]string{roles[1]}), roleListToMap(user.Roles))
 	}
 
-	// Case 5: create new user with roles
-	user5 := uuid.New().String()
+	// Case 5: change user roles
 	{
-		param := UserConfig{UserID: user5}
+		newRoles := []string{roles[1], roles[2]}
+		assert.Nil(uut.SetUserRoles(context.Background(), user1, newRoles))
+		user, err := uut.GetUser(context.Background(), user1)
+		assert.Nil(err)
+		assert.Equal(user1, user.UserID)
+		assert.EqualValues(roleListToMap([]string{roles[1], roles[2]}), roleListToMap(user.Roles))
+	}
+
+	// Case 6: create new user with roles
+	user6 := uuid.New().String()
+	{
+		param := UserConfig{UserID: user6}
 		assert.Nil(uut.DefineUser(context.Background(), param, []string{roles[0], roles[2]}))
 	}
 	{
-		user, err := uut.GetUser(context.Background(), user5)
+		user, err := uut.GetUser(context.Background(), user6)
 		assert.Nil(err)
-		assert.Equal(user5, user.UserID)
+		assert.Equal(user6, user.UserID)
 		assert.EqualValues(roleListToMap([]string{roles[0], roles[2]}), roleListToMap(user.Roles))
 	}
 
-	// Case 6: change user information
+	// Case 7: change user information
 	{
 		newEmail := "unit-test@testing.org"
-		param := UserConfig{UserID: user5, Email: &newEmail}
-		assert.Nil(uut.UpdateUser(context.Background(), user5, param))
-		user, err := uut.GetUser(context.Background(), user5)
+		param := UserConfig{UserID: user6, Email: &newEmail}
+		assert.Nil(uut.UpdateUser(context.Background(), user6, param))
+		user, err := uut.GetUser(context.Background(), user6)
 		assert.Nil(err)
-		assert.Equal(user5, user.UserID)
+		assert.Equal(user6, user.UserID)
 		assert.Equal(newEmail, *user.Email)
 	}
 
-	// Case 7: delete user
+	// Case 8: delete user
 	assert.Nil(uut.DeleteUser(context.Background(), user1))
 	{
 		_, err := uut.GetUser(context.Background(), user1)
@@ -173,11 +183,11 @@ func TestUserManagement(t *testing.T) {
 		users, err = uut.GetUsersOfRole(context.Background(), roles[0])
 		assert.Nil(err)
 		assert.Len(users, 1)
-		assert.Equal(user5, users[0].UserID)
+		assert.Equal(user6, users[0].UserID)
 		users, err = uut.GetUsersOfRole(context.Background(), roles[2])
 		assert.Nil(err)
 		assert.Len(users, 1)
-		assert.Equal(user5, users[0].UserID)
+		assert.Equal(user6, users[0].UserID)
 	}
 }
 

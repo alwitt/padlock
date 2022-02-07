@@ -304,6 +304,26 @@ func (m *managementImpl) AddRolesToUser(ctxt context.Context, id string, newRole
 }
 
 /*
+SetUserRoles change the roles of a user
+
+ @param ctxt context.Context - context calling this API
+ @param id string - user entry ID
+ @param newRoles []string - new roles for this user
+ @return whether successful
+*/
+func (m *managementImpl) SetUserRoles(ctxt context.Context, id string, newRoles []string) error {
+	m.rolesLock.RLock()
+	defer m.rolesLock.RUnlock()
+	// Verify that the roles actually exist
+	for _, aRole := range newRoles {
+		if _, ok := m.roles[aRole]; !ok {
+			return fmt.Errorf("can't add an unknown role %s to user %s", aRole, id)
+		}
+	}
+	return m.db.SetUserRoles(ctxt, id, newRoles)
+}
+
+/*
 RemoveRolesFromUser remove roles from user
 
  @param ctxt context.Context - context calling this API

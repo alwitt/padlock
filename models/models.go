@@ -150,6 +150,16 @@ type ManagementDBClient interface {
 	AddRolesToUser(ctxt context.Context, id string, newRoles []string) error
 
 	/*
+		SetUserRoles change the roles of a user
+
+		 @param ctxt context.Context - context calling this API
+		 @param id string - user entry ID
+		 @param newRoles []string - new roles for this user
+		 @return whether successful
+	*/
+	SetUserRoles(ctxt context.Context, id string, newRoles []string) error
+
+	/*
 		RemoveRolesFromUser remove roles from user
 
 		 @param ctxt context.Context - context calling this API
@@ -616,6 +626,46 @@ func (c *managementDBClientImpl) AddRolesToUser(
 		if err != nil {
 			log.WithError(err).WithFields(logTags).
 				Errorf("Failed to define %s new roles", userEntry.String())
+			return err
+		}
+		for _, roleEntry := range roleEntries {
+			if err := tx.Model(&userEntry).Association("Roles").Append(&roleEntry); err != nil {
+				log.WithError(err).WithFields(logTags).
+					Errorf("Failed to add %s to %s", roleEntry.String(), userEntry.String())
+				return err
+			}
+		}
+		return nil
+	})
+}
+
+/*
+SetUserRoles change the roles of a user
+
+ @param ctxt context.Context - context calling this API
+ @param id string - user entry ID
+ @param newRoles []string - new roles for this user
+ @return whether successful
+*/
+func (c *managementDBClientImpl) SetUserRoles(
+	ctxt context.Context, id string, newRoles []string,
+) error {
+	logTags := c.GetLogTagsForContext(ctxt)
+	return c.db.Transaction(func(tx *gorm.DB) error {
+		userEntry, err := c.fetchUserWithRoles(tx, id)
+		if err != nil {
+			log.WithError(err).WithFields(logTags).Errorf("Failed to query user %s", id)
+			return err
+		}
+		roleEntries, err := c.createRoles(ctxt, tx, newRoles)
+		if err != nil {
+			log.WithError(err).WithFields(logTags).
+				Errorf("Failed to define %s new roles", userEntry.String())
+			return err
+		}
+		// Clear the current associations
+		if err := tx.Model(&userEntry).Association("Roles").Clear(); err != nil {
+			log.WithError(err).WithFields(logTags).Errorf("Failed to clear %s roles", userEntry.String())
 			return err
 		}
 		for _, roleEntry := range roleEntries {

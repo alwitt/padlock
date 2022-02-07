@@ -141,6 +141,16 @@ type Management interface {
 	AddRolesToUser(ctxt context.Context, id string, newRoles []string) error
 
 	/*
+		SetUserRoles change the roles of a user
+
+		 @param ctxt context.Context - context calling this API
+		 @param id string - user entry ID
+		 @param newRoles []string - new roles for this user
+		 @return whether successful
+	*/
+	SetUserRoles(ctxt context.Context, id string, newRoles []string) error
+
+	/*
 		RemoveRolesFromUser remove roles from user
 
 		 @param ctxt context.Context - context calling this API

@@ -265,6 +265,30 @@ func TestManagingUsers(t *testing.T) {
 		assert.Empty(user.Roles)
 		assert.Empty(user.AssociatedPermission)
 	}
+
+	// Case 7: set the roles of a user
+	{
+		testRoles := map[string]common.UserRoleConfig{
+			roles[0]: {AssignedPermissions: []string{permissions[0]}},
+			roles[2]: {AssignedPermissions: []string{permissions[1]}},
+			roles[3]: {AssignedPermissions: []string{permissions[2]}},
+		}
+		assert.Nil(uut.AlignRolesWithConfig(context.Background(), testRoles))
+	}
+	{
+		newRoles := []string{roles[0], roles[3]}
+		assert.Nil(uut.SetUserRoles(context.Background(), user5, newRoles))
+	}
+	{
+		user, err := uut.GetUser(context.Background(), user5)
+		assert.Nil(err)
+		assert.Equal(user5, user.UserID)
+		assert.EqualValues(roleListToMap([]string{roles[0], roles[3]}), roleListToMap(user.Roles))
+		assert.EqualValues(
+			roleListToMap([]string{permissions[0], permissions[2]}),
+			roleListToMap(user.AssociatedPermission),
+		)
+	}
 }
 
 func roleListToMap(i []string) map[string]bool {
