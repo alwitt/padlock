@@ -137,4 +137,140 @@ func TestManagingUsers(t *testing.T) {
 		roles[2]: {AssignedPermissions: []string{permissions[1], permissions[2]}},
 	}
 	assert.Nil(uut.AlignRolesWithConfig(context.Background(), testRoles))
+
+	// Case 0: no users
+	{
+		_, err := uut.GetUser(context.Background(), uuid.New().String())
+		assert.NotNil(err)
+	}
+
+	// Case 1: add user
+	user1 := uuid.New().String()
+	{
+		param := models.UserConfig{UserID: user1}
+		assert.Nil(uut.DefineUser(context.Background(), param, []string{roles[0], roles[2]}))
+	}
+	{
+		user, err := uut.GetUser(context.Background(), user1)
+		assert.Nil(err)
+		assert.Equal(user1, user.UserID)
+		assert.EqualValues(roleListToMap([]string{roles[0], roles[2]}), roleListToMap(user.Roles))
+		assert.EqualValues(
+			roleListToMap([]string{permissions[0], permissions[1], permissions[2]}),
+			roleListToMap(user.AssociatedPermission),
+		)
+	}
+	{
+		_, users, err := uut.GetRoleWithLinkedUsers(context.Background(), roles[0])
+		assert.Nil(err)
+		assert.Len(users, 1)
+		assert.Equal(user1, users[0].UserID)
+	}
+
+	// Case 2: change user roles
+	{
+		newRoles := []string{roles[1]}
+		assert.Nil(uut.AddRolesToUser(context.Background(), user1, newRoles))
+	}
+	{
+		user, err := uut.GetUser(context.Background(), user1)
+		assert.Nil(err)
+		assert.Equal(user1, user.UserID)
+		assert.EqualValues(
+			roleListToMap([]string{roles[0], roles[1], roles[2]}), roleListToMap(user.Roles),
+		)
+		assert.EqualValues(
+			roleListToMap([]string{permissions[0], permissions[1], permissions[2]}),
+			roleListToMap(user.AssociatedPermission),
+		)
+	}
+
+	// Case 3: remove a user role
+	{
+		removeRoles := []string{roles[0]}
+		assert.Nil(uut.RemoveRolesFromUser(context.Background(), user1, removeRoles))
+	}
+	{
+		user, err := uut.GetUser(context.Background(), user1)
+		assert.Nil(err)
+		assert.Equal(user1, user.UserID)
+		assert.EqualValues(roleListToMap([]string{roles[1], roles[2]}), roleListToMap(user.Roles))
+		assert.EqualValues(
+			roleListToMap([]string{permissions[1], permissions[2]}),
+			roleListToMap(user.AssociatedPermission),
+		)
+	}
+
+	// Case 4: use an unknown role
+	{
+		newRoles := []string{roles[3]}
+		assert.NotNil(uut.AddRolesToUser(context.Background(), user1, newRoles))
+	}
+	{
+		user, err := uut.GetUser(context.Background(), user1)
+		assert.Nil(err)
+		assert.Equal(user1, user.UserID)
+		assert.EqualValues(roleListToMap([]string{roles[1], roles[2]}), roleListToMap(user.Roles))
+		assert.EqualValues(
+			roleListToMap([]string{permissions[1], permissions[2]}),
+			roleListToMap(user.AssociatedPermission),
+		)
+	}
+
+	// Case 5: add user
+	user5 := uuid.New().String()
+	{
+		param := models.UserConfig{UserID: user5}
+		assert.Nil(uut.DefineUser(context.Background(), param, []string{roles[1]}))
+	}
+	{
+		_, users, err := uut.GetRoleWithLinkedUsers(context.Background(), roles[0])
+		assert.Nil(err)
+		assert.Empty(users)
+		_, users, err = uut.GetRoleWithLinkedUsers(context.Background(), roles[1])
+		assert.Nil(err)
+		assert.Len(users, 2)
+		uids := []string{}
+		for _, userInfo := range users {
+			uids = append(uids, userInfo.UserID)
+		}
+		assert.EqualValues(roleListToMap([]string{user1, user5}), roleListToMap(uids))
+		_, users, err = uut.GetRoleWithLinkedUsers(context.Background(), roles[2])
+		assert.Nil(err)
+		assert.Len(users, 1)
+		assert.Equal(user1, users[0].UserID)
+	}
+
+	// Case 6: remove a role
+	{
+		testRoles := map[string]common.UserRoleConfig{
+			roles[0]: {AssignedPermissions: []string{permissions[0]}},
+			roles[2]: {AssignedPermissions: []string{permissions[1]}},
+		}
+		assert.Nil(uut.AlignRolesWithConfig(context.Background(), testRoles))
+	}
+	{
+		user, err := uut.GetUser(context.Background(), user1)
+		assert.Nil(err)
+		assert.Equal(user1, user.UserID)
+		assert.EqualValues(roleListToMap([]string{roles[2]}), roleListToMap(user.Roles))
+		assert.EqualValues(
+			roleListToMap([]string{permissions[1]}), roleListToMap(user.AssociatedPermission),
+		)
+	}
+	{
+		user, err := uut.GetUser(context.Background(), user5)
+		assert.Nil(err)
+		assert.Equal(user5, user.UserID)
+		assert.Empty(user.Roles)
+		assert.Empty(user.AssociatedPermission)
+	}
+}
+
+func roleListToMap(i []string) map[string]bool {
+	result := map[string]bool{}
+	for _, e := range i {
+		result[e] = true
+	}
+	return result
 }
