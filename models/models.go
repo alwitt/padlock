@@ -184,7 +184,7 @@ func CreateManagementDBClient(db *gorm.DB, validateSupport common.CustomFieldVal
 		return nil, err
 	}
 
-	logTags := log.Fields{"module": "user", "component": "db-client"}
+	logTags := log.Fields{"module": "models", "component": "user-db-client"}
 
 	// Prepare the models
 	if err := db.AutoMigrate(&dbUser{}); err != nil {
