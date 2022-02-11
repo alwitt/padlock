@@ -17,6 +17,15 @@ test: .prepare ## Run unittests
 
 .PHONY: build
 build: lint ## Build the application
+	@go build -o padlock .
+
+.PHONY: compose
+compose: ## Prepare the development docker stack
+	@docker-compose -f docker/docker-compose.yaml up -d
+
+.PHONY: clean
+clean: ## Clean up development environment
+	@docker-compose -f docker/docker-compose.yaml down
 
 .prepare: ## Prepare the project for local development
 	@pip3 install --user pre-commit

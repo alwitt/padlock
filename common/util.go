@@ -30,8 +30,14 @@ func (c Component) GetLogTagsForContext(ctxt context.Context) log.Fields {
 	if err := gob.NewDecoder(bytes.NewBuffer(buf.Bytes())).Decode(&result); err != nil {
 		return c.LogTags
 	}
-	if ctxt.Value(RequestParam{}) != nil {
-		v, ok := ctxt.Value(RequestParam{}).(RequestParam)
+	if ctxt.Value(RequestParamKey{}) != nil {
+		v, ok := ctxt.Value(RequestParamKey{}).(RequestParam)
+		if ok {
+			v.updateLogTags(result)
+		}
+	}
+	if ctxt.Value(AccessAuthorizeParamKey{}) != nil {
+		v, ok := ctxt.Value(AccessAuthorizeParamKey{}).(AccessAuthorizeParam)
 		if ok {
 			v.updateLogTags(result)
 		}

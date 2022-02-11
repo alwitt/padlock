@@ -1,0 +1,68 @@
+---
+role:
+  available_roles:
+    admin:
+      assigned_permissions:
+        - admin
+    reader:
+      assigned_permissions:
+        - read
+    writer:
+      assigned_permissions:
+        - write
+    user:
+      assigned_permissions:
+        - read
+        - write
+        - modify
+
+authorize:
+  hosts:
+    - host: dev-00.testing.org
+      paths:
+        - path_pattern: "^/path1$"
+          methods:
+            - method: GET
+              allowed_permissions:
+                - admin
+                - read
+            - method: POST
+              allowed_permissions:
+                - admin
+                - write
+        - path_pattern: "^/path1/([[:alnum:]]|-)+/?$"
+          methods:
+            - method: GET
+              allowed_permissions:
+                - admin
+                - read
+            - method: PUT
+              allowed_permissions:
+                - admin
+                - modify
+            - method: DELETE
+              allowed_permissions:
+                - admin
+                - modify
+        - path_pattern: "^/path2/[[:alpha:]]+/?$"
+          methods:
+            - method: "*"
+              allowed_permissions:
+                - admin
+    - host: "*"
+      paths:
+        - path_pattern: "^/path3/?$"
+          methods:
+            - method: "*"
+              allowed_permissions:
+                - admin
+        - path_pattern: "^/path3/([[:alnum:]]|-|_)+/?$"
+          methods:
+            - method: GET
+              allowed_permissions:
+                - admin
+                - read
+            - method: PUT
+              allowed_permissions:
+                - admin
+                - modify

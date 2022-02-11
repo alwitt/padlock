@@ -1,0 +1,13 @@
+version: '3'
+
+services:
+  db:
+    container_name: padlock-dev-db
+    hostname: "postgres"
+    image: "postgres:14"
+    ports:
+      - 127.0.0.1:5432:5432
+    environment:
+      - POSTGRES_DB=users
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=password

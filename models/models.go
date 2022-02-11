@@ -316,6 +316,9 @@ createRoles create a set of new roles
 func (c *managementDBClientImpl) createRoles(ctxt context.Context, tx *gorm.DB, roles []string) (
 	[]dbRole, error,
 ) {
+	if len(roles) == 0 {
+		return nil, nil
+	}
 	var results []dbRole
 	logTags := c.GetLogTagsForContext(ctxt)
 	if len(roles) == 0 {
@@ -356,6 +359,9 @@ deleteRoles delete a set of roles
 func (c *managementDBClientImpl) deleteRoles(
 	ctxt context.Context, tx *gorm.DB, roles []string,
 ) error {
+	if len(roles) == 0 {
+		return nil
+	}
 	logTags := c.GetLogTagsForContext(ctxt)
 	return tx.Transaction(func(tx *gorm.DB) error {
 		if tmp := tx.Where("role_name", roles).Delete(dbRole{}); tmp.Error != nil {
