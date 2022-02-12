@@ -3,6 +3,7 @@ package apis
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"time"
@@ -101,7 +102,6 @@ func registerPathPrefix(parent *mux.Router, prefix string, handler MethodHandler
 // APIRestHandler base REST handler
 type APIRestHandler struct {
 	common.Component
-	endOfRequestLog       string
 	offLimitHeadersForLog map[string]bool
 }
 
@@ -134,10 +134,18 @@ func (h APIRestHandler) LoggingMiddleware(next http.HandlerFunc) http.HandlerFun
 			RequestHeaders: make(http.Header),
 		}
 		// File in the request headers
+		userAgentString := "-"
 		for headerField, headerValues := range r.Header {
 			if _, present := h.offLimitHeadersForLog[headerField]; !present {
 				params.RequestHeaders[headerField] = headerValues
+				if headerField == "User-Agent" && len(headerValues) > 0 {
+					userAgentString = fmt.Sprintf("\"%s\"", headerValues[0])
+				}
 			}
+		}
+		requestReferer := "-"
+		if r.Referer() != "" {
+			requestReferer = fmt.Sprintf("\"%s\"", r.Referer())
 		}
 		// Construct new context
 		ctxt := context.WithValue(r.Context(), common.RequestParamKey{}, params)
@@ -147,11 +155,25 @@ func (h APIRestHandler) LoggingMiddleware(next http.HandlerFunc) http.HandlerFun
 		respTimestamp := time.Now()
 		// Log result of request
 		logTags := h.GetLogTagsForContext(ctxt)
+		respLen := respRecorder.Body.Len()
 		log.WithFields(logTags).
 			WithField("response_code", respRecorder.Code).
-			WithField("response_size", respRecorder.Body.Len()).
+			WithField("response_size", respLen).
 			WithField("response_timestamp", respTimestamp.UTC().Format(time.RFC3339Nano)).
-			Warn(h.endOfRequestLog)
+			Warn(
+				fmt.Sprintf(
+					"%s - - [%s] \"%s %s %s\" %d %d %s %s",
+					params.RemoteAddr,
+					params.Timestamp.UTC().Format(time.RFC3339Nano),
+					params.Method,
+					params.URI,
+					params.Proto,
+					respRecorder.Code,
+					respLen,
+					requestReferer,
+					userAgentString,
+				),
+			)
 		// Copy the recorded response to the response writer
 		for k, v := range respRecorder.Header() {
 			rw.Header()[k] = v

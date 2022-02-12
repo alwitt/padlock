@@ -114,8 +114,6 @@ type HTTPServerConfig struct {
 
 // HTTPRequestLogging defines HTTP request logging parameters
 type HTTPRequestLogging struct {
-	// EndOfRequestMessage is the message logged marking end of a request
-	EndOfRequestMessage string `mapstructure:"end_of_request_message" json:"end_of_request_message"`
 	// DoNotLogHeaders is the list of headers to not include in logging metadata
 	DoNotLogHeaders []string `mapstructure:"do_not_log_headers" json:"do_not_log_headers"`
 }
@@ -188,7 +186,6 @@ func InstallDefaultAuthorizationServerConfigValues() {
 	viper.SetDefault("api.user_admin.server_config.read_timeout_sec", 60)
 	viper.SetDefault("api.user_admin.server_config.write_timeout_sec", 60)
 	viper.SetDefault("api.user_admin.server_config.idle_timeout_sec", 600)
-	viper.SetDefault("api.user_admin.logging_config.end_of_request_message", "Request Complete")
 	viper.SetDefault(
 		"api.user_admin.logging_config.do_not_log_headers", []string{
 			"WWW-Authenticate", "Authorization", "Proxy-Authenticate", "Proxy-Authorization",
