@@ -1,6 +1,7 @@
 package apis
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -83,17 +84,15 @@ func (h UserManagementHandler) ListAllRoles(w http.ResponseWriter, r *http.Reque
 
 	roles, err := h.core.ListAllRoles(r.Context())
 	if err != nil {
-		log.WithError(err).WithFields(logTags).Error("Failed to query for all roles in system")
+		msg := "Failed to query for all roles in system"
+		log.WithError(err).WithFields(logTags).Error(msg)
 		respCode = http.StatusInternalServerError
 		response = getStdRESTErrorMsg(
-			r.Context(), http.StatusInternalServerError, "not ready", err.Error(),
+			r.Context(), http.StatusInternalServerError, msg, err.Error(),
 		)
 	} else {
 		respCode = http.StatusOK
-		response = RespListAllRoles{
-			BaseResponse: getStdRESTSuccessMsg(r.Context()),
-			Roles:        roles,
-		}
+		response = RespListAllRoles{BaseResponse: getStdRESTSuccessMsg(r.Context()), Roles: roles}
 	}
 }
 
@@ -106,7 +105,7 @@ func (h UserManagementHandler) ListAllRolesHandler() http.HandlerFunc {
 
 // -----------------------------------------------------------------------
 
-// RespRoleInfo is the API response giving infor on one role
+// RespRoleInfo is the API response giving info on one role
 type RespRoleInfo struct {
 	BaseResponse
 	// Role is info on this role
@@ -122,7 +121,7 @@ type RespRoleInfo struct {
 // @Produce json
 // @Param Padlock-Request-ID header string false "User provided request ID to match against logs"
 // @Param roleName path string true "Role name"
-// @Success 200 {object} RespListAllRoles "success"
+// @Success 200 {object} RespRoleInfo "success"
 // @Failure 400 {string} string "error"
 // @Failure 404 {string} string "error"
 // @Failure 500 {object} StandardResponse "error"
@@ -157,9 +156,7 @@ func (h UserManagementHandler) GetRole(w http.ResponseWriter, r *http.Request) {
 		msg := fmt.Sprintf("role name %s is not valid", roleName)
 		log.WithError(err).WithFields(logTags).Error(msg)
 		respCode = http.StatusBadRequest
-		response = getStdRESTErrorMsg(
-			r.Context(), http.StatusBadRequest, msg, err.Error(),
-		)
+		response = getStdRESTErrorMsg(r.Context(), http.StatusBadRequest, msg, err.Error())
 		return
 	}
 
@@ -168,9 +165,7 @@ func (h UserManagementHandler) GetRole(w http.ResponseWriter, r *http.Request) {
 		msg := fmt.Sprintf("Failed to query for role %s", roleName)
 		log.WithError(err).WithFields(logTags).Error(msg)
 		respCode = http.StatusInternalServerError
-		response = getStdRESTErrorMsg(
-			r.Context(), http.StatusInternalServerError, msg, err.Error(),
-		)
+		response = getStdRESTErrorMsg(r.Context(), http.StatusInternalServerError, msg, err.Error())
 	} else {
 		respCode = http.StatusOK
 		response = RespRoleInfo{
@@ -189,10 +184,398 @@ func (h UserManagementHandler) GetRoleHandler() http.HandlerFunc {
 // ====================================================================================
 // User Management
 
-// ====================================================================================
-// Utilities
+// ReqNewUserParams is the API request with information on a new user
+type ReqNewUserParams struct {
+	// User contains the new user parameters
+	User models.UserConfig `json:"user" validate:"required,dive"`
+	// Roles list the roles to assign to this user
+	Roles []string `json:"roles" validate:"omitempty,dive,role_name"`
+}
+
+// DefineUser godoc
+// @Summary Define new user
+// @Description Define a new user, and optionally assign roles to it
+// @tags Management
+// @Accept json
+// @Produce json
+// @Param Padlock-Request-ID header string false "User provided request ID to match against logs"
+// @Param userInfo body ReqNewUserParams true "New user information"
+// @Success 200 {object} StandardResponse "success"
+// @Failure 400 {string} string "error"
+// @Failure 404 {string} string "error"
+// @Failure 500 {object} StandardResponse "error"
+// @Router /v1/user [post]
+func (h UserManagementHandler) DefineUser(w http.ResponseWriter, r *http.Request) {
+	var respCode int
+	var response interface{}
+	logTags := h.GetLogTagsForContext(r.Context())
+	defer func() {
+		if err := writeRESTResponse(w, r, respCode, response); err != nil {
+			log.WithError(err).WithFields(logTags).Error("Failed to form response")
+		}
+	}()
+
+	var userInfo ReqNewUserParams
+	if err := json.NewDecoder(r.Body).Decode(&userInfo); err != nil {
+		msg := "new user parameters not parsable"
+		log.WithError(err).WithFields(logTags).Error(msg)
+		respCode = http.StatusBadRequest
+		response = getStdRESTErrorMsg(r.Context(), http.StatusBadRequest, msg, err.Error())
+		return
+	}
+	if err := h.validate.Struct(&userInfo); err != nil {
+		msg := "new user parameters not valid"
+		log.WithError(err).WithFields(logTags).Error(msg)
+		respCode = http.StatusBadRequest
+		response = getStdRESTErrorMsg(r.Context(), http.StatusBadRequest, msg, err.Error())
+		return
+	}
+
+	if err := h.core.DefineUser(r.Context(), userInfo.User, userInfo.Roles); err != nil {
+		msg := fmt.Sprintf("Failed to define new user %s", userInfo.User.UserID)
+		log.WithError(err).WithFields(logTags).Error(msg)
+		respCode = http.StatusInternalServerError
+		response = getStdRESTErrorMsg(r.Context(), http.StatusInternalServerError, msg, err.Error())
+	} else {
+		respCode = http.StatusOK
+		response = getStdRESTSuccessMsg(r.Context())
+	}
+}
+
+// DefineUserHandler Wrapper around DefineUser
+func (h UserManagementHandler) DefineUserHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		h.DefineUser(w, r)
+	}
+}
 
 // -----------------------------------------------------------------------
+
+// RespListAllUsers is the API response listing all the users the system is managing
+type RespListAllUsers struct {
+	BaseResponse
+	// Users are the users in system
+	Users []models.UserInfo `json:"roles" validate:"required,dive"`
+}
+
+// ListAllUsers godoc
+// @Summary List all users
+// @Description List all users currently managed by the system
+// @tags Management
+// @Produce json
+// @Param Padlock-Request-ID header string false "User provided request ID to match against logs"
+// @Success 200 {object} RespListAllUsers "success"
+// @Failure 400 {string} string "error"
+// @Failure 404 {string} string "error"
+// @Failure 500 {object} StandardResponse "error"
+// @Router /v1/user [get]
+func (h UserManagementHandler) ListAllUsers(w http.ResponseWriter, r *http.Request) {
+	var respCode int
+	var response interface{}
+	logTags := h.GetLogTagsForContext(r.Context())
+	defer func() {
+		if err := writeRESTResponse(w, r, respCode, response); err != nil {
+			log.WithError(err).WithFields(logTags).Error("Failed to form response")
+		}
+	}()
+
+	users, err := h.core.ListAllUsers(r.Context())
+	if err != nil {
+		msg := "Failed to query for all users in system"
+		log.WithError(err).WithFields(logTags).Error(msg)
+		respCode = http.StatusInternalServerError
+		response = getStdRESTErrorMsg(
+			r.Context(), http.StatusInternalServerError, msg, err.Error(),
+		)
+	} else {
+		respCode = http.StatusOK
+		response = RespListAllUsers{BaseResponse: getStdRESTSuccessMsg(r.Context()), Users: users}
+	}
+}
+
+// ListAllUsersHandler Wrapper around ListAllUsers
+func (h UserManagementHandler) ListAllUsersHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		h.ListAllUsers(w, r)
+	}
+}
+
+// -----------------------------------------------------------------------
+
+// fetchUserID helper function to fetch the user ID from URI path
+func (h UserManagementHandler) fetchUserID(r *http.Request) (string, error) {
+	vars := mux.Vars(r)
+	userID, ok := vars["userID"]
+	if !ok {
+		return "", fmt.Errorf("missing user ID in URI path")
+	}
+	type testStruct struct {
+		UserID string `validate:"required,user_id"`
+	}
+	if err := h.validate.Struct(&testStruct{UserID: userID}); err != nil {
+		return "", err
+	}
+	return userID, nil
+}
+
+// RespUserInfo is the API response giving info on one user
+type RespUserInfo struct {
+	BaseResponse
+	// User is info on this user
+	User users.UserDetailsWithPermission `json:"user" validate:"required,dive"`
+}
+
+// GetUser godoc
+// @Summary Get info on user
+// @Description Query for information regarding one user.
+// @tags Management
+// @Produce json
+// @Param Padlock-Request-ID header string false "User provided request ID to match against logs"
+// @Param userID path string true "User ID"
+// @Success 200 {object} RespUserInfo "success"
+// @Failure 400 {string} string "error"
+// @Failure 404 {string} string "error"
+// @Failure 500 {object} StandardResponse "error"
+// @Router /v1/user/{userID} [get]
+func (h UserManagementHandler) GetUser(w http.ResponseWriter, r *http.Request) {
+	var respCode int
+	var response interface{}
+	logTags := h.GetLogTagsForContext(r.Context())
+	defer func() {
+		if err := writeRESTResponse(w, r, respCode, response); err != nil {
+			log.WithError(err).WithFields(logTags).Error("Failed to form response")
+		}
+	}()
+
+	// Get user ID
+	userID, err := h.fetchUserID(r)
+	if err != nil {
+		msg := "no valid user ID"
+		log.WithError(err).WithFields(logTags).Error(msg)
+		respCode = http.StatusBadRequest
+		response = getStdRESTErrorMsg(r.Context(), http.StatusBadRequest, msg, err.Error())
+		return
+	}
+
+	userInfo, err := h.core.GetUser(r.Context(), userID)
+	if err != nil {
+		msg := fmt.Sprintf("Failed to query for user %s", userID)
+		log.WithError(err).WithFields(logTags).Error(msg)
+		respCode = http.StatusInternalServerError
+		response = getStdRESTErrorMsg(r.Context(), http.StatusInternalServerError, msg, err.Error())
+	} else {
+		respCode = http.StatusOK
+		response = RespUserInfo{BaseResponse: getStdRESTSuccessMsg(r.Context()), User: userInfo}
+	}
+}
+
+// GetUserHandler Wrapper around GetUser
+func (h UserManagementHandler) GetUserHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		h.GetUser(w, r)
+	}
+}
+
+// -----------------------------------------------------------------------
+
+// DeleteUser godoc
+// @Summary Delete user
+// @Description Remove user from the sytem.
+// @tags Management
+// @Produce json
+// @Param Padlock-Request-ID header string false "User provided request ID to match against logs"
+// @Param userID path string true "User ID"
+// @Success 200 {object} StandardResponse "success"
+// @Failure 400 {string} string "error"
+// @Failure 404 {string} string "error"
+// @Failure 500 {object} StandardResponse "error"
+// @Router /v1/user/{userID} [delete]
+func (h UserManagementHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
+	var respCode int
+	var response interface{}
+	logTags := h.GetLogTagsForContext(r.Context())
+	defer func() {
+		if err := writeRESTResponse(w, r, respCode, response); err != nil {
+			log.WithError(err).WithFields(logTags).Error("Failed to form response")
+		}
+	}()
+
+	// Get user ID
+	userID, err := h.fetchUserID(r)
+	if err != nil {
+		msg := "no valid user ID"
+		log.WithError(err).WithFields(logTags).Error(msg)
+		respCode = http.StatusBadRequest
+		response = getStdRESTErrorMsg(r.Context(), http.StatusBadRequest, msg, err.Error())
+		return
+	}
+
+	if err := h.core.DeleteUser(r.Context(), userID); err != nil {
+		msg := fmt.Sprintf("Failed to delete user %s", userID)
+		log.WithError(err).WithFields(logTags).Error(msg)
+		respCode = http.StatusInternalServerError
+		response = getStdRESTErrorMsg(r.Context(), http.StatusInternalServerError, msg, err.Error())
+	} else {
+		respCode = http.StatusOK
+		response = getStdRESTSuccessMsg(r.Context())
+	}
+}
+
+// DeleteUserHandler Wrapper around DeleteUser
+func (h UserManagementHandler) DeleteUserHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		h.DeleteUser(w, r)
+	}
+}
+
+// -----------------------------------------------------------------------
+
+// UpdateUser godoc
+// @Summary Update a user's info
+// @Description Update an existing user's information
+// @tags Management
+// @Accept json
+// @Produce json
+// @Param Padlock-Request-ID header string false "User provided request ID to match against logs"
+// @Param userID path string true "User ID"
+// @Param userInfo body models.UserConfig true "Updated user information"
+// @Success 200 {object} StandardResponse "success"
+// @Failure 400 {string} string "error"
+// @Failure 404 {string} string "error"
+// @Failure 500 {object} StandardResponse "error"
+// @Router /v1/user/{userID} [put]
+func (h UserManagementHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
+	var respCode int
+	var response interface{}
+	logTags := h.GetLogTagsForContext(r.Context())
+	defer func() {
+		if err := writeRESTResponse(w, r, respCode, response); err != nil {
+			log.WithError(err).WithFields(logTags).Error("Failed to form response")
+		}
+	}()
+
+	// Get user ID
+	userID, err := h.fetchUserID(r)
+	if err != nil {
+		msg := "no valid user ID"
+		log.WithError(err).WithFields(logTags).Error(msg)
+		respCode = http.StatusBadRequest
+		response = getStdRESTErrorMsg(r.Context(), http.StatusBadRequest, msg, err.Error())
+		return
+	}
+
+	var userInfo models.UserConfig
+	if err := json.NewDecoder(r.Body).Decode(&userInfo); err != nil {
+		msg := "user parameters not parsable"
+		log.WithError(err).WithFields(logTags).Error(msg)
+		respCode = http.StatusBadRequest
+		response = getStdRESTErrorMsg(r.Context(), http.StatusBadRequest, msg, err.Error())
+		return
+	}
+	if err := h.validate.Struct(&userInfo); err != nil {
+		msg := "user parameters not valid"
+		log.WithError(err).WithFields(logTags).Error(msg)
+		respCode = http.StatusBadRequest
+		response = getStdRESTErrorMsg(r.Context(), http.StatusBadRequest, msg, err.Error())
+		return
+	}
+
+	if err := h.core.UpdateUser(r.Context(), userID, userInfo); err != nil {
+		msg := fmt.Sprintf("Failed to update user %s", userID)
+		log.WithError(err).WithFields(logTags).Error(msg)
+		respCode = http.StatusInternalServerError
+		response = getStdRESTErrorMsg(r.Context(), http.StatusInternalServerError, msg, err.Error())
+	} else {
+		respCode = http.StatusOK
+		response = getStdRESTSuccessMsg(r.Context())
+	}
+}
+
+// UpdateUserHandler Wrapper around UpdateUser
+func (h UserManagementHandler) UpdateUserHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		h.UpdateUser(w, r)
+	}
+}
+
+// -----------------------------------------------------------------------
+
+// ReqNewUserRoles is the new roles to be assigned to the user
+type ReqNewUserRoles struct {
+	// Roles list the roles to assign to this user
+	Roles []string `json:"roles" validate:"omitempty,dive,role_name"`
+}
+
+// UpdateUserRoles godoc
+// @Summary Update a user's roles
+// @Description Change the user's roles to what caller requested
+// @tags Management
+// @Accept json
+// @Produce json
+// @Param Padlock-Request-ID header string false "User provided request ID to match against logs"
+// @Param userID path string true "User ID"
+// @Param roles body ReqNewUserRoles true "User's new roles"
+// @Success 200 {object} StandardResponse "success"
+// @Failure 400 {string} string "error"
+// @Failure 404 {string} string "error"
+// @Failure 500 {object} StandardResponse "error"
+// @Router /v1/user/{userID}/roles [put]
+func (h UserManagementHandler) UpdateUserRoles(w http.ResponseWriter, r *http.Request) {
+	var respCode int
+	var response interface{}
+	logTags := h.GetLogTagsForContext(r.Context())
+	defer func() {
+		if err := writeRESTResponse(w, r, respCode, response); err != nil {
+			log.WithError(err).WithFields(logTags).Error("Failed to form response")
+		}
+	}()
+
+	// Get user ID
+	userID, err := h.fetchUserID(r)
+	if err != nil {
+		msg := "no valid user ID"
+		log.WithError(err).WithFields(logTags).Error(msg)
+		respCode = http.StatusBadRequest
+		response = getStdRESTErrorMsg(r.Context(), http.StatusBadRequest, msg, err.Error())
+		return
+	}
+
+	var newRoles ReqNewUserRoles
+	if err := json.NewDecoder(r.Body).Decode(&newRoles); err != nil {
+		msg := "new role parameters not parsable"
+		log.WithError(err).WithFields(logTags).Error(msg)
+		respCode = http.StatusBadRequest
+		response = getStdRESTErrorMsg(r.Context(), http.StatusBadRequest, msg, err.Error())
+		return
+	}
+	if err := h.validate.Struct(&newRoles); err != nil {
+		msg := "new role parameters not valid"
+		log.WithError(err).WithFields(logTags).Error(msg)
+		respCode = http.StatusBadRequest
+		response = getStdRESTErrorMsg(r.Context(), http.StatusBadRequest, msg, err.Error())
+		return
+	}
+
+	if err := h.core.SetUserRoles(r.Context(), userID, newRoles.Roles); err != nil {
+		msg := fmt.Sprintf("Failed to set user %s roles", userID)
+		log.WithError(err).WithFields(logTags).Error(msg)
+		respCode = http.StatusInternalServerError
+		response = getStdRESTErrorMsg(r.Context(), http.StatusInternalServerError, msg, err.Error())
+	} else {
+		respCode = http.StatusOK
+		response = getStdRESTSuccessMsg(r.Context())
+	}
+}
+
+// UpdateUserRolesHandler Wrapper around UpdateUserRoles
+func (h UserManagementHandler) UpdateUserRolesHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		h.UpdateUserRoles(w, r)
+	}
+}
+
+// ====================================================================================
+// Utilities
 
 // Alive godoc
 // @Summary User Management API readiness check

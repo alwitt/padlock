@@ -321,9 +321,6 @@ func (c *managementDBClientImpl) createRoles(ctxt context.Context, tx *gorm.DB, 
 	}
 	var results []dbRole
 	logTags := c.GetLogTagsForContext(ctxt)
-	if len(roles) == 0 {
-		return nil, nil
-	}
 	return results, tx.Transaction(func(tx *gorm.DB) error {
 		entries := []dbRole{}
 		for _, newRole := range roles {
@@ -590,6 +587,11 @@ func (c *managementDBClientImpl) UpdateUser(
 	ctxt context.Context, id string, newConfig UserConfig,
 ) error {
 	logTags := c.GetLogTagsForContext(ctxt)
+	if id != newConfig.UserID {
+		err := fmt.Errorf("update details contains different ID")
+		log.WithError(err).WithFields(logTags).Errorf("Updated entry for user %s is invalid", id)
+		return err
+	}
 	return c.db.Transaction(func(tx *gorm.DB) error {
 		userEntry, err := c.fetchUser(tx, id)
 		if err != nil {
