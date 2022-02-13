@@ -34,12 +34,35 @@ func BuildUserManagementServer(
 
 	router := mux.NewRouter()
 	mainRouter := registerPathPrefix(router, httpCfg.Endpoints.PathPrefix, nil)
+	v1Router := registerPathPrefix(mainRouter, "/v1", nil)
+
+	// Role management
+	roleRouter := registerPathPrefix(v1Router, "/role", map[string]http.HandlerFunc{
+		"get": httpHandler.ListAllRolesHandler(),
+	})
+	_ = registerPathPrefix(roleRouter, "/{roleName}", map[string]http.HandlerFunc{
+		"get": httpHandler.GetRoleHandler(),
+	})
+
+	// User management
+	userRouter := registerPathPrefix(v1Router, "/user", map[string]http.HandlerFunc{
+		"post": httpHandler.DefineUserHandler(),
+		"get":  httpHandler.ListAllUsersHandler(),
+	})
+	perUserRouter := registerPathPrefix(userRouter, "/{userID}", map[string]http.HandlerFunc{
+		"get":    httpHandler.GetUserHandler(),
+		"delete": httpHandler.DeleteUserHandler(),
+		"put":    httpHandler.UpdateUserHandler(),
+	})
+	_ = registerPathPrefix(perUserRouter, "/roles", map[string]http.HandlerFunc{
+		"put": httpHandler.UpdateUserRolesHandler(),
+	})
 
 	// Health check
-	_ = registerPathPrefix(mainRouter, "/v1/alive", map[string]http.HandlerFunc{
+	_ = registerPathPrefix(v1Router, "/alive", map[string]http.HandlerFunc{
 		"get": httpHandler.AliveHandler(),
 	})
-	_ = registerPathPrefix(mainRouter, "/v1/ready", map[string]http.HandlerFunc{
+	_ = registerPathPrefix(v1Router, "/ready", map[string]http.HandlerFunc{
 		"get": httpHandler.ReadyHandler(),
 	})
 

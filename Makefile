@@ -19,6 +19,11 @@ test: .prepare ## Run unittests
 build: lint ## Build the application
 	@go build -o padlock .
 
+.PHONY: openapi
+openapi: .prepare ## Generate the OpenAPI spec
+	@swag init
+	@rm docs/docs.go
+
 .PHONY: compose
 compose: ## Prepare the development docker stack
 	@docker-compose -f docker/docker-compose.yaml up -d
@@ -32,6 +37,7 @@ clean: ## Clean up development environment
 	@pre-commit install
 	@pre-commit install-hooks
 	@GO111MODULE=on go install github.com/go-critic/go-critic/cmd/gocritic@v0.5.4
+	@GO111MODULE=on go get -v -u github.com/swaggo/swag/cmd/swag
 	@touch .prepare
 
 help: ## Display this help screen

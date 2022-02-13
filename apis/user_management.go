@@ -70,7 +70,7 @@ type RespListAllRoles struct {
 // @Success 200 {object} RespListAllRoles "success"
 // @Failure 400 {string} string "error"
 // @Failure 404 {string} string "error"
-// @Failure 500 {object} StandardResponse "error"
+// @Failure 500 {object} BaseResponse "error"
 // @Router /v1/role [get]
 func (h UserManagementHandler) ListAllRoles(w http.ResponseWriter, r *http.Request) {
 	var respCode int
@@ -124,7 +124,7 @@ type RespRoleInfo struct {
 // @Success 200 {object} RespRoleInfo "success"
 // @Failure 400 {string} string "error"
 // @Failure 404 {string} string "error"
-// @Failure 500 {object} StandardResponse "error"
+// @Failure 500 {object} BaseResponse "error"
 // @Router /v1/role/{roleName} [get]
 func (h UserManagementHandler) GetRole(w http.ResponseWriter, r *http.Request) {
 	var respCode int
@@ -200,10 +200,10 @@ type ReqNewUserParams struct {
 // @Produce json
 // @Param Padlock-Request-ID header string false "User provided request ID to match against logs"
 // @Param userInfo body ReqNewUserParams true "New user information"
-// @Success 200 {object} StandardResponse "success"
+// @Success 200 {object} BaseResponse "success"
 // @Failure 400 {string} string "error"
 // @Failure 404 {string} string "error"
-// @Failure 500 {object} StandardResponse "error"
+// @Failure 500 {object} BaseResponse "error"
 // @Router /v1/user [post]
 func (h UserManagementHandler) DefineUser(w http.ResponseWriter, r *http.Request) {
 	var respCode int
@@ -255,7 +255,7 @@ func (h UserManagementHandler) DefineUserHandler() http.HandlerFunc {
 type RespListAllUsers struct {
 	BaseResponse
 	// Users are the users in system
-	Users []models.UserInfo `json:"roles" validate:"required,dive"`
+	Users []models.UserInfo `json:"users" validate:"required,dive"`
 }
 
 // ListAllUsers godoc
@@ -267,7 +267,7 @@ type RespListAllUsers struct {
 // @Success 200 {object} RespListAllUsers "success"
 // @Failure 400 {string} string "error"
 // @Failure 404 {string} string "error"
-// @Failure 500 {object} StandardResponse "error"
+// @Failure 500 {object} BaseResponse "error"
 // @Router /v1/user [get]
 func (h UserManagementHandler) ListAllUsers(w http.ResponseWriter, r *http.Request) {
 	var respCode int
@@ -335,7 +335,7 @@ type RespUserInfo struct {
 // @Success 200 {object} RespUserInfo "success"
 // @Failure 400 {string} string "error"
 // @Failure 404 {string} string "error"
-// @Failure 500 {object} StandardResponse "error"
+// @Failure 500 {object} BaseResponse "error"
 // @Router /v1/user/{userID} [get]
 func (h UserManagementHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 	var respCode int
@@ -385,10 +385,10 @@ func (h UserManagementHandler) GetUserHandler() http.HandlerFunc {
 // @Produce json
 // @Param Padlock-Request-ID header string false "User provided request ID to match against logs"
 // @Param userID path string true "User ID"
-// @Success 200 {object} StandardResponse "success"
+// @Success 200 {object} BaseResponse "success"
 // @Failure 400 {string} string "error"
 // @Failure 404 {string} string "error"
-// @Failure 500 {object} StandardResponse "error"
+// @Failure 500 {object} BaseResponse "error"
 // @Router /v1/user/{userID} [delete]
 func (h UserManagementHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	var respCode int
@@ -439,10 +439,10 @@ func (h UserManagementHandler) DeleteUserHandler() http.HandlerFunc {
 // @Param Padlock-Request-ID header string false "User provided request ID to match against logs"
 // @Param userID path string true "User ID"
 // @Param userInfo body models.UserConfig true "Updated user information"
-// @Success 200 {object} StandardResponse "success"
+// @Success 200 {object} BaseResponse "success"
 // @Failure 400 {string} string "error"
 // @Failure 404 {string} string "error"
-// @Failure 500 {object} StandardResponse "error"
+// @Failure 500 {object} BaseResponse "error"
 // @Router /v1/user/{userID} [put]
 func (h UserManagementHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	var respCode int
@@ -515,10 +515,10 @@ type ReqNewUserRoles struct {
 // @Param Padlock-Request-ID header string false "User provided request ID to match against logs"
 // @Param userID path string true "User ID"
 // @Param roles body ReqNewUserRoles true "User's new roles"
-// @Success 200 {object} StandardResponse "success"
+// @Success 200 {object} BaseResponse "success"
 // @Failure 400 {string} string "error"
 // @Failure 404 {string} string "error"
-// @Failure 500 {object} StandardResponse "error"
+// @Failure 500 {object} BaseResponse "error"
 // @Router /v1/user/{userID}/roles [put]
 func (h UserManagementHandler) UpdateUserRoles(w http.ResponseWriter, r *http.Request) {
 	var respCode int
@@ -583,10 +583,10 @@ func (h UserManagementHandler) UpdateUserRolesHandler() http.HandlerFunc {
 // @tags Management
 // @Produce json
 // @Param Padlock-Request-ID header string false "User provided request ID to match against logs"
-// @Success 200 {object} StandardResponse "success"
+// @Success 200 {object} BaseResponse "success"
 // @Failure 400 {string} string "error"
 // @Failure 404 {string} string "error"
-// @Failure 500 {object} StandardResponse "error"
+// @Failure 500 {object} BaseResponse "error"
 // @Router /v1/alive [get]
 func (h UserManagementHandler) Alive(w http.ResponseWriter, r *http.Request) {
 	logTags := h.GetLogTagsForContext(r.Context())
@@ -610,10 +610,10 @@ func (h UserManagementHandler) AliveHandler() http.HandlerFunc {
 // @tags Management
 // @Produce json
 // @Param Padlock-Request-ID header string false "User provided request ID to match against logs"
-// @Success 200 {object} StandardResponse "success"
+// @Success 200 {object} BaseResponse "success"
 // @Failure 400 {string} string "error"
 // @Failure 404 {string} string "error"
-// @Failure 500 {object} StandardResponse "error"
+// @Failure 500 {object} BaseResponse "error"
 // @Router /v1/ready [get]
 func (h UserManagementHandler) Ready(w http.ResponseWriter, r *http.Request) {
 	var respCode int
