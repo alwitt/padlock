@@ -17,6 +17,8 @@ role:
         - modify
 
 authorize:
+  unknown_user:
+    auto_add: true
   request_param_location:
     request_host: X-Forwarded-Host
     request_path: X-Forwarded-Uri

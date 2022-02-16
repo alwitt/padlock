@@ -23,8 +23,8 @@ type AuthorizationHandler struct {
 	requestMatcher match.RequestMatch
 }
 
-// DefineAuthorizationHandler define a new AuthorizationHandler instance
-func DefineAuthorizationHandler(
+// defineAuthorizationHandler define a new AuthorizationHandler instance
+func defineAuthorizationHandler(
 	logConfig common.HTTPRequestLogging,
 	core users.Management,
 	matcher match.RequestMatch,

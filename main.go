@@ -13,6 +13,7 @@ import (
 
 	"github.com/alwitt/padlock/apis"
 	"github.com/alwitt/padlock/common"
+	"github.com/alwitt/padlock/match"
 	"github.com/alwitt/padlock/models"
 	"github.com/alwitt/padlock/users"
 	"github.com/apex/log"
@@ -246,6 +247,42 @@ func mainApplication(c *cli.Context) error {
 			defer wg.Done()
 			if err := svr.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 				log.WithError(err).Error("User Management API HTTP Server Failure")
+			}
+		}()
+	}
+
+	if appCfg.API.Authorize.Enabled {
+		// Build request matcher
+		matcherSpec, err := match.ConvertConfigToTargetGroupSpec(&appCfg.Authorize)
+		if err != nil {
+			log.WithError(err).WithFields(logTags).Errorf("Unable to define request matcher spec")
+			return err
+		}
+		matcher, err := match.DefineTargetGroupMatcher(matcherSpec)
+		if err != nil {
+			log.WithError(err).WithFields(logTags).Errorf("Unable to define request matcher")
+			return err
+		}
+		svr, err := apis.BuildAuthorizationServer(
+			appCfg.API.Authorize,
+			userManager,
+			matcher,
+			customValidator,
+			appCfg.Authorize.RequestParamLocation,
+			appCfg.Authorize.UnknownUser,
+		)
+		if err != nil {
+			log.WithError(err).WithFields(logTags).
+				Errorf("Unable to define Authorization API HTTP Server")
+			return err
+		}
+		apiServers["Authorization"] = svr
+		// Start the server
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			if err := svr.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+				log.WithError(err).Error("Authorization API HTTP Server Failure")
 			}
 		}()
 	}

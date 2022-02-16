@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/alwitt/padlock/common"
+	"github.com/alwitt/padlock/match"
 	"github.com/alwitt/padlock/users"
 	"github.com/gorilla/mux"
 	"golang.org/x/net/http2"
@@ -21,6 +22,7 @@ BuildUserManagementServer creates the user management server
  @param httpCfg common.HTTPConfig - HTTP server config
  @param manager users.Management - core user management logic block
  @param validateSupport common.CustomFieldValidator - customer validator support object
+ @return the http.Server
 */
 func BuildUserManagementServer(
 	httpCfg common.HTTPConfig,
@@ -69,6 +71,77 @@ func BuildUserManagementServer(
 	// Add logging middleware
 	router.Use(func(next http.Handler) http.Handler {
 		return httpHandler.LoggingMiddleware(next.ServeHTTP)
+	})
+
+	serverListen := fmt.Sprintf(
+		"%s:%d", httpCfg.Server.ListenOn, httpCfg.Server.Port,
+	)
+	httpSrv := &http.Server{
+		Addr:         serverListen,
+		WriteTimeout: time.Second * time.Duration(httpCfg.Server.WriteTimeout),
+		ReadTimeout:  time.Second * time.Duration(httpCfg.Server.ReadTimeout),
+		IdleTimeout:  time.Second * time.Duration(httpCfg.Server.IdleTimeout),
+		Handler:      h2c.NewHandler(router, &http2.Server{}),
+	}
+
+	return httpSrv, nil
+}
+
+// ====================================================================================
+// Authorization Server
+
+/*
+BuildAuthorizationServer creates the authorization server
+
+ @param httpCfg common.HTTPConfig - HTTP server config
+ @param manager users.Management - core user management logic block
+ @param requestMatcher match.RequestMatch - the request matcher
+ @param validateSupport common.CustomFieldValidator - customer validator support object
+ @param checkHeaders common.AuthorizeRequestParamLocConfig - param on which headers to search for
+ parameters regarding a REST API to authorize.
+ @param forUnknownUser common.UnknownUserActionConfig - param on how to handle new unknown user
+ @return the http.Server
+*/
+func BuildAuthorizationServer(
+	httpCfg common.HTTPConfig,
+	manager users.Management,
+	requestMatcher match.RequestMatch,
+	validateSupport common.CustomFieldValidator,
+	checkHeaders common.AuthorizeRequestParamLocConfig,
+	forUnknownUser common.UnknownUserActionConfig,
+) (*http.Server, error) {
+	httpHandler, err := defineAuthorizationHandler(
+		httpCfg.Logging, manager, requestMatcher, validateSupport, checkHeaders, forUnknownUser,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	router := mux.NewRouter()
+	mainRouter := registerPathPrefix(router, httpCfg.Endpoints.PathPrefix, nil)
+	v1Router := registerPathPrefix(mainRouter, "/v1", nil)
+
+	// Authorize
+	_ = registerPathPrefix(v1Router, "/allow", map[string]http.HandlerFunc{
+		"get": httpHandler.AllowHandler(),
+	})
+
+	// Health check
+	_ = registerPathPrefix(v1Router, "/alive", map[string]http.HandlerFunc{
+		"get": httpHandler.AliveHandler(),
+	})
+	_ = registerPathPrefix(v1Router, "/ready", map[string]http.HandlerFunc{
+		"get": httpHandler.ReadyHandler(),
+	})
+
+	// Add logging middleware
+	router.Use(func(next http.Handler) http.Handler {
+		return httpHandler.LoggingMiddleware(next.ServeHTTP)
+	})
+
+	// Add request parameter extract middleware
+	router.Use(func(next http.Handler) http.Handler {
+		return httpHandler.ParamReadMiddleware(next.ServeHTTP)
 	})
 
 	serverListen := fmt.Sprintf(

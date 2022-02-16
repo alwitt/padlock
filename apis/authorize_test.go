@@ -132,7 +132,7 @@ func TestAuthorization(t *testing.T) {
 	// --------------------------------------------------------------------------
 	// First test without auto add
 
-	uut, err := DefineAuthorizationHandler(
+	uut, err := defineAuthorizationHandler(
 		common.HTTPRequestLogging{DoNotLogHeaders: []string{}},
 		mgmtCore,
 		restRequestMatcher,
@@ -262,7 +262,7 @@ func TestAuthorization(t *testing.T) {
 	// --------------------------------------------------------------------------
 	// Then test with auto add
 
-	uut, err = DefineAuthorizationHandler(
+	uut, err = defineAuthorizationHandler(
 		common.HTTPRequestLogging{DoNotLogHeaders: []string{}},
 		mgmtCore,
 		restRequestMatcher,
