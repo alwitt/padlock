@@ -23,6 +23,11 @@ type AccessAuthorizeParam struct {
 	Host string `json:"host" validate:"required,fqdn"`
 }
 
+// String implements toString for object
+func (i *AccessAuthorizeParam) String() string {
+	return fmt.Sprintf("%s http://%s%s", i.Method, i.Host, i.Path)
+}
+
 // updateLogTags updates Apex log.Fields map with values from the parameter
 func (i *AccessAuthorizeParam) updateLogTags(tags log.Fields) {
 	tags["auth_user_id"] = i.UserID

@@ -17,6 +17,15 @@ role:
         - modify
 
 authorize:
+  request_param_location:
+    request_host: X-Forwarded-Host
+    request_path: X-Forwarded-Uri
+    request_method: X-Forwarded-Method
+    requester_userid: X-Caller-UserID
+    requester_username: X-Caller-Username
+    requester_firstname: X-Caller-Firstname
+    requester_lastname: X-Caller-Lastname
+    requester_email: X-Caller-Email
   hosts:
     - host: dev-00.testing.org
       paths:

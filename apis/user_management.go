@@ -68,7 +68,7 @@ type RespListAllRoles struct {
 // @Produce json
 // @Param Padlock-Request-ID header string false "User provided request ID to match against logs"
 // @Success 200 {object} RespListAllRoles "success"
-// @Failure 400 {string} string "error"
+// @Failure 400 {string} BaseResponse "error"
 // @Failure 404 {string} string "error"
 // @Failure 500 {object} BaseResponse "error"
 // @Router /v1/role [get]
@@ -122,7 +122,7 @@ type RespRoleInfo struct {
 // @Param Padlock-Request-ID header string false "User provided request ID to match against logs"
 // @Param roleName path string true "Role name"
 // @Success 200 {object} RespRoleInfo "success"
-// @Failure 400 {string} string "error"
+// @Failure 400 {string} BaseResponse "error"
 // @Failure 404 {string} string "error"
 // @Failure 500 {object} BaseResponse "error"
 // @Router /v1/role/{roleName} [get]
@@ -140,6 +140,7 @@ func (h UserManagementHandler) GetRole(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	roleName, ok := vars["roleName"]
 	if !ok {
+		log.WithFields(logTags).Errorf("Role name missing")
 		respCode = http.StatusBadRequest
 		response = getStdRESTErrorMsg(
 			r.Context(),
@@ -201,7 +202,7 @@ type ReqNewUserParams struct {
 // @Param Padlock-Request-ID header string false "User provided request ID to match against logs"
 // @Param userInfo body ReqNewUserParams true "New user information"
 // @Success 200 {object} BaseResponse "success"
-// @Failure 400 {string} string "error"
+// @Failure 400 {string} BaseResponse "error"
 // @Failure 404 {string} string "error"
 // @Failure 500 {object} BaseResponse "error"
 // @Router /v1/user [post]
@@ -265,7 +266,7 @@ type RespListAllUsers struct {
 // @Produce json
 // @Param Padlock-Request-ID header string false "User provided request ID to match against logs"
 // @Success 200 {object} RespListAllUsers "success"
-// @Failure 400 {string} string "error"
+// @Failure 400 {string} BaseResponse "error"
 // @Failure 404 {string} string "error"
 // @Failure 500 {object} BaseResponse "error"
 // @Router /v1/user [get]
@@ -333,7 +334,7 @@ type RespUserInfo struct {
 // @Param Padlock-Request-ID header string false "User provided request ID to match against logs"
 // @Param userID path string true "User ID"
 // @Success 200 {object} RespUserInfo "success"
-// @Failure 400 {string} string "error"
+// @Failure 400 {string} BaseResponse "error"
 // @Failure 404 {string} string "error"
 // @Failure 500 {object} BaseResponse "error"
 // @Router /v1/user/{userID} [get]
@@ -386,7 +387,7 @@ func (h UserManagementHandler) GetUserHandler() http.HandlerFunc {
 // @Param Padlock-Request-ID header string false "User provided request ID to match against logs"
 // @Param userID path string true "User ID"
 // @Success 200 {object} BaseResponse "success"
-// @Failure 400 {string} string "error"
+// @Failure 400 {string} BaseResponse "error"
 // @Failure 404 {string} string "error"
 // @Failure 500 {object} BaseResponse "error"
 // @Router /v1/user/{userID} [delete]
@@ -440,7 +441,7 @@ func (h UserManagementHandler) DeleteUserHandler() http.HandlerFunc {
 // @Param userID path string true "User ID"
 // @Param userInfo body models.UserConfig true "Updated user information"
 // @Success 200 {object} BaseResponse "success"
-// @Failure 400 {string} string "error"
+// @Failure 400 {string} BaseResponse "error"
 // @Failure 404 {string} string "error"
 // @Failure 500 {object} BaseResponse "error"
 // @Router /v1/user/{userID} [put]
@@ -516,7 +517,7 @@ type ReqNewUserRoles struct {
 // @Param userID path string true "User ID"
 // @Param roles body ReqNewUserRoles true "User's new roles"
 // @Success 200 {object} BaseResponse "success"
-// @Failure 400 {string} string "error"
+// @Failure 400 {string} BaseResponse "error"
 // @Failure 404 {string} string "error"
 // @Failure 500 {object} BaseResponse "error"
 // @Router /v1/user/{userID}/roles [put]
@@ -578,13 +579,13 @@ func (h UserManagementHandler) UpdateUserRolesHandler() http.HandlerFunc {
 // Utilities
 
 // Alive godoc
-// @Summary User Management API readiness check
+// @Summary User Management API liveness check
 // @Description Will return success to indicate user management REST API module is live
 // @tags Management
 // @Produce json
 // @Param Padlock-Request-ID header string false "User provided request ID to match against logs"
 // @Success 200 {object} BaseResponse "success"
-// @Failure 400 {string} string "error"
+// @Failure 400 {string} BaseResponse "error"
 // @Failure 404 {string} string "error"
 // @Failure 500 {object} BaseResponse "error"
 // @Router /v1/alive [get]
@@ -611,7 +612,7 @@ func (h UserManagementHandler) AliveHandler() http.HandlerFunc {
 // @Produce json
 // @Param Padlock-Request-ID header string false "User provided request ID to match against logs"
 // @Success 200 {object} BaseResponse "success"
-// @Failure 400 {string} string "error"
+// @Failure 400 {string} BaseResponse "error"
 // @Failure 404 {string} string "error"
 // @Failure 500 {object} BaseResponse "error"
 // @Router /v1/ready [get]

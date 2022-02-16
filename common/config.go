@@ -80,12 +80,52 @@ type HostAuthorizationConfig struct {
 	TargetPaths []PathAuthorizationConfig `mapstructure:"paths" json:"paths" validate:"required,gte=1,dive"`
 }
 
+// AuthorizeRequestParamLocConfig defines which HTTP headers to parse to get the parameters of
+// a REST request to authorize. It is expected that the component (i.e. a proxy) requesting
+// authorization for a request will provide the needed values through these headers when it
+// contacts the authorization server.
+type AuthorizeRequestParamLocConfig struct {
+	// Host is the host / FQDN of the request being authorized
+	Host string `mapstructure:"request_host" json:"request_host" validate:"required"`
+	// Path is the URI path of the request being authorized
+	Path string `mapstructure:"request_path" json:"request_path" validate:"required"`
+	// Method is the HTTP method of the request being authorized
+	Method string `mapstructure:"request_method" json:"request_method" validate:"required"`
+	// UserID is the user ID of the user making the request
+	UserID string `mapstructure:"requester_userid" json:"requester_userid" validate:"required"`
+	// Username is the username of the user making the request
+	Username string `mapstructure:"requester_username" json:"requester_username" validate:"required"`
+	// FirstName is the first name / given name of the user making the request
+	FirstName string `mapstructure:"requester_firstname" json:"requester_firstname" validate:"required"`
+	// LastName is the last name / surname / family name of the user making the request
+	LastName string `mapstructure:"requester_lastname" json:"requester_lastname" validate:"required"`
+	// Email is the email of the user making the request
+	Email string `mapstructure:"requester_email" json:"requester_email" validate:"required"`
+}
+
+// UnknownUserActionConfig defines what actions to take when the request being authorized is made
+// by an unknown user
+type UnknownUserActionConfig struct {
+	// AutoAdd set whether automatically record the unknown user during the authorization process
+	//
+	// Note: This can be dangerous as it could lead to denial-of-service due to resource exhaustion.
+	AutoAdd bool `mapstructure:"auto_add" json:"auto_add"`
+}
+
 // AuthorizationConfig describes the REST API authorization config
 type AuthorizationConfig struct {
 	// TargetHosts is the list of TargetHostSpec supported by the server. The host of "*"
 	// functions as a wildcard. If a request host is not explicitly listed here, it may match
 	// against "*" if that was defined.
 	TargetHosts []HostAuthorizationConfig `mapstructure:"hosts" json:"hosts" validate:"required,gte=1,dive"`
+	// RequestParamLocation sets which HTTP headers to parse to get the parameters of
+	// a REST request to authorize. It is expected that the component (i.e. a proxy) requesting
+	// authorization for a request will provide the needed values through these headers when it
+	// contacts the authorization server.
+	RequestParamLocation AuthorizeRequestParamLocConfig `mapstructure:"request_param_location" json:"request_param_location" validate:"required,dive"`
+	// UnknownUser sets what actions to take when the request being authorized is made
+	// by an unknown user
+	UnknownUser UnknownUserActionConfig `mapstructure:"unknown_user" json:"unknown_user" validate:"required,dive"`
 }
 
 // ===============================================================================
@@ -140,6 +180,8 @@ type HTTPConfig struct {
 type APIConfig struct {
 	// UserAdmin defines user admin API related configs
 	UserAdmin HTTPConfig `mapstructure:"user_admin" json:"user_admin" validate:"required,dive"`
+	// Authorize defines the authorization API related configs
+	Authorize HTTPConfig `mapstructure:"authorization" json:"authorization" validate:"required,dive"`
 }
 
 // ===============================================================================
@@ -179,7 +221,7 @@ func InstallDefaultAuthorizationServerConfigValues() {
 	viper.SetDefault("common.custom_validation_regex.role_name", "^([[:alnum:]]|-|_)+$")
 	viper.SetDefault("common.custom_validation_regex.permission", "^([[:alnum:]]|-|_|:)+$")
 
-	// Default HTTP REST Responder API config
+	// Default user management HTTP REST API Responder config
 	viper.SetDefault("api.user_admin.enabled", true)
 	viper.SetDefault("api.user_admin.server_config.listen_on", "0.0.0.0")
 	viper.SetDefault("api.user_admin.server_config.listen_port", 3000)
@@ -192,4 +234,28 @@ func InstallDefaultAuthorizationServerConfigValues() {
 		},
 	)
 	viper.SetDefault("api.user_admin.endpoint_config.path_prefix", "/")
+
+	// Default authorization HTTP REST API Responder config
+	viper.SetDefault("api.authorization.enabled", true)
+	viper.SetDefault("api.authorization.server_config.listen_on", "0.0.0.0")
+	viper.SetDefault("api.authorization.server_config.listen_port", 3001)
+	viper.SetDefault("api.authorization.server_config.read_timeout_sec", 60)
+	viper.SetDefault("api.authorization.server_config.write_timeout_sec", 60)
+	viper.SetDefault("api.authorization.server_config.idle_timeout_sec", 600)
+	viper.SetDefault(
+		"api.authorization.logging_config.do_not_log_headers", []string{
+			"WWW-Authenticate", "Authorization", "Proxy-Authenticate", "Proxy-Authorization",
+		},
+	)
+	viper.SetDefault("api.authorization.endpoint_config.path_prefix", "/")
+
+	// Default HTTP headers to parse to get the parameters of the request being authorized
+	viper.SetDefault("authorize.request_param_location.request_host", "X-Forwarded-Host")
+	viper.SetDefault("authorize.request_param_location.request_path", "X-Forwarded-Uri")
+	viper.SetDefault("authorize.request_param_location.request_method", "X-Forwarded-Method")
+	viper.SetDefault("authorize.request_param_location.requester_userid", "X-Caller-UserID")
+	viper.SetDefault("authorize.request_param_location.requester_username", "X-Caller-Username")
+	viper.SetDefault("authorize.request_param_location.requester_firstname", "X-Caller-Firstname")
+	viper.SetDefault("authorize.request_param_location.requester_lastname", "X-Caller-Lastname")
+	viper.SetDefault("authorize.request_param_location.requester_email", "X-Caller-Email")
 }

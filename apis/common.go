@@ -133,7 +133,7 @@ func (h APIRestHandler) LoggingMiddleware(next http.HandlerFunc) http.HandlerFun
 			Timestamp:      time.Now(),
 			RequestHeaders: make(http.Header),
 		}
-		// File in the request headers
+		// Fill in the request headers
 		userAgentString := "-"
 		for headerField, headerValues := range r.Header {
 			if _, present := h.offLimitHeadersForLog[headerField]; !present {
