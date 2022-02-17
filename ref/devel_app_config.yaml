@@ -16,6 +16,10 @@ role:
         - write
         - modify
 
+api:
+  authentication:
+    enabled: true
+
 authorize:
   unknown_user:
     auto_add: true

@@ -63,14 +63,15 @@ func getStdRESTErrorMsg(
 
 // writeRESTResponse writes a REST response
 func writeRESTResponse(
-	w http.ResponseWriter, r *http.Request, respCode int, resp interface{},
+	w http.ResponseWriter,
+	r *http.Request,
+	respCode int,
+	resp interface{},
+	respHeaders map[string]string,
 ) error {
 	w.Header().Set("content-type", "application/json")
-	if r.Context().Value(common.RequestParamKey{}) != nil {
-		v, ok := r.Context().Value(common.RequestParamKey{}).(common.RequestParam)
-		if ok {
-			w.Header().Add("Padlock-Request-ID", v.ID)
-		}
+	for name, value := range respHeaders {
+		w.Header().Set(name, value)
 	}
 	w.WriteHeader(respCode)
 	t, err := json.Marshal(resp)
@@ -178,6 +179,7 @@ func (h APIRestHandler) LoggingMiddleware(next http.HandlerFunc) http.HandlerFun
 		for k, v := range respRecorder.Header() {
 			rw.Header()[k] = v
 		}
+		rw.Header().Set("Padlock-Request-ID", reqID)
 		rw.WriteHeader(respRecorder.Code)
 		if _, err := respRecorder.Body.WriteTo(rw); err != nil {
 			log.WithError(err).WithFields(logTags).Errorf("Failed to transfer response to actual writer")

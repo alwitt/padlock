@@ -182,6 +182,8 @@ type APIConfig struct {
 	UserAdmin HTTPConfig `mapstructure:"user_admin" json:"user_admin" validate:"required,dive"`
 	// Authorize defines the authorization API related configs
 	Authorize HTTPConfig `mapstructure:"authorization" json:"authorization" validate:"required,dive"`
+	// Authenticate defines the authentication API related configs
+	Authenticate HTTPConfig `mapstructure:"authentication" json:"authentication" validate:"required,dive"`
 }
 
 // ===============================================================================
@@ -190,13 +192,32 @@ type APIConfig struct {
 // DatabaseConfig database related configuration
 type DatabaseConfig struct {
 	// Host is the DB host
-	Host string `mapstructure:"host" json:"host" validate:"required"`
+	Host string `json:"host" validate:"required"`
 	// DB is the database name
 	DB string `json:"db" validate:"required"`
 	// User is the database user
 	User string `json:"user" validate:"required"`
 	// Password is the user password
 	Password *string `json:"pw,omitempty"`
+}
+
+// ===============================================================================
+// OpenID Providers
+
+// OpenIDIssuerConfig defines connection parameters to one OpenID issuer
+type OpenIDIssuerConfig struct {
+	// Type defines the OpenID issuer type.
+	//
+	// Currently targeting only KeyCloak. Will allow other types as support is added.
+	Type string `json:"type" validate:"required,oneof=keycloak"`
+	// Issuer is the URL of the OpenID issuer
+	Issuer string `json:"issuer" validate:"required,url"`
+	// ClientID is the client ID to use during token introspection
+	ClientID string `json:"client_id" validate:"required"`
+	// ClientCred is the client credential to use during token introspection
+	ClientCred string `json:"client_cred" validate:"required"`
+	// CustomCA if provided, is the custom CA to use for the TLS session with this issuer.
+	CustomCA *string `json:"http_tlc_ca,omitempty" validate:"omitempty,file"`
 }
 
 // ===============================================================================
@@ -248,6 +269,20 @@ func InstallDefaultAuthorizationServerConfigValues() {
 		},
 	)
 	viper.SetDefault("api.authorization.endpoint_config.path_prefix", "/")
+
+	// Default authentication HTTP REST API Responder config
+	viper.SetDefault("api.authentication.enabled", false)
+	viper.SetDefault("api.authentication.server_config.listen_on", "0.0.0.0")
+	viper.SetDefault("api.authentication.server_config.listen_port", 3002)
+	viper.SetDefault("api.authentication.server_config.read_timeout_sec", 60)
+	viper.SetDefault("api.authentication.server_config.write_timeout_sec", 60)
+	viper.SetDefault("api.authentication.server_config.idle_timeout_sec", 600)
+	viper.SetDefault(
+		"api.authentication.logging_config.do_not_log_headers", []string{
+			"WWW-Authenticate", "Authorization", "Proxy-Authenticate", "Proxy-Authorization",
+		},
+	)
+	viper.SetDefault("api.authentication.endpoint_config.path_prefix", "/")
 
 	// Default HTTP headers to parse to get the parameters of the request being authorized
 	viper.SetDefault("authorize.request_param_location.request_host", "X-Forwarded-Host")

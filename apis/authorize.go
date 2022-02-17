@@ -111,7 +111,7 @@ func (h AuthorizationHandler) Allow(w http.ResponseWriter, r *http.Request) {
 	var response interface{}
 	logTags := h.GetLogTagsForContext(r.Context())
 	defer func() {
-		if err := writeRESTResponse(w, r, respCode, response); err != nil {
+		if err := writeRESTResponse(w, r, respCode, response, nil); err != nil {
 			log.WithError(err).WithFields(logTags).Error("Failed to form response")
 		}
 	}()
@@ -241,7 +241,9 @@ func (h AuthorizationHandler) AllowHandler() http.HandlerFunc {
 // @Router /v1/alive [get]
 func (h AuthorizationHandler) Alive(w http.ResponseWriter, r *http.Request) {
 	logTags := h.GetLogTagsForContext(r.Context())
-	if err := writeRESTResponse(w, r, http.StatusOK, getStdRESTSuccessMsg(r.Context())); err != nil {
+	if err := writeRESTResponse(
+		w, r, http.StatusOK, getStdRESTSuccessMsg(r.Context()), nil,
+	); err != nil {
 		log.WithError(err).WithFields(logTags).Error("Failed to form response")
 	}
 }
@@ -271,7 +273,7 @@ func (h AuthorizationHandler) Ready(w http.ResponseWriter, r *http.Request) {
 	var response interface{}
 	logTags := h.GetLogTagsForContext(r.Context())
 	defer func() {
-		if err := writeRESTResponse(w, r, respCode, response); err != nil {
+		if err := writeRESTResponse(w, r, respCode, response, nil); err != nil {
 			log.WithError(err).WithFields(logTags).Error("Failed to form response")
 		}
 	}()

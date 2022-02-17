@@ -4,6 +4,8 @@ go 1.17
 
 require (
 	github.com/apex/log v1.9.0
+	github.com/auth0/go-jwt-middleware v1.0.1
+	github.com/form3tech-oss/jwt-go v3.2.5+incompatible
 	github.com/go-playground/validator/v10 v10.10.0
 	github.com/google/uuid v1.1.1
 	github.com/gorilla/mux v1.8.0

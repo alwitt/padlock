@@ -26,11 +26,12 @@ import (
 )
 
 type cliArgs struct {
-	JSONLog     bool
-	LogLevel    string `validate:"required,oneof=debug info warn error"`
-	ConfigFile  string `validate:"file"`
-	DBParamFile string `validate:"file"`
-	Hostname    string
+	JSONLog               bool
+	LogLevel              string `validate:"required,oneof=debug info warn error"`
+	ConfigFile            string `validate:"file"`
+	DBParamFile           string `validate:"file"`
+	OpenIDIssuerParamFile string `validate:"omitempty,file"`
+	Hostname              string
 }
 
 var cmdArgs cliArgs
@@ -101,6 +102,14 @@ func main() {
 				Destination: &cmdArgs.DBParamFile,
 				Required:    true,
 			},
+			&cli.StringFlag{
+				Name:        "openid-issuer-param-file",
+				Usage:       "OpenID issuer parameter file",
+				Aliases:     []string{"o"},
+				EnvVars:     []string{"OPENID_ISSUER_PARAM_FILE"},
+				Destination: &cmdArgs.OpenIDIssuerParamFile,
+				Required:    false,
+			},
 		},
 		Action: mainApplication,
 	}
@@ -163,12 +172,12 @@ func mainApplication(c *cli.Context) error {
 	// Process the database connection parameters
 	var dbParam common.DatabaseConfig
 	{
-		context, err := ioutil.ReadFile(cmdArgs.DBParamFile)
+		params, err := ioutil.ReadFile(cmdArgs.DBParamFile)
 		if err != nil {
 			log.WithError(err).WithFields(logTags).Errorf("Unable to read %s", cmdArgs.DBParamFile)
 			return err
 		}
-		if err := json.Unmarshal(context, &dbParam); err != nil {
+		if err := json.Unmarshal(params, &dbParam); err != nil {
 			log.WithError(err).WithFields(logTags).Errorf("Unable to parse %s", cmdArgs.DBParamFile)
 			return err
 		}
@@ -233,6 +242,17 @@ func mainApplication(c *cli.Context) error {
 	defer wg.Wait()
 	apiServers := map[string]*http.Server{}
 
+	defer func() {
+		// Shutdown the servers
+		for svrInstance, svr := range apiServers {
+			ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+			defer cancel()
+			if err := svr.Shutdown(ctx); err != nil {
+				log.WithError(err).Errorf("Failure during HTTP Server %s shutdown", svrInstance)
+			}
+		}
+	}()
+
 	if appCfg.API.UserAdmin.Enabled {
 		svr, err := apis.BuildUserManagementServer(appCfg.API.UserAdmin, userManager, customValidator)
 		if err != nil {
@@ -287,6 +307,45 @@ func mainApplication(c *cli.Context) error {
 		}()
 	}
 
+	if appCfg.API.Authenticate.Enabled {
+		if cmdArgs.OpenIDIssuerParamFile == "" {
+			return fmt.Errorf("no OpenID issuer parameter file given")
+		}
+		// Parse OpenID issuer parameter file
+		var oidParam common.OpenIDIssuerConfig
+		params, err := ioutil.ReadFile(cmdArgs.OpenIDIssuerParamFile)
+		if err != nil {
+			log.WithError(err).WithFields(logTags).
+				Errorf("Unable to read %s", cmdArgs.OpenIDIssuerParamFile)
+			return err
+		}
+		if err := json.Unmarshal(params, &oidParam); err != nil {
+			log.WithError(err).WithFields(logTags).
+				Errorf("Unable to parse %s", cmdArgs.OpenIDIssuerParamFile)
+			return err
+		}
+		if err := validate.Struct(&oidParam); err != nil {
+			log.WithError(err).WithFields(logTags).
+				Errorf("%s content is not valid", cmdArgs.OpenIDIssuerParamFile)
+			return err
+		}
+		svr, err := apis.BuildAuthenticationServer(appCfg.API.Authenticate, oidParam)
+		if err != nil {
+			log.WithError(err).WithFields(logTags).
+				Errorf("Unable to define Authentication API HTTP Server")
+			return err
+		}
+		apiServers["Authentication"] = svr
+		// Start the server
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			if err := svr.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+				log.WithError(err).Error("Authentication API HTTP Server Failure")
+			}
+		}()
+	}
+
 	// ------------------------------------------------------------------------------------
 	// Wait for termination
 
@@ -295,15 +354,6 @@ func mainApplication(c *cli.Context) error {
 	// SIGKILL, SIGQUIT or SIGTERM (Ctrl+/) will not be caught.
 	signal.Notify(cc, os.Interrupt)
 	<-cc
-
-	// Shutdown the servers
-	for svrInstance, svr := range apiServers {
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
-		defer cancel()
-		if err := svr.Shutdown(ctx); err != nil {
-			log.WithError(err).Errorf("Failure during HTTP Server %s shutdown", svrInstance)
-		}
-	}
 
 	return nil
 }

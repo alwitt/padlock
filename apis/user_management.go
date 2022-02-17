@@ -77,7 +77,7 @@ func (h UserManagementHandler) ListAllRoles(w http.ResponseWriter, r *http.Reque
 	var response interface{}
 	logTags := h.GetLogTagsForContext(r.Context())
 	defer func() {
-		if err := writeRESTResponse(w, r, respCode, response); err != nil {
+		if err := writeRESTResponse(w, r, respCode, response, nil); err != nil {
 			log.WithError(err).WithFields(logTags).Error("Failed to form response")
 		}
 	}()
@@ -131,7 +131,7 @@ func (h UserManagementHandler) GetRole(w http.ResponseWriter, r *http.Request) {
 	var response interface{}
 	logTags := h.GetLogTagsForContext(r.Context())
 	defer func() {
-		if err := writeRESTResponse(w, r, respCode, response); err != nil {
+		if err := writeRESTResponse(w, r, respCode, response, nil); err != nil {
 			log.WithError(err).WithFields(logTags).Error("Failed to form response")
 		}
 	}()
@@ -211,7 +211,7 @@ func (h UserManagementHandler) DefineUser(w http.ResponseWriter, r *http.Request
 	var response interface{}
 	logTags := h.GetLogTagsForContext(r.Context())
 	defer func() {
-		if err := writeRESTResponse(w, r, respCode, response); err != nil {
+		if err := writeRESTResponse(w, r, respCode, response, nil); err != nil {
 			log.WithError(err).WithFields(logTags).Error("Failed to form response")
 		}
 	}()
@@ -275,7 +275,7 @@ func (h UserManagementHandler) ListAllUsers(w http.ResponseWriter, r *http.Reque
 	var response interface{}
 	logTags := h.GetLogTagsForContext(r.Context())
 	defer func() {
-		if err := writeRESTResponse(w, r, respCode, response); err != nil {
+		if err := writeRESTResponse(w, r, respCode, response, nil); err != nil {
 			log.WithError(err).WithFields(logTags).Error("Failed to form response")
 		}
 	}()
@@ -343,7 +343,7 @@ func (h UserManagementHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 	var response interface{}
 	logTags := h.GetLogTagsForContext(r.Context())
 	defer func() {
-		if err := writeRESTResponse(w, r, respCode, response); err != nil {
+		if err := writeRESTResponse(w, r, respCode, response, nil); err != nil {
 			log.WithError(err).WithFields(logTags).Error("Failed to form response")
 		}
 	}()
@@ -396,7 +396,7 @@ func (h UserManagementHandler) DeleteUser(w http.ResponseWriter, r *http.Request
 	var response interface{}
 	logTags := h.GetLogTagsForContext(r.Context())
 	defer func() {
-		if err := writeRESTResponse(w, r, respCode, response); err != nil {
+		if err := writeRESTResponse(w, r, respCode, response, nil); err != nil {
 			log.WithError(err).WithFields(logTags).Error("Failed to form response")
 		}
 	}()
@@ -450,7 +450,7 @@ func (h UserManagementHandler) UpdateUser(w http.ResponseWriter, r *http.Request
 	var response interface{}
 	logTags := h.GetLogTagsForContext(r.Context())
 	defer func() {
-		if err := writeRESTResponse(w, r, respCode, response); err != nil {
+		if err := writeRESTResponse(w, r, respCode, response, nil); err != nil {
 			log.WithError(err).WithFields(logTags).Error("Failed to form response")
 		}
 	}()
@@ -526,7 +526,7 @@ func (h UserManagementHandler) UpdateUserRoles(w http.ResponseWriter, r *http.Re
 	var response interface{}
 	logTags := h.GetLogTagsForContext(r.Context())
 	defer func() {
-		if err := writeRESTResponse(w, r, respCode, response); err != nil {
+		if err := writeRESTResponse(w, r, respCode, response, nil); err != nil {
 			log.WithError(err).WithFields(logTags).Error("Failed to form response")
 		}
 	}()
@@ -591,7 +591,9 @@ func (h UserManagementHandler) UpdateUserRolesHandler() http.HandlerFunc {
 // @Router /v1/alive [get]
 func (h UserManagementHandler) Alive(w http.ResponseWriter, r *http.Request) {
 	logTags := h.GetLogTagsForContext(r.Context())
-	if err := writeRESTResponse(w, r, http.StatusOK, getStdRESTSuccessMsg(r.Context())); err != nil {
+	if err := writeRESTResponse(
+		w, r, http.StatusOK, getStdRESTSuccessMsg(r.Context()), nil,
+	); err != nil {
 		log.WithError(err).WithFields(logTags).Error("Failed to form response")
 	}
 }
@@ -621,7 +623,7 @@ func (h UserManagementHandler) Ready(w http.ResponseWriter, r *http.Request) {
 	var response interface{}
 	logTags := h.GetLogTagsForContext(r.Context())
 	defer func() {
-		if err := writeRESTResponse(w, r, respCode, response); err != nil {
+		if err := writeRESTResponse(w, r, respCode, response, nil); err != nil {
 			log.WithError(err).WithFields(logTags).Error("Failed to form response")
 		}
 	}()
