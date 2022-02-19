@@ -1,20 +1,32 @@
 package apis
 
 import (
+	"encoding/json"
+	"fmt"
 	"net/http"
+	"strings"
 
+	"github.com/alwitt/padlock/authenticate"
 	"github.com/alwitt/padlock/common"
+	"github.com/alwitt/padlock/models"
 	"github.com/apex/log"
+	"github.com/form3tech-oss/jwt-go"
 )
 
 // AuthenticationHandler the request authentication REST API handler
 type AuthenticationHandler struct {
 	APIRestHandler
+	oidClient       authenticate.OpenIDIssuerClient
+	targetClaims    common.OpenIDClaimsOfInterestConfig
+	respHeaderParam common.AuthorizeRequestParamLocConfig
 }
 
-// DefineAuthenticationHandler define a new AuthenticationHandler instance
-func DefineAuthenticationHandler(
+// defineAuthenticationHandler define a new AuthenticationHandler instance
+func defineAuthenticationHandler(
 	logConfig common.HTTPRequestLogging,
+	oid authenticate.OpenIDIssuerClient,
+	targetClaims common.OpenIDClaimsOfInterestConfig,
+	respHeaderParam common.AuthorizeRequestParamLocConfig,
 ) (AuthenticationHandler, error) {
 	logTags := log.Fields{
 		"module": "apis", "component": "api-handler", "instance": "authentication",
@@ -30,7 +42,7 @@ func DefineAuthenticationHandler(
 				}
 				return result
 			}(),
-		},
+		}, oidClient: oid, targetClaims: targetClaims, respHeaderParam: respHeaderParam,
 	}, nil
 }
 
@@ -52,12 +64,139 @@ func DefineAuthenticationHandler(
 // @Failure 500 {object} BaseResponse "error"
 // @Router /v1/authenticate [get]
 func (h AuthenticationHandler) Authenticate(w http.ResponseWriter, r *http.Request) {
+	var respCode int
+	var response interface{}
+	respHeaders := map[string]string{}
 	logTags := h.GetLogTagsForContext(r.Context())
-	if err := writeRESTResponse(
-		w, r, http.StatusOK, getStdRESTSuccessMsg(r.Context()), nil,
-	); err != nil {
-		log.WithError(err).WithFields(logTags).Error("Failed to form response")
+	defer func() {
+		if err := writeRESTResponse(w, r, respCode, response, respHeaders); err != nil {
+			log.WithError(err).WithFields(logTags).Error("Failed to form response")
+		}
+	}()
+
+	// Read the JWT Bearer token
+	bearer := r.Header.Get("Authorization")
+	if bearer == "" {
+		msg := "Header 'Authorization' missing"
+		log.WithFields(logTags).Errorf(msg)
+		respCode = http.StatusBadRequest
+		response = getStdRESTErrorMsg(r.Context(), http.StatusBadRequest, msg, "")
+		return
 	}
+	bearerParts := strings.Split(bearer, " ")
+	if len(bearerParts) != 2 {
+		msg := "Bearer 'Authorization' has incorrect format"
+		log.WithFields(logTags).Errorf(msg)
+		respCode = http.StatusBadRequest
+		response = getStdRESTErrorMsg(r.Context(), http.StatusBadRequest, msg, "")
+		return
+	}
+	rawToken := bearerParts[1]
+
+	// Parse the JWT token
+	userClaims := new(jwt.MapClaims)
+	_, err := h.oidClient.ParseJWT(rawToken, userClaims)
+	if err != nil {
+		msg := "Unable to parse JWT bearer token"
+		log.WithError(err).WithFields(logTags).Errorf(msg)
+		respCode = http.StatusBadRequest
+		response = getStdRESTErrorMsg(r.Context(), http.StatusBadRequest, msg, err.Error())
+		return
+	}
+
+	{
+		t, _ := json.MarshalIndent(userClaims, "", "  ")
+		log.WithFields(logTags).Debugf("Token claims\n%s", t)
+	}
+
+	fetchClaimAsString := func(target string) (string, error) {
+		if v, ok := (*userClaims)[target]; ok {
+			if value, ok := v.(string); ok {
+				return value, nil
+			}
+			return "", fmt.Errorf("bearer 'Authorization' token's claim %s is not a string", target)
+		}
+		return "", fmt.Errorf("bearer 'Authorization' token missing %s", target)
+	}
+
+	errMacro := func(msg string, err error) {
+		log.WithError(err).WithFields(logTags).Errorf(msg)
+		respCode = http.StatusBadRequest
+		response = getStdRESTErrorMsg(r.Context(), http.StatusBadRequest, msg, err.Error())
+	}
+
+	// Parse out the critical fields
+	userParams := models.UserConfig{}
+
+	// Token ID
+	tokenID, err := fetchClaimAsString("jti")
+	if err != nil {
+		errMacro("Unable to parse out 'jti'", err)
+		return
+	}
+
+	// User ID
+	uid, err := fetchClaimAsString(h.targetClaims.UserIDClaim)
+	if err != nil {
+		errMacro(fmt.Sprintf("Unable to parse out '%s'", h.targetClaims.UserIDClaim), err)
+		return
+	}
+	userParams.UserID = uid
+	respHeaders[h.respHeaderParam.UserID] = uid
+
+	// User name
+	if h.targetClaims.UsernameClaim != nil {
+		username, err := fetchClaimAsString(*h.targetClaims.UsernameClaim)
+		if err != nil {
+			errMacro(fmt.Sprintf("Unable to parse out '%s'", *h.targetClaims.UsernameClaim), err)
+			return
+		}
+		userParams.Username = &username
+		respHeaders[h.respHeaderParam.Username] = username
+	}
+
+	// First name
+	if h.targetClaims.FirstNameClaim != nil {
+		firstName, err := fetchClaimAsString(*h.targetClaims.FirstNameClaim)
+		if err != nil {
+			errMacro(fmt.Sprintf("Unable to parse out '%s'", *h.targetClaims.FirstNameClaim), err)
+			return
+		}
+		userParams.FirstName = &firstName
+		respHeaders[h.respHeaderParam.FirstName] = firstName
+	}
+
+	// Last name
+	if h.targetClaims.LastNameClaim != nil {
+		lastName, err := fetchClaimAsString(*h.targetClaims.LastNameClaim)
+		if err != nil {
+			errMacro(fmt.Sprintf("Unable to parse out '%s'", *h.targetClaims.LastNameClaim), err)
+			return
+		}
+		userParams.LastName = &lastName
+		respHeaders[h.respHeaderParam.LastName] = lastName
+	}
+
+	// Email
+	if h.targetClaims.EmailClaim != nil {
+		email, err := fetchClaimAsString(*h.targetClaims.EmailClaim)
+		if err != nil {
+			errMacro(fmt.Sprintf("Unable to parse out '%s'", *h.targetClaims.EmailClaim), err)
+			return
+		}
+		userParams.Email = &email
+		respHeaders[h.respHeaderParam.Email] = email
+	}
+
+	{
+		t, _ := json.MarshalIndent(userParams, "", "  ")
+		log.WithFields(logTags).Debugf("User parameters in Token %s\n%s", tokenID, t)
+	}
+
+	// Set the response headers
+
+	respCode = http.StatusOK
+	response = getStdRESTSuccessMsg(r.Context())
 }
 
 // AuthenticateHandler Wrapper around Authenticate

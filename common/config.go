@@ -220,15 +220,40 @@ type OpenIDIssuerConfig struct {
 	CustomCA *string `json:"http_tlc_ca,omitempty" validate:"omitempty,file"`
 }
 
+// OpenIDClaimsOfInterestConfig sets which claims to parse from a token to get key
+// parameters regarding a user.
+//
+// Depending on the OpenID provider, these claims are present in the ID token, but may
+// also be present in the access token; this is the case with KeyCloak.
+type OpenIDClaimsOfInterestConfig struct {
+	// UserIDClaim is the claim for containing the user ID
+	UserIDClaim string `mapstructure:"user_id" json:"user_id" validate:"required"`
+	// UsernameClaim is the claim containing the user Name
+	UsernameClaim *string `mapstructure:"username,omitempty" json:"username,omitempty"`
+	// FirstNameClaim is the claim containing the first name / given name of the user
+	FirstNameClaim *string `mapstructure:"first_name,omitempty" json:"first_name,omitempty"`
+	// LastNameClaim is the claim containing the last name / surname / family name of the user
+	LastNameClaim *string `mapstructure:"last_name,omitempty" json:"last_name,omitempty"`
+	// EmailClaim is the claim containing the email of the user
+	EmailClaim *string `mapstructure:"email,omitempty" json:"email,omitempty"`
+}
+
+// AuthenticationConfig describes the REST API authentication config
+type AuthenticationConfig struct {
+	// TargetClaims sets which claims to parse from a token to get key parameters regarding a user.
+	TargetClaims OpenIDClaimsOfInterestConfig `mapstructure:"target_jwt_claims" json:"target_jwt_claims" validate:"required,dive"`
+}
+
 // ===============================================================================
 // Complete Configuration Structures
 
 // AuthorizationServerConfig is the authorization server config
 type AuthorizationServerConfig struct {
-	Common    UtilConfigs         `mapstructure:"common" json:"common" validate:"required,dive"`
-	Roles     UserRolesConfig     `mapstructure:"role" json:"role" validate:"required,dive"`
-	Authorize AuthorizationConfig `mapstructure:"authorize" json:"authorize" validate:"required,dive"`
-	API       APIConfig           `mapstructure:"api" json:"api" validate:"required,dive"`
+	Common       UtilConfigs          `mapstructure:"common" json:"common" validate:"required,dive"`
+	Roles        UserRolesConfig      `mapstructure:"role" json:"role" validate:"required,dive"`
+	Authorize    AuthorizationConfig  `mapstructure:"authorize" json:"authorize" validate:"required,dive"`
+	Authenticate AuthenticationConfig `mapstructure:"authenticate" json:"authenticate" validate:"required,dive"`
+	API          APIConfig            `mapstructure:"api" json:"api" validate:"required,dive"`
 }
 
 // ===============================================================================
@@ -293,4 +318,7 @@ func InstallDefaultAuthorizationServerConfigValues() {
 	viper.SetDefault("authorize.request_param_location.requester_firstname", "X-Caller-Firstname")
 	viper.SetDefault("authorize.request_param_location.requester_lastname", "X-Caller-Lastname")
 	viper.SetDefault("authorize.request_param_location.requester_email", "X-Caller-Email")
+
+	// Default JWT claims to read to fetch parameters regarding a user
+	viper.SetDefault("authenticate.target_jwt_claims.user_id", "sub")
 }

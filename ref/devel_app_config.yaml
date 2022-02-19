@@ -20,6 +20,14 @@ api:
   authentication:
     enabled: true
 
+authenticate:
+  target_jwt_claims:
+    user_id: sub
+    username: preferred_username
+    first_name: given_name
+    last_name: family_name
+    email: email
+
 authorize:
   unknown_user:
     auto_add: true

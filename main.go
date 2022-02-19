@@ -329,7 +329,12 @@ func mainApplication(c *cli.Context) error {
 				Errorf("%s content is not valid", cmdArgs.OpenIDIssuerParamFile)
 			return err
 		}
-		svr, err := apis.BuildAuthenticationServer(appCfg.API.Authenticate, oidParam)
+		svr, err := apis.BuildAuthenticationServer(
+			appCfg.API.Authenticate,
+			oidParam,
+			appCfg.Authenticate.TargetClaims,
+			appCfg.Authorize.RequestParamLocation,
+		)
 		if err != nil {
 			log.WithError(err).WithFields(logTags).
 				Errorf("Unable to define Authentication API HTTP Server")

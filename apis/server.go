@@ -174,11 +174,17 @@ BuildAuthenticationServer creates the authentication server
 
  @param httpCfg common.HTTPConfig - HTTP server config
  @param openIDCfg common.OpenIDIssuerConfig - OpenID issuer configuration
+ @param targetClaims common.OpenIDClaimsOfInterestConfig - config which JWT token claims to parse
+ to fetch a user's parameters.
+ @param respHeaderParam common.AuthorizeRequestParamLocConfig - config which indicates what
+ response headers to output the user parameters on.
  @return the http.Server
 */
 func BuildAuthenticationServer(
 	httpCfg common.HTTPConfig,
 	openIDCfg common.OpenIDIssuerConfig,
+	targetClaims common.OpenIDClaimsOfInterestConfig,
+	respHeaderParam common.AuthorizeRequestParamLocConfig,
 ) (*http.Server, error) {
 	// Define custom HTTP client for connecting with OpenID issuer
 	oidHTTPClient := http.Client{}
@@ -202,7 +208,9 @@ func BuildAuthenticationServer(
 		return nil, err
 	}
 
-	httpHandler, err := DefineAuthenticationHandler(httpCfg.Logging)
+	httpHandler, err := defineAuthenticationHandler(
+		httpCfg.Logging, oidClient, targetClaims, respHeaderParam,
+	)
 	if err != nil {
 		return nil, err
 	}

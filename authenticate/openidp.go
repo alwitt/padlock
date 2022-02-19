@@ -22,6 +22,15 @@ type OpenIDIssuerClient interface {
 		 @return public key material
 	*/
 	AssociatedPublicKey(token *jwt.Token) (interface{}, error)
+
+	/*
+		ParseJWT parses a string into a JWT token object.
+
+		 @param raw string - the original JWT string
+		 @param claimStore jwt.Claims - the object to store the claims in
+		 @return the parsed JWT token object
+	*/
+	ParseJWT(raw string, claimStore jwt.Claims) (*jwt.Token, error)
 }
 
 // OpenIDIssuerConfig holds the OpenID issuer's API info.
@@ -169,4 +178,15 @@ func (c *openIDIssuerClientImpl) AssociatedPublicKey(token *jwt.Token) (interfac
 	msg := fmt.Sprintf("Encountered JWT referring public key %s which is unknown", kid)
 	log.WithFields(c.LogTags).Errorf(msg)
 	return nil, fmt.Errorf(msg)
+}
+
+/*
+ParseJWT parses a string into a JWT token object.
+
+ @param raw string - the original JWT string
+ @param claimStore jwt.Claims - the object to store the claims in
+ @return the parsed JWT token object
+*/
+func (c *openIDIssuerClientImpl) ParseJWT(raw string, claimStore jwt.Claims) (*jwt.Token, error) {
+	return jwt.ParseWithClaims(raw, claimStore, c.AssociatedPublicKey)
 }
