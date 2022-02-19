@@ -10,7 +10,7 @@ import (
 
 	"github.com/alwitt/padlock/common"
 	"github.com/apex/log"
-	"github.com/form3tech-oss/jwt-go"
+	"github.com/golang-jwt/jwt"
 )
 
 // OpenIDIssuerClient a client to interact with an OpenID issuer

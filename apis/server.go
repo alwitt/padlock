@@ -14,8 +14,6 @@ import (
 	"github.com/alwitt/padlock/match"
 	"github.com/alwitt/padlock/users"
 	"github.com/apex/log"
-	jwtmiddleware "github.com/auth0/go-jwt-middleware"
-	"github.com/form3tech-oss/jwt-go"
 	"github.com/gorilla/mux"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
@@ -220,7 +218,7 @@ func BuildAuthenticationServer(
 	v1Router := registerPathPrefix(mainRouter, "/v1", nil)
 
 	// Authentication
-	authRouter := registerPathPrefix(v1Router, "/authenticate", map[string]http.HandlerFunc{
+	_ = registerPathPrefix(v1Router, "/authenticate", map[string]http.HandlerFunc{
 		"get": httpHandler.AuthenticateHandler(),
 	})
 
@@ -236,14 +234,6 @@ func BuildAuthenticationServer(
 	router.Use(func(next http.Handler) http.Handler {
 		return httpHandler.LoggingMiddleware(next.ServeHTTP)
 	})
-
-	// Add JWT validation middleware to authentication handler
-	authRouter.Use(
-		jwtmiddleware.New(jwtmiddleware.Options{
-			ValidationKeyGetter: oidClient.AssociatedPublicKey,
-			SigningMethod:       jwt.SigningMethodRS256,
-		}).Handler,
-	)
 
 	serverListen := fmt.Sprintf(
 		"%s:%d", httpCfg.Server.ListenOn, httpCfg.Server.Port,
