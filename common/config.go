@@ -206,10 +206,6 @@ type DatabaseConfig struct {
 
 // OpenIDIssuerConfig defines connection parameters to one OpenID issuer
 type OpenIDIssuerConfig struct {
-	// Type defines the OpenID issuer type.
-	//
-	// Currently targeting only KeyCloak. Will allow other types as support is added.
-	Type string `json:"type" validate:"required,oneof=keycloak"`
 	// Issuer is the URL of the OpenID issuer
 	Issuer string `json:"issuer" validate:"required,url"`
 	// ClientID is the client ID to use during token introspection

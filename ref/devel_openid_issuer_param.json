@@ -1,5 +1,4 @@
 {
-  "type": "keycloak",
   "issuer": "{{ You OpenID Issuer URL }}",
   "client_id": "{{ OAuth2 client credentials }}",
   "client_cred": "{{ OAuth2 client credentials }}",
