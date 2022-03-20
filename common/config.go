@@ -197,8 +197,6 @@ type DatabaseConfig struct {
 	DB string `json:"db" validate:"required"`
 	// User is the database user
 	User string `json:"user" validate:"required"`
-	// Password is the user password
-	Password *string `json:"pw,omitempty"`
 }
 
 // ===============================================================================
@@ -209,11 +207,11 @@ type OpenIDIssuerConfig struct {
 	// Issuer is the URL of the OpenID issuer
 	Issuer string `json:"issuer" validate:"required,url"`
 	// ClientID is the client ID to use during token introspection
-	ClientID string `json:"client_id" validate:"required"`
+	ClientID *string `json:"client_id" validate:"omitempty"`
 	// ClientCred is the client credential to use during token introspection
-	ClientCred string `json:"client_cred" validate:"required"`
+	ClientCred *string `json:"client_cred" validate:"omitempty"`
 	// CustomCA if provided, is the custom CA to use for the TLS session with this issuer.
-	CustomCA *string `json:"http_tlc_ca,omitempty" validate:"omitempty,file"`
+	CustomCA *string `json:"http_tls_ca,omitempty" validate:"omitempty,file"`
 }
 
 // OpenIDClaimsOfInterestConfig sets which claims to parse from a token to get key

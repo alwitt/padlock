@@ -30,6 +30,7 @@ type cliArgs struct {
 	LogLevel              string `validate:"required,oneof=debug info warn error"`
 	ConfigFile            string `validate:"file"`
 	DBParamFile           string `validate:"file"`
+	DBPassword            string
 	OpenIDIssuerParamFile string `validate:"omitempty,file"`
 	Hostname              string
 }
@@ -101,6 +102,16 @@ func main() {
 				EnvVars:     []string{"DB_CONNECT_PARAM_FILE"},
 				Destination: &cmdArgs.DBParamFile,
 				Required:    true,
+			},
+			&cli.StringFlag{
+				Name:        "db-user-password",
+				Usage:       "Database user password",
+				Aliases:     []string{"p"},
+				EnvVars:     []string{"DB_CONNECT_USER_PASSWORD"},
+				Value:       "",
+				DefaultText: "",
+				Destination: &cmdArgs.DBPassword,
+				Required:    false,
 			},
 			&cli.StringFlag{
 				Name:        "openid-issuer-param-file",
@@ -201,13 +212,13 @@ func mainApplication(c *cli.Context) error {
 		dbParam.User,
 		dbParam.DB,
 	)
-	if dbParam.Password != nil {
+	if cmdArgs.DBPassword != "" {
 		dbDSN = fmt.Sprintf(
 			"host=%s user=%s dbname=%s password=%s sslmode=disable",
 			dbParam.Host,
 			dbParam.User,
 			dbParam.DB,
-			*dbParam.Password,
+			cmdArgs.DBPassword,
 		)
 	}
 	baseDBClient, err := gorm.Open(postgres.Open(dbDSN))
