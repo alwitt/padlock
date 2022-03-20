@@ -92,7 +92,7 @@ func ConvertConfigToTargetGroupSpec(cfg *common.AuthorizationConfig) (TargetGrou
 	result := TargetGroupSpec{AllowedHosts: make(map[string]TargetHostSpec)}
 
 	// Go through eaach target hosts
-	for _, oneTargetHost := range cfg.TargetHosts {
+	for _, oneTargetHost := range cfg.Rules {
 		hostSpec := TargetHostSpec{
 			TargetHost: oneTargetHost.Host, AllowedPathsForHost: make([]TargetPathSpec, 0),
 		}

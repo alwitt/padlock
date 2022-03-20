@@ -40,7 +40,7 @@ authorize:
     requester_firstname: X-Caller-Firstname
     requester_lastname: X-Caller-Lastname
     requester_email: X-Caller-Email
-  hosts:
+  rules:
     - host: dev-00.testing.org
       paths:
         - path_pattern: "^/path1$"

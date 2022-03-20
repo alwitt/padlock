@@ -114,10 +114,10 @@ type UnknownUserActionConfig struct {
 
 // AuthorizationConfig describes the REST API authorization config
 type AuthorizationConfig struct {
-	// TargetHosts is the list of TargetHostSpec supported by the server. The host of "*"
+	// Rules is the list of TargetHostSpec supported by the server. The host of "*"
 	// functions as a wildcard. If a request host is not explicitly listed here, it may match
 	// against "*" if that was defined.
-	TargetHosts []HostAuthorizationConfig `mapstructure:"hosts" json:"hosts" validate:"required,gte=1,dive"`
+	Rules []HostAuthorizationConfig `mapstructure:"rules" json:"rules" validate:"required,gte=1,dive"`
 	// RequestParamLocation sets which HTTP headers to parse to get the parameters of
 	// a REST request to authorize. It is expected that the component (i.e. a proxy) requesting
 	// authorization for a request will provide the needed values through these headers when it

@@ -30,7 +30,7 @@ role:
         - write
         - read
 authorize:
-  hosts:
+  rules:
     - host: unittest.testing.org
       paths:
         - path_pattern: "^/path1/[[:alpha:]]+/?$"

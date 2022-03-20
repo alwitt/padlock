@@ -37,7 +37,7 @@ role:
         - write
         - read
 authorize:
-  hosts:
+  rules:
     - host: unittest.testing.org
       paths:
         - path_pattern: "^/path1/[[:alpha:]]+/?$"
@@ -87,7 +87,7 @@ role:
         - write
         - read
 authorize:
-  hosts:
+  rules:
     - host: unittest.testing.org
       paths:
         - path_pattern: "^/path1/[[:alpha:]]+/?$"
@@ -117,7 +117,7 @@ role:
         - write
         - read
 authorize:
-  hosts:
+  rules:
     - host: unittest.testing.org
       paths:
         - path_pattern: "^/path1/[[:alpha:]]+/?$"
@@ -143,7 +143,7 @@ role:
         - read
         - read
 authorize:
-  hosts:
+  rules:
     - host: unittest.testing.org
       paths:
         - path_pattern: "^/path1/[[:alpha:]]+/?$"
@@ -169,7 +169,7 @@ role:
       assigned_permissions:
         - all
 authorize:
-  hosts:
+  rules:
     - host: unittest.testing.org
       paths:
         - path_pattern: "^/path1/[[:alpha:]]+/?$"
@@ -201,7 +201,7 @@ role:
       assigned_permissions:
         - all
 authorize:
-  hosts:
+  rules:
     - host: unittest.testing.org
       paths:
         - path_pattern: "^/path1/[[:alpha:]]+/?$"
@@ -231,7 +231,7 @@ role:
       assigned_permissions:
         - all
 authorize:
-  hosts:
+  rules:
     - host: unittest.testing.org
       paths:
         - path_pattern: "^/path1/[[:alpha:]]+/?$"
@@ -259,7 +259,7 @@ role:
       assigned_permissions:
         - all
 authorize:
-  hosts:
+  rules:
     - host: unittest.testing.org
       paths:
         - path_pattern: "^/path1/[[:alpha:]]+/?$"
@@ -285,7 +285,7 @@ role:
       assigned_permissions:
         - all
 authorize:
-  hosts:
+  rules:
     - host: unittest.testing.org
       paths:
         - path_pattern: "^/path1/[[:alpha:]]+/?$"
@@ -312,7 +312,7 @@ role:
         - all
         - "read.path1"
 authorize:
-  hosts:
+  rules:
     - host: unittest.testing.org
       paths:
         - path_pattern: "^/path1/[[:alpha:]]+/?$"
@@ -338,7 +338,7 @@ role:
       assigned_permissions:
         - all
 authorize:
-  hosts:
+  rules:
     - host: unittest.testing.org
       paths:
         - path_pattern: "^/path1/[[:alpha:]]+/?$"

@@ -65,7 +65,7 @@ func (c AuthorizationServerConfig) Validate() error {
 
 	// Verify hosts defined are all unique
 	seenHost := map[string]bool{}
-	for _, hostAuthEntry := range c.Authorize.TargetHosts {
+	for _, hostAuthEntry := range c.Authorize.Rules {
 		if _, ok := seenHost[hostAuthEntry.Host]; ok {
 			msg := fmt.Sprintf("Host %s already defined", hostAuthEntry.Host)
 			log.Errorf(msg)
