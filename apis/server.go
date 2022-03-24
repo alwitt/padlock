@@ -31,17 +31,19 @@ BuildUserManagementServer creates the user management server
  @return the http.Server
 */
 func BuildUserManagementServer(
-	httpCfg common.HTTPConfig,
+	httpCfg common.APIServerConfig,
 	manager users.Management,
 	validateSupport common.CustomFieldValidator,
 ) (*http.Server, error) {
-	httpHandler, err := defineUserManagementHandler(httpCfg.Logging, manager, validateSupport)
+	httpHandler, err := defineUserManagementHandler(
+		httpCfg.APIs.RequestLogging, manager, validateSupport,
+	)
 	if err != nil {
 		return nil, err
 	}
 
 	router := mux.NewRouter()
-	mainRouter := registerPathPrefix(router, httpCfg.Endpoints.PathPrefix, nil)
+	mainRouter := registerPathPrefix(router, httpCfg.APIs.Endpoint.PathPrefix, nil)
 	v1Router := registerPathPrefix(mainRouter, "/v1", nil)
 
 	// Role management
@@ -84,9 +86,9 @@ func BuildUserManagementServer(
 	)
 	httpSrv := &http.Server{
 		Addr:         serverListen,
-		WriteTimeout: time.Second * time.Duration(httpCfg.Server.WriteTimeout),
-		ReadTimeout:  time.Second * time.Duration(httpCfg.Server.ReadTimeout),
-		IdleTimeout:  time.Second * time.Duration(httpCfg.Server.IdleTimeout),
+		WriteTimeout: time.Second * time.Duration(httpCfg.Server.Timeouts.WriteTimeout),
+		ReadTimeout:  time.Second * time.Duration(httpCfg.Server.Timeouts.ReadTimeout),
+		IdleTimeout:  time.Second * time.Duration(httpCfg.Server.Timeouts.IdleTimeout),
 		Handler:      h2c.NewHandler(router, &http2.Server{}),
 	}
 
@@ -109,7 +111,7 @@ BuildAuthorizationServer creates the authorization server
  @return the http.Server
 */
 func BuildAuthorizationServer(
-	httpCfg common.HTTPConfig,
+	httpCfg common.APIServerConfig,
 	manager users.Management,
 	requestMatcher match.RequestMatch,
 	validateSupport common.CustomFieldValidator,
@@ -117,14 +119,19 @@ func BuildAuthorizationServer(
 	forUnknownUser common.UnknownUserActionConfig,
 ) (*http.Server, error) {
 	httpHandler, err := defineAuthorizationHandler(
-		httpCfg.Logging, manager, requestMatcher, validateSupport, checkHeaders, forUnknownUser,
+		httpCfg.APIs.RequestLogging,
+		manager,
+		requestMatcher,
+		validateSupport,
+		checkHeaders,
+		forUnknownUser,
 	)
 	if err != nil {
 		return nil, err
 	}
 
 	router := mux.NewRouter()
-	mainRouter := registerPathPrefix(router, httpCfg.Endpoints.PathPrefix, nil)
+	mainRouter := registerPathPrefix(router, httpCfg.APIs.Endpoint.PathPrefix, nil)
 	v1Router := registerPathPrefix(mainRouter, "/v1", nil)
 
 	// Authorize
@@ -155,9 +162,9 @@ func BuildAuthorizationServer(
 	)
 	httpSrv := &http.Server{
 		Addr:         serverListen,
-		WriteTimeout: time.Second * time.Duration(httpCfg.Server.WriteTimeout),
-		ReadTimeout:  time.Second * time.Duration(httpCfg.Server.ReadTimeout),
-		IdleTimeout:  time.Second * time.Duration(httpCfg.Server.IdleTimeout),
+		WriteTimeout: time.Second * time.Duration(httpCfg.Server.Timeouts.WriteTimeout),
+		ReadTimeout:  time.Second * time.Duration(httpCfg.Server.Timeouts.ReadTimeout),
+		IdleTimeout:  time.Second * time.Duration(httpCfg.Server.Timeouts.IdleTimeout),
 		Handler:      h2c.NewHandler(router, &http2.Server{}),
 	}
 
@@ -179,7 +186,7 @@ BuildAuthenticationServer creates the authentication server
  @return the http.Server
 */
 func BuildAuthenticationServer(
-	httpCfg common.HTTPConfig,
+	httpCfg common.APIServerConfig,
 	openIDCfg common.OpenIDIssuerConfig,
 	targetClaims common.OpenIDClaimsOfInterestConfig,
 	respHeaderParam common.AuthorizeRequestParamLocConfig,
@@ -207,14 +214,14 @@ func BuildAuthenticationServer(
 	}
 
 	httpHandler, err := defineAuthenticationHandler(
-		httpCfg.Logging, oidClient, targetClaims, respHeaderParam,
+		httpCfg.APIs.RequestLogging, oidClient, targetClaims, respHeaderParam,
 	)
 	if err != nil {
 		return nil, err
 	}
 
 	router := mux.NewRouter()
-	mainRouter := registerPathPrefix(router, httpCfg.Endpoints.PathPrefix, nil)
+	mainRouter := registerPathPrefix(router, httpCfg.APIs.Endpoint.PathPrefix, nil)
 	v1Router := registerPathPrefix(mainRouter, "/v1", nil)
 
 	// Authentication
@@ -240,9 +247,9 @@ func BuildAuthenticationServer(
 	)
 	httpSrv := &http.Server{
 		Addr:         serverListen,
-		WriteTimeout: time.Second * time.Duration(httpCfg.Server.WriteTimeout),
-		ReadTimeout:  time.Second * time.Duration(httpCfg.Server.ReadTimeout),
-		IdleTimeout:  time.Second * time.Duration(httpCfg.Server.IdleTimeout),
+		WriteTimeout: time.Second * time.Duration(httpCfg.Server.Timeouts.WriteTimeout),
+		ReadTimeout:  time.Second * time.Duration(httpCfg.Server.Timeouts.ReadTimeout),
+		IdleTimeout:  time.Second * time.Duration(httpCfg.Server.Timeouts.IdleTimeout),
 		Handler:      h2c.NewHandler(router, &http2.Server{}),
 	}
 

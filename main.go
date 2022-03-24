@@ -40,7 +40,7 @@ var cmdArgs cliArgs
 var logTags log.Fields
 
 // @title padlock
-// @version v0.1.0-rc.1
+// @version v0.1.0-rc.2
 // @description REST API RBAC support application
 
 // @host localhost:3000
@@ -61,7 +61,7 @@ func main() {
 	common.InstallDefaultAuthorizationServerConfigValues()
 
 	app := &cli.App{
-		Version:     "v0.1.0-rc.1",
+		Version:     "v0.1.0-rc.2",
 		Usage:       "application entrypoint",
 		Description: "A simple support application for REST API RBAC",
 		Flags: []cli.Flag{
@@ -199,7 +199,7 @@ func mainApplication(c *cli.Context) error {
 		}
 	}
 
-	customValidator, err := appCfg.Common.ValidationSupport.DefineCustomFieldValidator()
+	customValidator, err := appCfg.CustomRegex.DefineCustomFieldValidator()
 	if err != nil {
 		log.WithError(err).WithFields(logTags).Errorf("Unable to define custom validator supporter")
 		return err
@@ -240,7 +240,9 @@ func mainApplication(c *cli.Context) error {
 	}
 
 	// Synchronize role configuration
-	err = userManager.AlignRolesWithConfig(context.Background(), appCfg.Roles.AvailableRoles)
+	err = userManager.AlignRolesWithConfig(
+		context.Background(), appCfg.UserManagement.AvailableRoles,
+	)
 	if err != nil {
 		log.WithError(err).WithFields(logTags).Errorf("Failed to perform initial role config sync")
 		return err
@@ -264,8 +266,10 @@ func mainApplication(c *cli.Context) error {
 		}
 	}()
 
-	if appCfg.API.UserAdmin.Enabled {
-		svr, err := apis.BuildUserManagementServer(appCfg.API.UserAdmin, userManager, customValidator)
+	if appCfg.UserManagement.Enabled {
+		svr, err := apis.BuildUserManagementServer(
+			appCfg.UserManagement.APIServerConfig, userManager, customValidator,
+		)
 		if err != nil {
 			log.WithError(err).WithFields(logTags).
 				Errorf("Unable to define User Management API HTTP Server")
@@ -282,9 +286,11 @@ func mainApplication(c *cli.Context) error {
 		}()
 	}
 
-	if appCfg.API.Authorize.Enabled {
+	if appCfg.Authorization.Enabled {
 		// Build request matcher
-		matcherSpec, err := match.ConvertConfigToTargetGroupSpec(&appCfg.Authorize)
+		matcherSpec, err := match.ConvertConfigToTargetGroupSpec(
+			&appCfg.Authorization.AuthorizationConfig,
+		)
 		if err != nil {
 			log.WithError(err).WithFields(logTags).Errorf("Unable to define request matcher spec")
 			return err
@@ -295,12 +301,12 @@ func mainApplication(c *cli.Context) error {
 			return err
 		}
 		svr, err := apis.BuildAuthorizationServer(
-			appCfg.API.Authorize,
+			appCfg.Authorization.APIServerConfig,
 			userManager,
 			matcher,
 			customValidator,
-			appCfg.Authorize.RequestParamLocation,
-			appCfg.Authorize.UnknownUser,
+			appCfg.Authorization.RequestParamLocation,
+			appCfg.Authorization.UnknownUser,
 		)
 		if err != nil {
 			log.WithError(err).WithFields(logTags).
@@ -318,7 +324,7 @@ func mainApplication(c *cli.Context) error {
 		}()
 	}
 
-	if appCfg.API.Authenticate.Enabled {
+	if appCfg.Authentication.Enabled {
 		if cmdArgs.OpenIDIssuerParamFile == "" {
 			return fmt.Errorf("no OpenID issuer parameter file given")
 		}
@@ -341,10 +347,10 @@ func mainApplication(c *cli.Context) error {
 			return err
 		}
 		svr, err := apis.BuildAuthenticationServer(
-			appCfg.API.Authenticate,
+			appCfg.Authentication.APIServerConfig,
 			oidParam,
-			appCfg.Authenticate.TargetClaims,
-			appCfg.Authorize.RequestParamLocation,
+			appCfg.Authentication.TargetClaims,
+			appCfg.Authorization.RequestParamLocation,
 		)
 		if err != nil {
 			log.WithError(err).WithFields(logTags).

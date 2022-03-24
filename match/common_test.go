@@ -17,44 +17,44 @@ func TestAuthorizationConfigConvert(t *testing.T) {
 	common.InstallDefaultAuthorizationServerConfigValues()
 
 	config := []byte(`---
-role:
-  available_roles:
+userManagement:
+  userRoles:
     admin:
-      assigned_permissions:
+      permissions:
         - all
     reader:
-      assigned_permissions:
+      permissions:
         - read
     user:
-      assigned_permissions:
+      permissions:
         - write
         - read
 authorize:
   rules:
     - host: unittest.testing.org
-      paths:
-        - path_pattern: "^/path1/[[:alpha:]]+/?$"
-          methods:
+      allowedPaths:
+        - pathPattern: "^/path1/[[:alpha:]]+/?$"
+          allowedMethods:
             - method: GET
-              allowed_permissions:
+              allowedPermissions:
                 - all
                 - read
             - method: PUT
-              allowed_permissions:
+              allowedPermissions:
                 - all
                 - write
-        - path_pattern: "^/path2/[[:alnum:]]+/$"
-          methods:
+        - pathPattern: "^/path2/[[:alnum:]]+/$"
+          allowedMethods:
             - method: "*"
-              allowed_permissions:
+              allowedPermissions:
                 - all
                 - read
     - host: "*"
-      paths:
-        - path_pattern: "^/path3/[[:alpha:]]+/?$"
-          methods:
+      allowedPaths:
+        - pathPattern: "^/path3/[[:alpha:]]+/?$"
+          allowedMethods:
             - method: POST
-              allowed_permissions:
+              allowedPermissions:
                 - all
                 - write`)
 	viper.SetConfigType("yaml")
@@ -63,7 +63,7 @@ authorize:
 	assert.Nil(viper.Unmarshal(&cfg))
 	assert.Nil(cfg.Validate())
 
-	groupSpec, err := ConvertConfigToTargetGroupSpec(&cfg.Authorize)
+	groupSpec, err := ConvertConfigToTargetGroupSpec(&cfg.Authorization.AuthorizationConfig)
 	assert.Nil(err)
 
 	assert.Len(groupSpec.AllowedHosts, 2)

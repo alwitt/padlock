@@ -24,44 +24,44 @@ func TestAuthorizationServerConfig(t *testing.T) {
 	// Case 1: basic valid configuration
 	{
 		config := []byte(`---
-role:
-  available_roles:
+userManagement:
+  userRoles:
     admin:
-      assigned_permissions:
+      permissions:
         - all
     reader:
-      assigned_permissions:
+      permissions:
         - read
     user:
-      assigned_permissions:
+      permissions:
         - write
         - read
 authorize:
   rules:
     - host: unittest.testing.org
-      paths:
-        - path_pattern: "^/path1/[[:alpha:]]+/?$"
-          methods:
+      allowedPaths:
+        - pathPattern: "^/path1/[[:alpha:]]+/?$"
+          allowedMethods:
             - method: GET
-              allowed_permissions:
+              allowedPermissions:
                 - all
                 - read
             - method: PUT
-              allowed_permissions:
+              allowedPermissions:
                 - all
                 - write
-        - path_pattern: "^/path2/[[:alnum:]]+/$"
-          methods:
+        - pathPattern: "^/path2/[[:alnum:]]+/$"
+          allowedMethods:
             - method: "*"
-              allowed_permissions:
+              allowedPermissions:
                 - all
                 - read
     - host: "*"
-      paths:
-        - path_pattern: "^/path3/[[:alpha:]]+/?$"
-          methods:
+      allowedPaths:
+        - pathPattern: "^/path3/[[:alpha:]]+/?$"
+          allowedMethods:
             - method: POST
-              allowed_permissions:
+              allowedPermissions:
                 - all
                 - write`)
 		viper.SetConfigType("yaml")
@@ -74,25 +74,25 @@ authorize:
 	// Case 2: missing parameters
 	{
 		config := []byte(`---
-role:
-  available_roles:
+userManagement:
+  userRoles:
     admin:
-      assigned_permissions:
+      permissions:
         - all
     reader:
-      assigned_permissions:
+      permissions:
         - read
     user:
-      assigned_permissions:
+      permissions:
         - write
         - read
 authorize:
   rules:
     - host: unittest.testing.org
-      paths:
-        - path_pattern: "^/path1/[[:alpha:]]+/?$"
-          methods:
-            - allowed_permissions:
+      allowedPaths:
+        - pathPattern: "^/path1/[[:alpha:]]+/?$"
+          allowedMethods:
+            - allowedPermissions:
                 - all
                 - read`)
 		viper.SetConfigType("yaml")
@@ -105,25 +105,25 @@ authorize:
 	// Case 3: bad structure
 	{
 		config := []byte(`---
-role:
-  available_roles:
+userManagement:
+  userRoles:
     admin:
       - all
     reader:
-      assigned_permissions:
+      permissions:
         - read
     user:
-      assigned_permissions:
+      permissions:
         - write
         - read
 authorize:
   rules:
     - host: unittest.testing.org
-      paths:
-        - path_pattern: "^/path1/[[:alpha:]]+/?$"
-          methods:
+      allowedPaths:
+        - pathPattern: "^/path1/[[:alpha:]]+/?$"
+          allowedMethods:
             - method: GET
-              allowed_permissions:
+              allowedPermissions:
                 - all
                 - read`)
 		viper.SetConfigType("yaml")
@@ -135,21 +135,21 @@ authorize:
 	// Case 4: duplicate entries in roles
 	{
 		config := []byte(`---
-role:
-  available_roles:
+userManagement:
+  userRoles:
     user:
-      assigned_permissions:
+      permissions:
         - write
         - read
         - read
 authorize:
   rules:
     - host: unittest.testing.org
-      paths:
-        - path_pattern: "^/path1/[[:alpha:]]+/?$"
-          methods:
+      allowedPaths:
+        - pathPattern: "^/path1/[[:alpha:]]+/?$"
+          allowedMethods:
             - method: GET
-              allowed_permissions:
+              allowedPermissions:
                 - all
                 - read`)
 		viper.SetConfigType("yaml")
@@ -163,26 +163,26 @@ authorize:
 	// Case 5: duplicate entries in hosts
 	{
 		config := []byte(`---
-role:
-  available_roles:
+userManagement:
+  userRoles:
     admin:
-      assigned_permissions:
+      permissions:
         - all
 authorize:
   rules:
     - host: unittest.testing.org
-      paths:
-        - path_pattern: "^/path1/[[:alpha:]]+/?$"
-          methods:
+      allowedPaths:
+        - pathPattern: "^/path1/[[:alpha:]]+/?$"
+          allowedMethods:
             - method: GET
-              allowed_permissions:
+              allowedPermissions:
                 - all
     - host: unittest.testing.org
-      paths:
-        - path_pattern: "^/path2/[[:alpha:]]+/$"
-          methods:
+      allowedPaths:
+        - pathPattern: "^/path2/[[:alpha:]]+/$"
+          allowedMethods:
             - method: PUT
-              allowed_permissions:
+              allowedPermissions:
                 - all`)
 		viper.SetConfigType("yaml")
 		err := viper.ReadConfig(bytes.NewBuffer(config))
@@ -195,24 +195,24 @@ authorize:
 	// Case 6: duplicate entries in paths
 	{
 		config := []byte(`---
-role:
-  available_roles:
+userManagement:
+  userRoles:
     admin:
-      assigned_permissions:
+      permissions:
         - all
 authorize:
   rules:
     - host: unittest.testing.org
-      paths:
-        - path_pattern: "^/path1/[[:alpha:]]+/?$"
-          methods:
+      allowedPaths:
+        - pathPattern: "^/path1/[[:alpha:]]+/?$"
+          allowedMethods:
             - method: GET
-              allowed_permissions:
+              allowedPermissions:
                 - all
-        - path_pattern: "^/path1/[[:alpha:]]+/?$"
-          methods:
+        - pathPattern: "^/path1/[[:alpha:]]+/?$"
+          allowedMethods:
             - method: PUT
-              allowed_permissions:
+              allowedPermissions:
                 - all`)
 		viper.SetConfigType("yaml")
 		err := viper.ReadConfig(bytes.NewBuffer(config))
@@ -225,22 +225,22 @@ authorize:
 	// Case 7: duplicate entries in path methods
 	{
 		config := []byte(`---
-role:
-  available_roles:
+userManagement:
+  userRoles:
     admin:
-      assigned_permissions:
+      permissions:
         - all
 authorize:
   rules:
     - host: unittest.testing.org
-      paths:
-        - path_pattern: "^/path1/[[:alpha:]]+/?$"
-          methods:
+      allowedPaths:
+        - pathPattern: "^/path1/[[:alpha:]]+/?$"
+          allowedMethods:
             - method: GET
-              allowed_permissions:
+              allowedPermissions:
                 - all
             - method: GET
-              allowed_permissions:
+              allowedPermissions:
                 - all`)
 		viper.SetConfigType("yaml")
 		err := viper.ReadConfig(bytes.NewBuffer(config))
@@ -253,19 +253,19 @@ authorize:
 	// Case 8: duplicate entries in permission for path methods
 	{
 		config := []byte(`---
-role:
-  available_roles:
+userManagement:
+  userRoles:
     admin:
-      assigned_permissions:
+      permissions:
         - all
 authorize:
   rules:
     - host: unittest.testing.org
-      paths:
-        - path_pattern: "^/path1/[[:alpha:]]+/?$"
-          methods:
+      allowedPaths:
+        - pathPattern: "^/path1/[[:alpha:]]+/?$"
+          allowedMethods:
             - method: GET
-              allowed_permissions:
+              allowedPermissions:
                 - all
                 - all`)
 		viper.SetConfigType("yaml")
@@ -279,19 +279,19 @@ authorize:
 	// Case 9: permission for path method is not associated with any roles
 	{
 		config := []byte(`---
-role:
-  available_roles:
+userManagement:
+  userRoles:
     admin:
-      assigned_permissions:
+      permissions:
         - all
 authorize:
   rules:
     - host: unittest.testing.org
-      paths:
-        - path_pattern: "^/path1/[[:alpha:]]+/?$"
-          methods:
+      allowedPaths:
+        - pathPattern: "^/path1/[[:alpha:]]+/?$"
+          allowedMethods:
             - method: GET
-              allowed_permissions:
+              allowedPermissions:
                 - all
                 - read`)
 		viper.SetConfigType("yaml")
@@ -305,20 +305,20 @@ authorize:
 	// Case 10: regex failures on permission name
 	{
 		config := []byte(`---
-role:
-  available_roles:
+userManagement:
+  userRoles:
     admin:
-      assigned_permissions:
+      permissions:
         - all
         - "read.path1"
 authorize:
   rules:
     - host: unittest.testing.org
-      paths:
-        - path_pattern: "^/path1/[[:alpha:]]+/?$"
-          methods:
+      allowedPaths:
+        - pathPattern: "^/path1/[[:alpha:]]+/?$"
+          allowedMethods:
             - method: GET
-              allowed_permissions:
+              allowedPermissions:
                 - all
                 - read`)
 		viper.SetConfigType("yaml")
@@ -332,19 +332,19 @@ authorize:
 	// Case 11: regex failures on role name
 	{
 		config := []byte(`---
-role:
-  available_roles:
+userManagement:
+  userRoles:
     "admin+local":
-      assigned_permissions:
+      permissions:
         - all
 authorize:
   rules:
     - host: unittest.testing.org
-      paths:
-        - path_pattern: "^/path1/[[:alpha:]]+/?$"
-          methods:
+      allowedPaths:
+        - pathPattern: "^/path1/[[:alpha:]]+/?$"
+          allowedMethods:
             - method: GET
-              allowed_permissions:
+              allowedPermissions:
                 - all
                 - read`)
 		viper.SetConfigType("yaml")

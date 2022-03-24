@@ -16,14 +16,14 @@ Validate the authorization server config
 func (c AuthorizationServerConfig) Validate() error {
 	validate := validator.New()
 
-	// Validate the Common section first
-	if err := validate.Struct(&c.Common); err != nil {
+	// Validate the custom regex section first
+	if err := validate.Struct(&c.CustomRegex); err != nil {
 		log.WithError(err).Errorf("Custom validator support not defined")
 		return err
 	}
 
 	// Create a custom validator
-	customValidate, err := c.Common.ValidationSupport.DefineCustomFieldValidator()
+	customValidate, err := c.CustomRegex.DefineCustomFieldValidator()
 	if err != nil {
 		log.WithError(err).Errorf("Unable to define custom validator support")
 		return err
@@ -45,7 +45,7 @@ func (c AuthorizationServerConfig) Validate() error {
 	}
 	allRoles := roleKeyValidate{Roles: make([]string, 0)}
 	availablePermissions := map[string]bool{}
-	for roleName, roleInfo := range c.Roles.AvailableRoles {
+	for roleName, roleInfo := range c.UserManagement.AvailableRoles {
 		allRoles.Roles = append(allRoles.Roles, roleName)
 		seenPermission := map[string]bool{}
 		for _, permission := range roleInfo.AssignedPermissions {
@@ -65,7 +65,7 @@ func (c AuthorizationServerConfig) Validate() error {
 
 	// Verify hosts defined are all unique
 	seenHost := map[string]bool{}
-	for _, hostAuthEntry := range c.Authorize.Rules {
+	for _, hostAuthEntry := range c.Authorization.Rules {
 		if _, ok := seenHost[hostAuthEntry.Host]; ok {
 			msg := fmt.Sprintf("Host %s already defined", hostAuthEntry.Host)
 			log.Errorf(msg)
