@@ -1,3 +1,8 @@
+# Padlock Application Configuration
+
+See below for an example of the complete Padlock application configuration file. Detailed explanation for each field are in the comments.
+
+```yaml
 ---
 ################################################################################################
 # Provide custom validation regex patterns
@@ -323,3 +328,87 @@ authenticate:
     firstName: given_name
     # Last name claim
     lastName: family_name
+```
+
+---
+
+## Default Configuration
+
+The binary comes with some preset default values.
+
+```yaml
+customValidationRegex:
+  userID: "^([[:alnum:]]|-|_)+$"
+  username: "^([[:alnum:]]|-|_)+$"
+  personalName: "^([[:alnum:]]|-)+$"
+  roleName: "^([[:alnum:]]|-|_)+$"
+  permission: "^([[:alnum:]]|-|_|:)+$"
+
+userManagement:
+  apis:
+    endPoint:
+      pathPrefix: "/"
+    requestLogging:
+      skipHeaders:
+        - "WWW-Authenticate"
+        - "Authorization"
+        - "Proxy-Authenticate"
+        - "Proxy-Authorization"
+  service:
+    appPort: 3000
+    listenOn: "0.0.0.0"
+    timeoutSecs:
+      idle: 600
+      read: 60
+      write: 60
+
+authorize:
+  apis:
+    endPoint:
+      pathPrefix: "/"
+    requestLogging:
+      skipHeaders:
+        - "WWW-Authenticate"
+        - "Authorization"
+        - "Proxy-Authenticate"
+        - "Proxy-Authorization"
+  service:
+    appPort: 3001
+    listenOn: "0.0.0.0"
+    timeoutSecs:
+      idle: 600
+      read: 60
+      write: 60
+  requestParamHeaders:
+    host: "X-Forwarded-Host"
+    path: "X-Forwarded-Uri"
+    method: "X-Forwarded-Method"
+    userID: "X-Caller-UserID"
+    username: "X-Caller-Username"
+    firstName: "X-Caller-Firstname"
+    lastName: "X-Caller-Lastname"
+    email: "X-Caller-Email"
+
+authenticate:
+  enabled: False
+  apis:
+    endPoint:
+      pathPrefix: "/"
+    requestLogging:
+      skipHeaders:
+        - "WWW-Authenticate"
+        - "Authorization"
+        - "Proxy-Authenticate"
+        - "Proxy-Authorization"
+  service:
+    appPort: 3002
+    listenOn: "0.0.0.0"
+    timeoutSecs:
+      idle: 600
+      read: 60
+      write: 60
+  targetClaims:
+    userID: sub
+```
+
+A user's configuration may skip these fields; the application will merge the provided configuration with the default values to form the final runtime configuration. However, the user must provide the missing configuration.
