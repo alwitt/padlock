@@ -41,7 +41,7 @@ var logTags log.Fields
 
 // @title padlock
 // @version v0.1.0-rc.2
-// @description REST API RBAC support application
+// @description External AuthN / AuthZ support service for REST API RBAC
 
 // @host localhost:3000
 // @BasePath /
@@ -63,7 +63,7 @@ func main() {
 	app := &cli.App{
 		Version:     "v0.1.0-rc.2",
 		Usage:       "application entrypoint",
-		Description: "A simple support application for REST API RBAC",
+		Description: "An external AuthN / AuthZ support service for REST API RBAC",
 		Flags: []cli.Flag{
 			// LOGGING
 			&cli.BoolFlag{

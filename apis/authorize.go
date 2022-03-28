@@ -89,17 +89,17 @@ func (h AuthorizationHandler) ParamReadMiddleware(next http.HandlerFunc) http.Ha
 // via HTTP headers by the entity using this endpoint. The parameters listed in this comment
 // section are the default headers the application will search for. But the headers to check
 // can be configured via the "authorize.request_param_location" object of the application config.
-// @tags Management
+// @tags Authorize
 // @Produce json
 // @Param Padlock-Request-ID header string false "User provided request ID to match against logs"
-// @Param X-Forwarded-Host header string true "Host of the REST call to authorize"
-// @Param X-Forwarded-Uri header string true "URI path of the REST call to authorize"
-// @Param X-Forwarded-Method header string true "HTTP method of the REST call to authorize"
-// @Param X-Caller-UserID header string true "ID of the user making the REST call to authorize"
-// @Param X-Caller-Username header string false "Username of the user making the REST call to authorize"
-// @Param X-Caller-Firstname header string false "First name / given name of the user making the REST call to authorize"
-// @Param X-Caller-Lastname header string false "Last name / surname / family name of the user making the REST call to authorize"
-// @Param X-Caller-Email header string false "Email of the user making the REST call to authorize"
+// @Param X-Forwarded-Host header string true "Host of the API call to authorize"
+// @Param X-Forwarded-Uri header string true "URI path of the API call to authorize"
+// @Param X-Forwarded-Method header string true "HTTP method of the API call to authorize"
+// @Param X-Caller-UserID header string true "ID of the user making the API call to authorize"
+// @Param X-Caller-Username header string false "Username of the user making the API call to authorize"
+// @Param X-Caller-Firstname header string false "First name / given name of the user making the API call to authorize"
+// @Param X-Caller-Lastname header string false "Last name / surname / family name of the user making the API call to authorize"
+// @Param X-Caller-Email header string false "Email of the user making the API call to authorize"
 // @Success 200 {object} BaseResponse "success"
 // @Failure 400 {string} BaseResponse "error"
 // @Failure 403 {string} BaseResponse "error"
@@ -231,7 +231,7 @@ func (h AuthorizationHandler) AllowHandler() http.HandlerFunc {
 // Alive godoc
 // @Summary Authorization API liveness check
 // @Description Will return success to indicate authorization REST API module is live
-// @tags Management
+// @tags Authorize
 // @Produce json
 // @Param Padlock-Request-ID header string false "User provided request ID to match against logs"
 // @Success 200 {object} BaseResponse "success"
@@ -260,7 +260,7 @@ func (h AuthorizationHandler) AliveHandler() http.HandlerFunc {
 // Ready godoc
 // @Summary Authorization API readiness check
 // @Description Will return success if authorization REST API module is ready for use
-// @tags Management
+// @tags Authorize
 // @Produce json
 // @Param Padlock-Request-ID header string false "User provided request ID to match against logs"
 // @Success 200 {object} BaseResponse "success"

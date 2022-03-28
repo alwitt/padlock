@@ -52,7 +52,7 @@ func defineAuthenticationHandler(
 // Authenticate godoc
 // @Summary Authenticate a user
 // @Description Authticate a user by verifiying the bearer token provided
-// @tags Management
+// @tags Authenticate
 // @Produce json
 // @Param Padlock-Request-ID header string false "User provided request ID to match against logs"
 // @Param Authorization header string true "User must provide a bearer token"
@@ -212,7 +212,7 @@ func (h AuthenticationHandler) AuthenticateHandler() http.HandlerFunc {
 // Alive godoc
 // @Summary Authentication API liveness check
 // @Description Will return success to indicate Authentication REST API module is live
-// @tags Management
+// @tags Authenticate
 // @Produce json
 // @Param Padlock-Request-ID header string false "User provided request ID to match against logs"
 // @Success 200 {object} BaseResponse "success"
@@ -241,7 +241,7 @@ func (h AuthenticationHandler) AliveHandler() http.HandlerFunc {
 // Ready godoc
 // @Summary Authentication API readiness check
 // @Description Will return success if Authentication REST API module is ready for use
-// @tags Management
+// @tags Authenticate
 // @Produce json
 // @Param Padlock-Request-ID header string false "User provided request ID to match against logs"
 // @Success 200 {object} BaseResponse "success"
