@@ -1,93 +1,137 @@
-# Padlock
+# Padlock - External Authorization Service For REST APIs
 
-Padlock provides RBAC enforcement for REST APIs
+`Padlock` is a simple, configurable, and flexible authentication (AuthN) and authorization (AuthZ) service for REST APIs.
 
-## Getting started
+The AuthN / AuthZ API supports
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+* [Nginx Subrequest Authentication](https://docs.nginx.com/nginx/admin-guide/security-controls/configuring-subrequest-authentication/)
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+* [Traefik ForwardAuth Middleware](https://doc.traefik.io/traefik/middlewares/http/forwardauth/)
 
-## Add your files
+* etc.
 
-- [ ] [Create](https://gitlab.com/-/experiment/new_project_readme_content:fc1b2ae5e05bdfa3564c486d86babacf?https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://gitlab.com/-/experiment/new_project_readme_content:fc1b2ae5e05bdfa3564c486d86babacf?https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://gitlab.com/-/experiment/new_project_readme_content:fc1b2ae5e05bdfa3564c486d86babacf?https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+as an external auth server responding to validation requests from the request proxy.
 
+---
+
+## [Table of Content](#table-of-content)
+
+- [1. Overview](#1-overview)
+  * [1.1 User Management](#11-user-management)
+  * [1.2 Authentication](#12-authentication)
+  * [1.3 Authorization](#13-authorization)
+- [2. Configuration](#2-configuration)
+  * [2.1 User Roles](#21-user-roles)
+  * [2.2 Authorization Rules](#22-authorization-rules)
+  * [2.3 Runtime User Discovery](#23-runtime-user-discovery)
+
+---
+
+# [1. Overview](#table-of-content)
+
+<p align="center">
+  <img src="docs/highlevel.png">
+</p>
+
+`Padlock` consists of three submodules:
+
+* `User Management`
+
+* `Authentication`
+
+* `Authorization`
+
+## [1.1 User Management](#table-of-content)
+
+The user management submodule is the administrative API of `Padlock`. Through this API, an administrator can
+
+* Perform CRUD operations on users known and managed by `Padlock`.
+* Associate users with user roles.
+
+> **NOTES:** A user role defines what system permissions a user of this role have within the system being protected. In the context of REST API RBAC, these permissions mainly govern which API calls a user is allowed to make against the REST APIs. **By associating roles with a user, that user inherits the permissions associated with those user roles.**
+
+The set of user roles `Padlock` operates with is provided via configuration at program start; whereas users are administrator defined, or can be [learned at runtime](#23-runtime-user-discovery). The mapping between users and user roles provides the basis for [user request authorization](#13-authorization)
+
+> **NOTES:** A user without permissions will never pass authorization.
+
+## [1.2 Authentication](#table-of-content)
+
+The authentication submodule performs user authentication for user requests arriving at the request proxy. Specifically, the submodule processes the bearer token found in the authorization header included with the user request, and validates that token.
+
+```http
+GET /v1/authenticate HTTP/1.1
+...
+Authorization: bearer {{ token }}
+...
 ```
-cd existing_repo
-git remote add origin https://gitlab.com/projects-nan/padlock.git
-git branch -M main
-git push -uf origin main
+
+`Padlock` is designed to validate Oauth2 / OpenID JWT tokens; so the authentication submodule will validate the signature of the bearer token against the Public key of the Oauth2 / OpenID provider's signing key pair.
+
+> **NOTES:** Token introspection will be implemented in the future.
+
+Upon successful validation, the submodule will respond to the request proxy with the following additional information regarding the user as response headers:
+
+* User ID
+* Username
+* First name
+* Last name
+* Email
+
+These additional parameters are parsed from the various claims within the JWT bearer token.
+
+> **NOTE:** Since different Oauth2 / OpenID providers include different claims in their JWT, the user is responsible for providing via [configuration](ref/general_application_config.md) which claims to parse for the additional user metadata.
+
+> **NOTE:** Aside from `User ID`, the other metadata fields are optional depending on the presence of the associated claims within the JWT token. **The JWT token must provide `User ID` as a claim.**
+
+## [1.3 Authorization](#table-of-content)
+
+The authorization submodule performs authorization for user requests arriving at the request proxy (i.e. is a user allowed to make that request?). The submodule fetches the parameters regarding the user request from the headers of the HTTP call from the request proxy to `Padlock` for authorization.
+
+```http
+GET /v1/allow HTTP/1.1
+...
+X-Forwarded-Host: {{ User request "host" }}
+X-Forwarded-Uri: {{ User request URI path }}
+X-Forwarded-Method: {{ User request HTTP method }}
+X-Caller-UserID: {{ Caller user ID }}
+X-Caller-Username: {{ Caller username }}
+X-Caller-Firstname: {{ Caller first name }}
+X-Caller-Lastname: {{ Caller last name }}
+X-Caller-Email: {{ Caller email }}
+...
 ```
 
-## Integrate with your tools
+The authorization submodule operates against
 
-- [ ] [Set up project integrations](https://gitlab.com/-/experiment/new_project_readme_content:fc1b2ae5e05bdfa3564c486d86babacf?https://gitlab.com/projects-nan/padlock/-/settings/integrations)
+* Pre-defined [authorization rules](#22-authorization-rules)
+* Mapping between [users and roles](#11-user-management)
 
-## Collaborate with your team
+Authorization rules define what system permissions would allow a user to make a specific request, and the mapping between users and user roles define what system permissions a user has.
 
-- [ ] [Invite team members and collaborators](https://gitlab.com/-/experiment/new_project_readme_content:fc1b2ae5e05bdfa3564c486d86babacf?https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://gitlab.com/-/experiment/new_project_readme_content:fc1b2ae5e05bdfa3564c486d86babacf?https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://gitlab.com/-/experiment/new_project_readme_content:fc1b2ae5e05bdfa3564c486d86babacf?https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://gitlab.com/-/experiment/new_project_readme_content:fc1b2ae5e05bdfa3564c486d86babacf?https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Automatically merge when pipeline succeeds](https://gitlab.com/-/experiment/new_project_readme_content:fc1b2ae5e05bdfa3564c486d86babacf?https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+The submodule uses the following request parameters
 
-## Test and Deploy
+* `X-Forwarded-Host`
+* `X-Forwarded-Uri`
+* `X-Forwarded-Method`
 
-Use the built-in continuous integration in GitLab.
+to match the request against a specific authorization rule.
 
-- [ ] [Get started with GitLab CI/CD](https://gitlab.com/-/experiment/new_project_readme_content:fc1b2ae5e05bdfa3564c486d86babacf?https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing(SAST)](https://gitlab.com/-/experiment/new_project_readme_content:fc1b2ae5e05bdfa3564c486d86babacf?https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://gitlab.com/-/experiment/new_project_readme_content:fc1b2ae5e05bdfa3564c486d86babacf?https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://gitlab.com/-/experiment/new_project_readme_content:fc1b2ae5e05bdfa3564c486d86babacf?https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://gitlab.com/-/experiment/new_project_readme_content:fc1b2ae5e05bdfa3564c486d86babacf?https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+With the authorization rule, this user is authorized based on whether the user's system permissions passes the permission check of that authorization rule.
 
-***
+For an unknown user, if [runtime user discovery](#table-of-content) is enabled, the authorization submodule will define a new user within the database using the request parameters
 
-# Editing this README
+* `X-Caller-UserID`
+* `X-Caller-Username`
+* `X-Caller-Firstname`
+* `X-Caller-Lastname`
+* `X-Caller-Email`
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!).  Thank you to [makeareadme.com](https://www.makeareadme.com) for this template.
+> **NOTES:** The newly created user entry starts with no user roles.
 
-## Suggestions for a good README
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+# [2. Configuration](#table-of-content)
 
-## Name
-Choose a self-explaining name for your project.
+## [2.1 User Roles](#table-of-content)
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+## [2.2 Authorization Rules](#table-of-content)
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
-
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
-
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
-
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
-
+## [2.3 Runtime User Discovery](#table-of-content)
