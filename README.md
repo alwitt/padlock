@@ -79,7 +79,7 @@ Upon successful validation, the submodule will respond to the request proxy with
 
 These additional parameters are parsed from the various claims within the JWT bearer token.
 
-> **NOTE:** Since different Oauth2 / OpenID providers include different claims in their JWT, the user is responsible for providing via [configuration](ref/general_application_config.md) which claims to parse for the additional user metadata.
+> **NOTE:** Since different Oauth2 / OpenID providers include different claims in their JWT, the user is responsible for providing via [configuration](ref/general_application_config.md#authentication-submodule-configuration) which claims to parse for the additional user metadata.
 
 > **NOTE:** Aside from `User ID`, the other metadata fields are optional depending on the presence of the associated claims within the JWT token. **The JWT token must provide `User ID` as a claim.**
 
