@@ -23,7 +23,9 @@ as an external auth server responding to validation requests from the request pr
 - [2. Configuration](#2-configuration)
   * [2.1 User Roles](#21-user-roles)
   * [2.2 Authorization Rules](#22-authorization-rules)
+    * [2.2.1 User Request Parameters](#221-user-request-parameters)
   * [2.3 Runtime User Discovery](#23-runtime-user-discovery)
+- [3. Integration With a HTTP Request Proxy](#3-integration-with-a-http-request-proxy)
 
 ---
 
@@ -193,4 +195,82 @@ As an example
 
 ## [2.2 Authorization Rules](#table-of-content)
 
+Similar to user roles, authorization rules must be provided in the configuration. Below is an example authorization rules configuration section
+
+```yaml
+authorize:
+  rules:
+    - host: dev-00.testing.org
+      allowedPaths:
+        - pathPattern: "^/path1$"
+          allowedMethods:
+            - method: GET
+              allowedPermissions:
+                - admin
+                - read
+            - method: POST
+              allowedPermissions:
+                - admin
+                - write
+        - pathPattern: "^/path1/([[:alnum:]]|-)+/?$"
+          allowedMethods:
+            - method: GET
+              allowedPermissions:
+                - admin
+                - read
+            - method: PUT
+              allowedPermissions:
+                - admin
+                - modify
+            - method: DELETE
+              allowedPermissions:
+                - admin
+                - modify
+```
+
+When the authorization submodule is determining whether a user request is authorized, it will step through the set of configured authorization rules.
+
+1. Find the **rule group** whose `host` matches that in the user request.
+    * If none matches and a rule group with `host` as `*` exists, that rule group will be used.
+2. Based on the request's URI path, determine which `allowedPaths` entry, a **path rule**, best matches the request.
+    * Each path rule is distinguished by a PCRE2 REGEX pattern (e.g. `"^/path1/([[:alnum:]]|-)+/?$"`).
+    * As there may be multiple entries with similar prefixes, the path rules are organized by the length of their REGEX pattern. When searching for a path rule which best describes a user request, the submodule compares it against path rules with the longest REGEX patterns first.
+3. With the path rule, find the appropriate `allowedMethods` entry, a **method rule**, based on the user request method.
+    * If none matches and a method rule with `method` as `*` exists, that method rule will be used.
+
+Once the most appropriate method rule is found, the authorization submodule now has the set of system permissions which would authorize this user to make that request. A user is authorized if this user's system permissions, assigned through its user roles, overlaps with the allowed list of permissions of that method rule.
+
+### [2.2.1 User Request Parameters](#table-of-content)
+
+As described [here](#13-authorization), the parameters of the user request to authorize is provided via HTTP headers when the request proxy calls `Padlock` to authorize the request. The headers which `Padlock` checks for these parameter are configured via
+
+```yaml
+authorize:
+  requestParamHeaders:
+    host: X-Forwarded-Host
+    path: X-Forwarded-Uri
+    method: X-Forwarded-Method
+    userID: X-Caller-UserID
+    username: X-Caller-Username
+    firstName: X-Caller-Firstname
+    lastName: X-Caller-Lastname
+    email: X-Caller-Email
+```
+
+> **NOTES:** The values seen above are the default values in `Padlock`.
+
+The configuration of these value should be tuned for the specific request proxy used.
+
+The headers described by
+
+* `authorize.requestParamHeaders.userID`
+* `authorize.requestParamHeaders.username`
+* `authorize.requestParamHeaders.firstName`
+* `authorize.requestParamHeaders.lastName`
+* `authorize.requestParamHeaders.email`
+
+carry a user's metadata. These are special configuration fields as they are read by both the `authorization` and `authentication` submodules. See [here](#3-integration-with-a-http-request-proxy) for how these configurations are used.
+
 ## [2.3 Runtime User Discovery](#table-of-content)
+
+# [3. Integration With a HTTP Request Proxy](#table-of-content)
