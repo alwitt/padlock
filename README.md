@@ -130,7 +130,66 @@ For an unknown user, if [runtime user discovery](#table-of-content) is enabled, 
 
 # [2. Configuration](#table-of-content)
 
+`Padlock` requires the following configuration during runtime:
+
+* [General Application Config](ref/general_application_config.md): Controls and defines general behavior of the various `Padlock` submodules.
+* [OpenID Provider Connection Parameters](ref/openid_provider_param.md): Provides connection parameters for the Oauth2 / OpenID provider to be used by the `authentication` submodule.
+* [User Tracking Database Connection Parameters](ref/user_track_database_param.md): User tracking database connection parameters, **not including the user password**.
+* Database User Password
+
+More details regarding the various configuration files (i.e. format and content) can be found under [ref](ref/README.md).
+
+> **IMPORTANT:** `Padlock` currently targets only Postgres compatible databases (e.g. AWS Aurora). When connecting with the user tracking database, the application only uses Postgres drivers.
+
+Several important configuration / runtime related concepts will be highlighted in the following subsections.
+
 ## [2.1 User Roles](#table-of-content)
+
+User role configurations are, as one would expect, not part of the default configuration built into `Padlock`. Below is an example user role configuration section
+
+```yaml
+userManagement:
+  userRoles:
+    admin:
+      permissions:
+        - read
+        - write
+        - modify
+        - delete
+    reader:
+      permissions:
+        - read
+    writer:
+      permissions:
+        - write
+    user:
+      permissions:
+        - read
+        - write
+        - modify
+```
+
+The example defines the user roles `admin`, `reader`, `writer`, and `user`; the system permissions associated with each role is listed under `{{ role }}.permissions`.
+
+`Padlock` only supports role assignments, so system permissions can not be directly assigned to a user. By assigning `reader`, the user would gain the permission `read`; by assigning both `reader` and `writer`, the user would gain the permissions `read` and `write`.
+
+When multiple assigned roles have overlapping system permission sets, the final permissions associated with the user would be a union of all system permission sets of each assigned role; by assigning the `reader` and `user` roles, a user would have the permissions `read`, `write`, and `modify`.
+
+Regarding the tracking of users and roles, `Padlock` treats roles as read-only configuration. At program start, `Padlock` will commit to memory the set of roles provided; roles can not be added at runtime. When a user is assigned a role, the only information recorded by the user tracking database is the association between a user and the name of a role; the system permissions granted by that association is based entirely on the provided configuration file. Thus, when configuration changes the system permissions assigned with a role, the associated users automatically inherit the permission sets.
+
+If the set of user roles configured changes between execution of `Padlock`, a clean up will be performed.
+
+* Compare the set of user roles provided in the configuration with the set of user roles referenced in the database.
+* For all newly configured roles, mark them in the database.
+* For all roles previously referenced in the database, but is now missing from the configuration, remove their references from the database.
+
+As an example
+
+* User `X` was assigned roles `A` and `B`.
+* The new configuration no longer mentions role `B`.
+* Now, user `X` will only be assigned role `A`.
+
+> **NOTES:** Ideally the role names should not be changed, but their assigned system permissions should be adapted overtime instead.
 
 ## [2.2 Authorization Rules](#table-of-content)
 
