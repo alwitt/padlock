@@ -273,4 +273,14 @@ carry a user's metadata. These are special configuration fields as they are read
 
 ## [2.3 Runtime User Discovery](#table-of-content)
 
+`Padlock` has the option to create new user entries at runtime. This is controlled by the configuration field
+
+```yaml
+authorize:
+  forUnknownUser:
+    autoAdd: true
+```
+
+When `autoAdd` is enabled, the authorization submodule will, during the authorization process, record a new user entry for any unknown user ID it encounters. The user entry is populated based on the user metadata read from the authorization request (see [here](#13-authorization) and [here](#221-user-request-parameters) for additional context) sent by the request proxy to `Padlock`.
+
 # [3. Integration With a HTTP Request Proxy](#table-of-content)
