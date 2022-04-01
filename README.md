@@ -26,6 +26,8 @@ as an external auth server responding to validation requests from the request pr
     * [2.2.1 User Request Parameters](#221-user-request-parameters)
   * [2.3 Runtime User Discovery](#23-runtime-user-discovery)
 - [3. Integration With a HTTP Request Proxy](#3-integration-with-a-http-request-proxy)
+  * [3.1 User Request Authentication](#31-user-request-authentication)
+  * [3.2 User Request Authorization](#32-user-request-authorization)
 
 ---
 
@@ -284,3 +286,66 @@ authorize:
 When `autoAdd` is enabled, the authorization submodule will, during the authorization process, record a new user entry for any unknown user ID it encounters. The user entry is populated based on the user metadata read from the authorization request (see [here](#13-authorization) and [here](#221-user-request-parameters) for additional context) sent by the request proxy to `Padlock`.
 
 # [3. Integration With a HTTP Request Proxy](#table-of-content)
+
+`Padlock` is fully compatible with [Traefik ForwardAuth Middleware](https://doc.traefik.io/traefik/middlewares/http/forwardauth/). In this example, we use two different `ForwardAuth` middleware: one for user authentication, and the other for user authorization.
+
+<p align="center">
+  <img src="docs/traefik-integration.png">
+</p>
+
+## [3.1 User Request Authentication](#table-of-content)
+
+For the first `ForwardAuth` middleware, `Traefik` will authenticate the user of the request. An example middleware specification is
+
+```yaml
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: padlock-authn
+spec:
+  forwardAuth:
+    address: http://padlock-authn.auth.svc.cluster.local/v1/authenticate
+    authResponseHeaders:
+    - X-Caller-UserID
+    - X-Caller-Username
+    - X-Caller-Firstname
+    - X-Caller-Lastname
+    - X-Caller-Email
+```
+
+`Traefik` sends to `Padlock` the user's authorization bearer token, expected to be in JWT format. After authenticating the user, `Padlock` will return in the response additional headers containing the user's metadata read from the JWT token claims.
+
+The first `Traefik` `ForwardAuth` is configured to incorporate these additional headers into the user request, and will be available to all subsequent middleware and any upstream service backends.
+
+<p align="center">
+  <img src="docs/traefik-authn-middleware.png">
+</p>
+
+## [3.2 User Request Authorization](#table-of-content)
+
+For the second `ForwardAuth` middleware, `Traefik` will authorize the user request. An example middleware specification is
+
+```yaml
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: padlock-authz
+spec:
+  forwardAuth:
+    address: http://padlock-authz.auth.svc.cluster.local/v1/allow
+```
+
+`Traefik` sends to `Padlock`
+
+* The user request parameters
+* The user metadata parameters provided by the authentication submodule
+
+The authorization submodule uses these two sets of parameters to determine whether to allow this request.
+
+> **NOTES:** The user metadata parameters here is used to record a new user entry when runtime user discovery is enabled.
+
+<p align="center">
+  <img src="docs/traefik-authz-middleware.png">
+</p>
+
+> **IMPORTANT:** To ensure both the authentication and authorization submodules are targeting the same set of HTTP headers, both submodules refer to the same [configuration section for the names of these headers](#221-user-request-parameters).
