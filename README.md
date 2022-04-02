@@ -1,5 +1,12 @@
 # Padlock - External Authorization Service For REST APIs
 
+[![MIT][License-Image]][License-Url] [![Go Report Card][ReportCard-Image]][ReportCard-Url]
+
+[License-Url]: https://mit-license.org/
+[License-Image]: https://img.shields.io/badge/License-MIT-blue.svg
+[ReportCard-Url]: https://goreportcard.com/report/github.com/alwitt/padlock
+[ReportCard-Image]: https://goreportcard.com/badge/github.com/alwitt/padlock
+
 `Padlock` is a simple, configurable, and flexible authentication (AuthN) and authorization (AuthZ) service for REST APIs.
 
 The AuthN / AuthZ API supports

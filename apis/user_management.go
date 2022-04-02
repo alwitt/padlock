@@ -381,7 +381,7 @@ func (h UserManagementHandler) GetUserHandler() http.HandlerFunc {
 
 // DeleteUser godoc
 // @Summary Delete user
-// @Description Remove user from the sytem.
+// @Description Remove user from the system.
 // @tags Management
 // @Produce json
 // @Param Padlock-Request-ID header string false "User provided request ID to match against logs"
