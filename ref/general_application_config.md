@@ -93,7 +93,10 @@ userManagement:
     # non-repeating.
     admin:
       permissions:
-        - admin
+        - read
+        - write
+        - modify
+        - delete
     reader:
       permissions:
         - read
@@ -208,11 +211,9 @@ authorize:
             - method: GET
               # For a given HTTP method, which permissions will allow the REST request to pass.
               allowedPermissions:
-                - admin
                 - read
             - method: POST
               allowedPermissions:
-                - admin
                 - write
         # As multiple path regex patterns may start with the same prefix, the submodule checks
         # each regex pattern from longest to shortest (more specific to less specific).
@@ -220,22 +221,22 @@ authorize:
           allowedMethods:
             - method: GET
               allowedPermissions:
-                - admin
                 - read
             - method: PUT
               allowedPermissions:
-                - admin
                 - modify
             - method: DELETE
               allowedPermissions:
-                - admin
                 - modify
         - pathPattern: "^/path2/[[:alpha:]]+/?$"
           allowedMethods:
             # If method is "*", this mean "any HTTP method" is allowed.
             - method: "*"
               allowedPermissions:
-                - admin
+                - read
+                - write
+                - modify
+                - delete
     # If host is "*", this mean "any HTTP host" will match.
     - host: "*"
       allowedPaths:
@@ -243,16 +244,17 @@ authorize:
           allowedMethods:
             - method: "*"
               allowedPermissions:
-                - admin
+                - read
+                - write
+                - modify
+                - delete
         - pathPattern: "^/path3/([[:alnum:]]|-|_)+/?$"
           allowedMethods:
             - method: GET
               allowedPermissions:
-                - admin
                 - read
             - method: PUT
               allowedPermissions:
-                - admin
                 - modify
 ```
 

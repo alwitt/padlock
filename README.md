@@ -28,6 +28,7 @@ as an external auth server responding to validation requests from the request pr
 - [3. Integration With a HTTP Request Proxy](#3-integration-with-a-http-request-proxy)
   * [3.1 User Request Authentication](#31-user-request-authentication)
   * [3.2 User Request Authorization](#32-user-request-authorization)
+- [4. Getting Started](#4-getting-started)
 
 ---
 
@@ -122,7 +123,7 @@ to match the request against a specific authorization rule.
 
 With the authorization rule, this user is authorized based on whether the user's system permissions passes the permission check of that authorization rule.
 
-For an unknown user, if [runtime user discovery](#table-of-content) is enabled, the authorization submodule will define a new user within the database using the request parameters
+For an unknown user, if [runtime user discovery](#23-runtime-user-discovery) is enabled, the authorization submodule will define a new user within the database using the request parameters
 
 * `X-Caller-UserID`
 * `X-Caller-Username`
@@ -287,7 +288,7 @@ When `autoAdd` is enabled, the authorization submodule will, during the authoriz
 
 # [3. Integration With a HTTP Request Proxy](#table-of-content)
 
-`Padlock` is fully compatible with [Traefik ForwardAuth Middleware](https://doc.traefik.io/traefik/middlewares/http/forwardauth/). In this example, we use two different `ForwardAuth` middleware: one for user authentication, and the other for user authorization.
+`Padlock` is fully compatible with [Traefik ForwardAuth Middleware](https://doc.traefik.io/traefik/middlewares/http/forwardauth/). In this example, we use `Traefik` as the request proxy and two different `ForwardAuth` middleware: one for user authentication, and the other for user authorization.
 
 <p align="center">
   <img src="docs/traefik-integration.png">
@@ -349,3 +350,70 @@ The authorization submodule uses these two sets of parameters to determine wheth
 </p>
 
 > **IMPORTANT:** To ensure both the authentication and authorization submodules are targeting the same set of HTTP headers, both submodules refer to the same [configuration section for the names of these headers](#221-user-request-parameters).
+
+# [4. Getting Started](#table-of-content)
+
+`Padlock`'s development process is defined as Makefile targets for ease-of-use.
+
+```shell
+$ make help
+lint                           Lint the files
+fix                            Lint and fix vialoations
+test                           Run unittests
+build                          Build the application
+openapi                        Generate the OpenAPI spec
+compose                        Prepare the development docker stack
+clean                          Clean up development environment
+help                           Display this help screen
+```
+
+After checking out the project, first:
+
+```shell
+make
+```
+
+This will prepare the development environment, and build the application binary
+
+```shell
+$ ./padlock -h
+NAME:
+   padlock - application entrypoint
+
+USAGE:
+   padlock [global options] command [command options] [arguments...]
+
+VERSION:
+   v0.1.0
+
+DESCRIPTION:
+   An external AuthN / AuthZ support service for REST API RBAC
+
+COMMANDS:
+   help, h  Shows a list of commands or help for one command
+
+GLOBAL OPTIONS:
+   --json-log, -j                              Whether to log in JSON format (default: false) [$LOG_AS_JSON]
+   --log-level value, -l value                 Logging level: [debug info warn error] (default: warn) [$LOG_LEVEL]
+   --config-file value, -c value               Application config file [$CONFIG_FILE]
+   --db-param-file value, -d value             Database connection parameter file [$DB_CONNECT_PARAM_FILE]
+   --db-user-password value, -p value          Database user password [$DB_CONNECT_USER_PASSWORD]
+   --openid-issuer-param-file value, -o value  OpenID issuer parameter file [$OPENID_ISSUER_PARAM_FILE]
+   --help, -h                                  show help (default: false)
+   --version, -v                               print the version (default: false)
+```
+
+> **NOTES:** The various config files needed by `Padlock` are described [here](ref/README.md).
+
+Then verify that all tests are passing:
+
+```
+$ make test
+?   	github.com/alwitt/padlock	[no test files]
+ok  	github.com/alwitt/padlock/apis	0.067s
+?   	github.com/alwitt/padlock/authenticate	[no test files]
+ok  	github.com/alwitt/padlock/common	0.019s
+ok  	github.com/alwitt/padlock/match	0.024s
+ok  	github.com/alwitt/padlock/models	0.032s
+ok  	github.com/alwitt/padlock/users	0.093s
+```

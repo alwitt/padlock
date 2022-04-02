@@ -40,7 +40,7 @@ var cmdArgs cliArgs
 var logTags log.Fields
 
 // @title padlock
-// @version v0.1.0-rc.2
+// @version v0.1.0
 // @description External AuthN / AuthZ support service for REST API RBAC
 
 // @host localhost:3000
@@ -61,7 +61,7 @@ func main() {
 	common.InstallDefaultAuthorizationServerConfigValues()
 
 	app := &cli.App{
-		Version:     "v0.1.0-rc.2",
+		Version:     "v0.1.0",
 		Usage:       "application entrypoint",
 		Description: "An external AuthN / AuthZ support service for REST API RBAC",
 		Flags: []cli.Flag{

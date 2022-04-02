@@ -1,5 +1,5 @@
 ---
-title: padlock v0.1.0-rc.2
+title: padlock v0.1.0
 language_tabs:
   - shell: Shell
   - http: HTTP
@@ -19,7 +19,7 @@ generator: widdershins v4.0.1
 
 ---
 
-<h1 id="padlock">padlock v0.1.0-rc.2</h1>
+<h1 id="padlock">padlock v0.1.0</h1>
 
 > Scroll down for code samples, example requests and responses. Select a language for code samples from the tabs above or the mobile navigation menu.
 
@@ -27,7 +27,7 @@ External AuthN / AuthZ support service for REST API RBAC
 
 Base URLs:
 
-* <a href="//localhost:3000">//localhost:3000</a>
+* <a href="http://localhost:3000">http://localhost:3000</a>
 
 <h1 id="padlock-management">Management</h1>
 
