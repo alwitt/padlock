@@ -1,6 +1,6 @@
 # Padlock - External Authorization Service For REST APIs
 
-[![MIT][License-Image]][License-Url] [![Go Report Card][ReportCard-Image]][ReportCard-Url]
+[![MIT][License-Image]][License-Url] [![Go Report Card][ReportCard-Image]][ReportCard-Url] [![CICD](https://github.com/alwitt/padlock/actions/workflows/cicd.yaml/badge.svg?branch=main)](https://github.com/alwitt/padlock/actions/workflows/cicd.yaml)
 
 [License-Url]: https://mit-license.org/
 [License-Image]: https://img.shields.io/badge/License-MIT-blue.svg
