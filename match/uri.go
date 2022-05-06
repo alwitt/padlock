@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	goutils "github.com/alwitt/go-utils"
+	"github.com/alwitt/goutils"
 	"github.com/alwitt/padlock/common"
 	"github.com/apex/log"
 	"github.com/go-playground/validator/v10"

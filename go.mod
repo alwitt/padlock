@@ -3,7 +3,7 @@ module github.com/alwitt/padlock
 go 1.18
 
 require (
-	github.com/alwitt/go-utils v0.2.0
+	github.com/alwitt/goutils v0.3.0
 	github.com/apex/log v1.9.0
 	github.com/go-playground/validator/v10 v10.11.0
 	github.com/golang-jwt/jwt v3.2.2+incompatible

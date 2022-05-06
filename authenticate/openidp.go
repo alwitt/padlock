@@ -8,7 +8,7 @@ import (
 	"math/big"
 	"net/http"
 
-	goutils "github.com/alwitt/go-utils"
+	"github.com/alwitt/goutils"
 	"github.com/alwitt/padlock/common"
 	"github.com/apex/log"
 	"github.com/golang-jwt/jwt"

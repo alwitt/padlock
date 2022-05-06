@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"sync"
 
-	goutils "github.com/alwitt/go-utils"
+	"github.com/alwitt/goutils"
 	"github.com/alwitt/padlock/common"
 	"github.com/alwitt/padlock/models"
 	"github.com/apex/log"

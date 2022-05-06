@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	goutils "github.com/alwitt/go-utils"
+	"github.com/alwitt/goutils"
 	"github.com/alwitt/padlock/common"
 	"github.com/alwitt/padlock/match"
 	"github.com/alwitt/padlock/models"
@@ -108,11 +108,11 @@ func (h AuthorizationHandler) ParamReadMiddleware(next http.HandlerFunc) http.Ha
 // @Param X-Caller-Firstname header string false "First name / given name of the user making the API call to authorize"
 // @Param X-Caller-Lastname header string false "Last name / surname / family name of the user making the API call to authorize"
 // @Param X-Caller-Email header string false "Email of the user making the API call to authorize"
-// @Success 200 {object} BaseResponse "success"
-// @Failure 400 {string} BaseResponse "error"
-// @Failure 403 {string} BaseResponse "error"
+// @Success 200 {object} goutils.RestAPIBaseResponse "success"
+// @Failure 400 {object} goutils.RestAPIBaseResponse "error"
+// @Failure 403 {object} goutils.RestAPIBaseResponse "error"
 // @Failure 404 {string} string "error"
-// @Failure 500 {object} BaseResponse "error"
+// @Failure 500 {object} goutils.RestAPIBaseResponse "error"
 // @Router /v1/allow [get]
 func (h AuthorizationHandler) Allow(w http.ResponseWriter, r *http.Request) {
 	var respCode int
@@ -242,10 +242,10 @@ func (h AuthorizationHandler) AllowHandler() http.HandlerFunc {
 // @tags Authorize
 // @Produce json
 // @Param Padlock-Request-ID header string false "User provided request ID to match against logs"
-// @Success 200 {object} BaseResponse "success"
-// @Failure 400 {string} BaseResponse "error"
+// @Success 200 {object} goutils.RestAPIBaseResponse "success"
+// @Failure 400 {object} goutils.RestAPIBaseResponse "error"
 // @Failure 404 {string} string "error"
-// @Failure 500 {object} BaseResponse "error"
+// @Failure 500 {object} goutils.RestAPIBaseResponse "error"
 // @Router /v1/alive [get]
 func (h AuthorizationHandler) Alive(w http.ResponseWriter, r *http.Request) {
 	logTags := h.GetLogTagsForContext(r.Context())
@@ -271,10 +271,10 @@ func (h AuthorizationHandler) AliveHandler() http.HandlerFunc {
 // @tags Authorize
 // @Produce json
 // @Param Padlock-Request-ID header string false "User provided request ID to match against logs"
-// @Success 200 {object} BaseResponse "success"
-// @Failure 400 {string} BaseResponse "error"
+// @Success 200 {object} goutils.RestAPIBaseResponse "success"
+// @Failure 400 {object} goutils.RestAPIBaseResponse "error"
 // @Failure 404 {string} string "error"
-// @Failure 500 {object} BaseResponse "error"
+// @Failure 500 {object} goutils.RestAPIBaseResponse "error"
 // @Router /v1/ready [get]
 func (h AuthorizationHandler) Ready(w http.ResponseWriter, r *http.Request) {
 	var respCode int

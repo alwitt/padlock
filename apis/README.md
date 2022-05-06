@@ -1,5 +1,5 @@
 ---
-title: padlock v0.1.0
+title: padlock v0.2.0
 language_tabs:
   - shell: Shell
   - http: HTTP
@@ -19,7 +19,7 @@ generator: widdershins v4.0.1
 
 ---
 
-<h1 id="padlock">padlock v0.1.0</h1>
+<h1 id="padlock">padlock v0.2.0</h1>
 
 > Scroll down for code samples, example requests and responses. Select a language for code samples from the tabs above or the mobile navigation menu.
 
@@ -63,10 +63,10 @@ Will return success to indicate user management REST API module is live
 
 |Status|Meaning|Description|Schema|
 |---|---|---|---|
-|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|success|[apis.BaseResponse](#schemaapis.baseresponse)|
-|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|error|string|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|success|[goutils.RestAPIBaseResponse](#schemagoutils.restapibaseresponse)|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|error|[goutils.RestAPIBaseResponse](#schemagoutils.restapibaseresponse)|
 |404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|error|string|
-|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|error|[apis.BaseResponse](#schemaapis.baseresponse)|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|error|[goutils.RestAPIBaseResponse](#schemagoutils.restapibaseresponse)|
 
 <aside class="success">
 This operation does not require authentication
@@ -104,10 +104,10 @@ Will return success if user management REST API module is ready for use
 
 |Status|Meaning|Description|Schema|
 |---|---|---|---|
-|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|success|[apis.BaseResponse](#schemaapis.baseresponse)|
-|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|error|string|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|success|[goutils.RestAPIBaseResponse](#schemagoutils.restapibaseresponse)|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|error|[goutils.RestAPIBaseResponse](#schemagoutils.restapibaseresponse)|
 |404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|error|string|
-|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|error|[apis.BaseResponse](#schemaapis.baseresponse)|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|error|[goutils.RestAPIBaseResponse](#schemagoutils.restapibaseresponse)|
 
 <aside class="success">
 This operation does not require authentication
@@ -158,9 +158,9 @@ List all roles the system is operating against
 |Status|Meaning|Description|Schema|
 |---|---|---|---|
 |200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|success|[apis.RespListAllRoles](#schemaapis.resplistallroles)|
-|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|error|string|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|error|[goutils.RestAPIBaseResponse](#schemagoutils.restapibaseresponse)|
 |404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|error|string|
-|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|error|[apis.BaseResponse](#schemaapis.baseresponse)|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|error|[goutils.RestAPIBaseResponse](#schemagoutils.restapibaseresponse)|
 
 <aside class="success">
 This operation does not require authentication
@@ -216,9 +216,9 @@ Query for information regarding one role, along with users assigned this role.
 |Status|Meaning|Description|Schema|
 |---|---|---|---|
 |200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|success|[apis.RespRoleInfo](#schemaapis.resproleinfo)|
-|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|error|string|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|error|[goutils.RestAPIBaseResponse](#schemagoutils.restapibaseresponse)|
 |404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|error|string|
-|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|error|[apis.BaseResponse](#schemaapis.baseresponse)|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|error|[goutils.RestAPIBaseResponse](#schemagoutils.restapibaseresponse)|
 
 <aside class="success">
 This operation does not require authentication
@@ -268,9 +268,9 @@ List all users currently managed by the system
 |Status|Meaning|Description|Schema|
 |---|---|---|---|
 |200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|success|[apis.RespListAllUsers](#schemaapis.resplistallusers)|
-|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|error|string|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|error|[goutils.RestAPIBaseResponse](#schemagoutils.restapibaseresponse)|
 |404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|error|string|
-|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|error|[apis.BaseResponse](#schemaapis.baseresponse)|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|error|[goutils.RestAPIBaseResponse](#schemagoutils.restapibaseresponse)|
 
 <aside class="success">
 This operation does not require authentication
@@ -326,10 +326,10 @@ Define a new user, and optionally assign roles to it
 
 |Status|Meaning|Description|Schema|
 |---|---|---|---|
-|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|success|[apis.BaseResponse](#schemaapis.baseresponse)|
-|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|error|string|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|success|[goutils.RestAPIBaseResponse](#schemagoutils.restapibaseresponse)|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|error|[goutils.RestAPIBaseResponse](#schemagoutils.restapibaseresponse)|
 |404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|error|string|
-|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|error|[apis.BaseResponse](#schemaapis.baseresponse)|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|error|[goutils.RestAPIBaseResponse](#schemagoutils.restapibaseresponse)|
 
 <aside class="success">
 This operation does not require authentication
@@ -339,7 +339,7 @@ This operation does not require authentication
 
 `DELETE /v1/user/{userID}`
 
-Remove user from the sytem.
+Remove user from the system.
 
 <h3 id="delete-user-parameters">Parameters</h3>
 
@@ -368,10 +368,10 @@ Remove user from the sytem.
 
 |Status|Meaning|Description|Schema|
 |---|---|---|---|
-|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|success|[apis.BaseResponse](#schemaapis.baseresponse)|
-|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|error|string|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|success|[goutils.RestAPIBaseResponse](#schemagoutils.restapibaseresponse)|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|error|[goutils.RestAPIBaseResponse](#schemagoutils.restapibaseresponse)|
 |404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|error|string|
-|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|error|[apis.BaseResponse](#schemaapis.baseresponse)|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|error|[goutils.RestAPIBaseResponse](#schemagoutils.restapibaseresponse)|
 
 <aside class="success">
 This operation does not require authentication
@@ -426,9 +426,9 @@ Query for information regarding one user.
 |Status|Meaning|Description|Schema|
 |---|---|---|---|
 |200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|success|[apis.RespUserInfo](#schemaapis.respuserinfo)|
-|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|error|string|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|error|[goutils.RestAPIBaseResponse](#schemagoutils.restapibaseresponse)|
 |404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|error|string|
-|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|error|[apis.BaseResponse](#schemaapis.baseresponse)|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|error|[goutils.RestAPIBaseResponse](#schemagoutils.restapibaseresponse)|
 
 <aside class="success">
 This operation does not require authentication
@@ -480,10 +480,10 @@ Update an existing user's information
 
 |Status|Meaning|Description|Schema|
 |---|---|---|---|
-|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|success|[apis.BaseResponse](#schemaapis.baseresponse)|
-|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|error|string|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|success|[goutils.RestAPIBaseResponse](#schemagoutils.restapibaseresponse)|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|error|[goutils.RestAPIBaseResponse](#schemagoutils.restapibaseresponse)|
 |404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|error|string|
-|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|error|[apis.BaseResponse](#schemaapis.baseresponse)|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|error|[goutils.RestAPIBaseResponse](#schemagoutils.restapibaseresponse)|
 
 <aside class="success">
 This operation does not require authentication
@@ -533,10 +533,10 @@ Change the user's roles to what caller requested
 
 |Status|Meaning|Description|Schema|
 |---|---|---|---|
-|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|success|[apis.BaseResponse](#schemaapis.baseresponse)|
-|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|error|string|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|success|[goutils.RestAPIBaseResponse](#schemagoutils.restapibaseresponse)|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|error|[goutils.RestAPIBaseResponse](#schemagoutils.restapibaseresponse)|
 |404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|error|string|
-|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|error|[apis.BaseResponse](#schemaapis.baseresponse)|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|error|[goutils.RestAPIBaseResponse](#schemagoutils.restapibaseresponse)|
 
 <aside class="success">
 This operation does not require authentication
@@ -584,11 +584,11 @@ Check whether a REST API call is allowed. The parameters of the call is passed i
 
 |Status|Meaning|Description|Schema|
 |---|---|---|---|
-|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|success|[apis.BaseResponse](#schemaapis.baseresponse)|
-|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|error|string|
-|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|error|string|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|success|[goutils.RestAPIBaseResponse](#schemagoutils.restapibaseresponse)|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|error|[goutils.RestAPIBaseResponse](#schemagoutils.restapibaseresponse)|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|error|[goutils.RestAPIBaseResponse](#schemagoutils.restapibaseresponse)|
 |404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|error|string|
-|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|error|[apis.BaseResponse](#schemaapis.baseresponse)|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|error|[goutils.RestAPIBaseResponse](#schemagoutils.restapibaseresponse)|
 
 <aside class="success">
 This operation does not require authentication
@@ -629,70 +629,18 @@ Authticate a user by verifiying the bearer token provided
 
 |Status|Meaning|Description|Schema|
 |---|---|---|---|
-|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|success|[apis.BaseResponse](#schemaapis.baseresponse)|
-|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|error|string|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|success|[goutils.RestAPIBaseResponse](#schemagoutils.restapibaseresponse)|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|error|[goutils.RestAPIBaseResponse](#schemagoutils.restapibaseresponse)|
 |401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|error|string|
 |403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|error|string|
 |404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|error|string|
-|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|error|[apis.BaseResponse](#schemaapis.baseresponse)|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|error|[goutils.RestAPIBaseResponse](#schemagoutils.restapibaseresponse)|
 
 <aside class="success">
 This operation does not require authentication
 </aside>
 
 # Schemas
-
-<h2 id="tocS_apis.BaseResponse">apis.BaseResponse</h2>
-
-<a id="schemaapis.baseresponse"></a>
-<a id="schema_apis.BaseResponse"></a>
-<a id="tocSapis.baseresponse"></a>
-<a id="tocsapis.baseresponse"></a>
-
-```json
-{
-  "error": {
-    "code": 0,
-    "detail": "string",
-    "message": "string"
-  },
-  "request_id": "string",
-  "success": true
-}
-
-```
-
-### Properties
-
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|error|[apis.ErrorDetail](#schemaapis.errordetail)|false|none|Error are details in case of errors|
-|request_id|string|true|none|RequestID gives the request ID to match against logs|
-|success|boolean|true|none|Success indicates whether the request was successful|
-
-<h2 id="tocS_apis.ErrorDetail">apis.ErrorDetail</h2>
-
-<a id="schemaapis.errordetail"></a>
-<a id="schema_apis.ErrorDetail"></a>
-<a id="tocSapis.errordetail"></a>
-<a id="tocsapis.errordetail"></a>
-
-```json
-{
-  "code": 0,
-  "detail": "string",
-  "message": "string"
-}
-
-```
-
-### Properties
-
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|code|integer|true|none|Code is the response code|
-|detail|string|false|none|Detail is an optional descriptive message providing additional details on the error|
-|message|string|false|none|Msg is an optional descriptive message|
 
 <h2 id="tocS_apis.ReqNewUserParams">apis.ReqNewUserParams</h2>
 
@@ -782,7 +730,7 @@ This operation does not require authentication
 
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
-|error|[apis.ErrorDetail](#schemaapis.errordetail)|false|none|Error are details in case of errors|
+|error|[goutils.ErrorDetail](#schemagoutils.errordetail)|false|none|Error are details in case of errors|
 |request_id|string|true|none|RequestID gives the request ID to match against logs|
 |roles|object|true|none|Roles are the roles|
 |» **additionalProperties**|[common.UserRoleConfig](#schemacommon.userroleconfig)|false|none|none|
@@ -823,7 +771,7 @@ This operation does not require authentication
 
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
-|error|[apis.ErrorDetail](#schemaapis.errordetail)|false|none|Error are details in case of errors|
+|error|[goutils.ErrorDetail](#schemagoutils.errordetail)|false|none|Error are details in case of errors|
 |request_id|string|true|none|RequestID gives the request ID to match against logs|
 |success|boolean|true|none|Success indicates whether the request was successful|
 |users|[[models.UserInfo](#schemamodels.userinfo)]|true|none|Users are the users in system|
@@ -869,7 +817,7 @@ This operation does not require authentication
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
 |assigned_users|[[models.UserInfo](#schemamodels.userinfo)]|false|none|AssignedUsers is the list of users being assigned this role|
-|error|[apis.ErrorDetail](#schemaapis.errordetail)|false|none|Error are details in case of errors|
+|error|[goutils.ErrorDetail](#schemagoutils.errordetail)|false|none|Error are details in case of errors|
 |request_id|string|true|none|RequestID gives the request ID to match against logs|
 |role|[common.UserRoleConfig](#schemacommon.userroleconfig)|true|none|Role is info on this role|
 |success|boolean|true|none|Success indicates whether the request was successful|
@@ -913,7 +861,7 @@ This operation does not require authentication
 
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
-|error|[apis.ErrorDetail](#schemaapis.errordetail)|false|none|Error are details in case of errors|
+|error|[goutils.ErrorDetail](#schemagoutils.errordetail)|false|none|Error are details in case of errors|
 |request_id|string|true|none|RequestID gives the request ID to match against logs|
 |success|boolean|true|none|Success indicates whether the request was successful|
 |user|[users.UserDetailsWithPermission](#schemausers.userdetailswithpermission)|true|none|User is info on this user|
@@ -939,6 +887,58 @@ This operation does not require authentication
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
 |permissions|[string]|true|none|AssignedPermissions is the list of permissions assigned to a role|
+
+<h2 id="tocS_goutils.ErrorDetail">goutils.ErrorDetail</h2>
+
+<a id="schemagoutils.errordetail"></a>
+<a id="schema_goutils.ErrorDetail"></a>
+<a id="tocSgoutils.errordetail"></a>
+<a id="tocsgoutils.errordetail"></a>
+
+```json
+{
+  "code": 0,
+  "detail": "string",
+  "message": "string"
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|code|integer|true|none|Code is the response code|
+|detail|string|false|none|Detail is an optional descriptive message providing additional details on the error|
+|message|string|false|none|Msg is an optional descriptive message|
+
+<h2 id="tocS_goutils.RestAPIBaseResponse">goutils.RestAPIBaseResponse</h2>
+
+<a id="schemagoutils.restapibaseresponse"></a>
+<a id="schema_goutils.RestAPIBaseResponse"></a>
+<a id="tocSgoutils.restapibaseresponse"></a>
+<a id="tocsgoutils.restapibaseresponse"></a>
+
+```json
+{
+  "error": {
+    "code": 0,
+    "detail": "string",
+    "message": "string"
+  },
+  "request_id": "string",
+  "success": true
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|error|[goutils.ErrorDetail](#schemagoutils.errordetail)|false|none|Error are details in case of errors|
+|request_id|string|true|none|RequestID gives the request ID to match against logs|
+|success|boolean|true|none|Success indicates whether the request was successful|
 
 <h2 id="tocS_models.UserConfig">models.UserConfig</h2>
 

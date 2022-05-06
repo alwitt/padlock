@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	goutils "github.com/alwitt/go-utils"
+	"github.com/alwitt/goutils"
 	"github.com/alwitt/padlock/common"
 	"github.com/alwitt/padlock/models"
 	"github.com/alwitt/padlock/users"
@@ -75,9 +75,9 @@ type RespListAllRoles struct {
 // @Produce json
 // @Param Padlock-Request-ID header string false "User provided request ID to match against logs"
 // @Success 200 {object} RespListAllRoles "success"
-// @Failure 400 {string} BaseResponse "error"
+// @Failure 400 {object} goutils.RestAPIBaseResponse "error"
 // @Failure 404 {string} string "error"
-// @Failure 500 {object} BaseResponse "error"
+// @Failure 500 {object} goutils.RestAPIBaseResponse "error"
 // @Router /v1/role [get]
 func (h UserManagementHandler) ListAllRoles(w http.ResponseWriter, r *http.Request) {
 	var respCode int
@@ -131,9 +131,9 @@ type RespRoleInfo struct {
 // @Param Padlock-Request-ID header string false "User provided request ID to match against logs"
 // @Param roleName path string true "Role name"
 // @Success 200 {object} RespRoleInfo "success"
-// @Failure 400 {string} BaseResponse "error"
+// @Failure 400 {object} goutils.RestAPIBaseResponse "error"
 // @Failure 404 {string} string "error"
-// @Failure 500 {object} BaseResponse "error"
+// @Failure 500 {object} goutils.RestAPIBaseResponse "error"
 // @Router /v1/role/{roleName} [get]
 func (h UserManagementHandler) GetRole(w http.ResponseWriter, r *http.Request) {
 	var respCode int
@@ -212,10 +212,10 @@ type ReqNewUserParams struct {
 // @Produce json
 // @Param Padlock-Request-ID header string false "User provided request ID to match against logs"
 // @Param userInfo body ReqNewUserParams true "New user information"
-// @Success 200 {object} BaseResponse "success"
-// @Failure 400 {string} BaseResponse "error"
+// @Success 200 {object} goutils.RestAPIBaseResponse "success"
+// @Failure 400 {object} goutils.RestAPIBaseResponse "error"
 // @Failure 404 {string} string "error"
-// @Failure 500 {object} BaseResponse "error"
+// @Failure 500 {object} goutils.RestAPIBaseResponse "error"
 // @Router /v1/user [post]
 func (h UserManagementHandler) DefineUser(w http.ResponseWriter, r *http.Request) {
 	var respCode int
@@ -277,9 +277,9 @@ type RespListAllUsers struct {
 // @Produce json
 // @Param Padlock-Request-ID header string false "User provided request ID to match against logs"
 // @Success 200 {object} RespListAllUsers "success"
-// @Failure 400 {string} BaseResponse "error"
+// @Failure 400 {object} goutils.RestAPIBaseResponse "error"
 // @Failure 404 {string} string "error"
-// @Failure 500 {object} BaseResponse "error"
+// @Failure 500 {object} goutils.RestAPIBaseResponse "error"
 // @Router /v1/user [get]
 func (h UserManagementHandler) ListAllUsers(w http.ResponseWriter, r *http.Request) {
 	var respCode int
@@ -347,9 +347,9 @@ type RespUserInfo struct {
 // @Param Padlock-Request-ID header string false "User provided request ID to match against logs"
 // @Param userID path string true "User ID"
 // @Success 200 {object} RespUserInfo "success"
-// @Failure 400 {string} BaseResponse "error"
+// @Failure 400 {object} goutils.RestAPIBaseResponse "error"
 // @Failure 404 {string} string "error"
-// @Failure 500 {object} BaseResponse "error"
+// @Failure 500 {object} goutils.RestAPIBaseResponse "error"
 // @Router /v1/user/{userID} [get]
 func (h UserManagementHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 	var respCode int
@@ -401,10 +401,10 @@ func (h UserManagementHandler) GetUserHandler() http.HandlerFunc {
 // @Produce json
 // @Param Padlock-Request-ID header string false "User provided request ID to match against logs"
 // @Param userID path string true "User ID"
-// @Success 200 {object} BaseResponse "success"
-// @Failure 400 {string} BaseResponse "error"
+// @Success 200 {object} goutils.RestAPIBaseResponse "success"
+// @Failure 400 {object} goutils.RestAPIBaseResponse "error"
 // @Failure 404 {string} string "error"
-// @Failure 500 {object} BaseResponse "error"
+// @Failure 500 {object} goutils.RestAPIBaseResponse "error"
 // @Router /v1/user/{userID} [delete]
 func (h UserManagementHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	var respCode int
@@ -455,10 +455,10 @@ func (h UserManagementHandler) DeleteUserHandler() http.HandlerFunc {
 // @Param Padlock-Request-ID header string false "User provided request ID to match against logs"
 // @Param userID path string true "User ID"
 // @Param userInfo body models.UserConfig true "Updated user information"
-// @Success 200 {object} BaseResponse "success"
-// @Failure 400 {string} BaseResponse "error"
+// @Success 200 {object} goutils.RestAPIBaseResponse "success"
+// @Failure 400 {object} goutils.RestAPIBaseResponse "error"
 // @Failure 404 {string} string "error"
-// @Failure 500 {object} BaseResponse "error"
+// @Failure 500 {object} goutils.RestAPIBaseResponse "error"
 // @Router /v1/user/{userID} [put]
 func (h UserManagementHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	var respCode int
@@ -531,10 +531,10 @@ type ReqNewUserRoles struct {
 // @Param Padlock-Request-ID header string false "User provided request ID to match against logs"
 // @Param userID path string true "User ID"
 // @Param roles body ReqNewUserRoles true "User's new roles"
-// @Success 200 {object} BaseResponse "success"
-// @Failure 400 {string} BaseResponse "error"
+// @Success 200 {object} goutils.RestAPIBaseResponse "success"
+// @Failure 400 {object} goutils.RestAPIBaseResponse "error"
 // @Failure 404 {string} string "error"
-// @Failure 500 {object} BaseResponse "error"
+// @Failure 500 {object} goutils.RestAPIBaseResponse "error"
 // @Router /v1/user/{userID}/roles [put]
 func (h UserManagementHandler) UpdateUserRoles(w http.ResponseWriter, r *http.Request) {
 	var respCode int
@@ -599,10 +599,10 @@ func (h UserManagementHandler) UpdateUserRolesHandler() http.HandlerFunc {
 // @tags Management
 // @Produce json
 // @Param Padlock-Request-ID header string false "User provided request ID to match against logs"
-// @Success 200 {object} BaseResponse "success"
-// @Failure 400 {string} BaseResponse "error"
+// @Success 200 {object} goutils.RestAPIBaseResponse "success"
+// @Failure 400 {object} goutils.RestAPIBaseResponse "error"
 // @Failure 404 {string} string "error"
-// @Failure 500 {object} BaseResponse "error"
+// @Failure 500 {object} goutils.RestAPIBaseResponse "error"
 // @Router /v1/alive [get]
 func (h UserManagementHandler) Alive(w http.ResponseWriter, r *http.Request) {
 	logTags := h.GetLogTagsForContext(r.Context())
@@ -628,10 +628,10 @@ func (h UserManagementHandler) AliveHandler() http.HandlerFunc {
 // @tags Management
 // @Produce json
 // @Param Padlock-Request-ID header string false "User provided request ID to match against logs"
-// @Success 200 {object} BaseResponse "success"
-// @Failure 400 {string} BaseResponse "error"
+// @Success 200 {object} goutils.RestAPIBaseResponse "success"
+// @Failure 400 {object} goutils.RestAPIBaseResponse "error"
 // @Failure 404 {string} string "error"
-// @Failure 500 {object} BaseResponse "error"
+// @Failure 500 {object} goutils.RestAPIBaseResponse "error"
 // @Router /v1/ready [get]
 func (h UserManagementHandler) Ready(w http.ResponseWriter, r *http.Request) {
 	var respCode int

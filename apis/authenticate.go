@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	goutils "github.com/alwitt/go-utils"
+	"github.com/alwitt/goutils"
 	"github.com/alwitt/padlock/authenticate"
 	"github.com/alwitt/padlock/common"
 	"github.com/alwitt/padlock/models"
@@ -63,12 +63,12 @@ func defineAuthenticationHandler(
 // @Produce json
 // @Param Padlock-Request-ID header string false "User provided request ID to match against logs"
 // @Param Authorization header string true "User must provide a bearer token"
-// @Success 200 {object} BaseResponse "success"
-// @Failure 400 {string} BaseResponse "error"
+// @Success 200 {object} goutils.RestAPIBaseResponse "success"
+// @Failure 400 {object} goutils.RestAPIBaseResponse "error"
 // @Failure 401 {string} string "error"
 // @Failure 403 {string} string "error"
 // @Failure 404 {string} string "error"
-// @Failure 500 {object} BaseResponse "error"
+// @Failure 500 {object} goutils.RestAPIBaseResponse "error"
 // @Router /v1/authenticate [get]
 func (h AuthenticationHandler) Authenticate(w http.ResponseWriter, r *http.Request) {
 	var respCode int
@@ -222,10 +222,10 @@ func (h AuthenticationHandler) AuthenticateHandler() http.HandlerFunc {
 // @tags Authenticate
 // @Produce json
 // @Param Padlock-Request-ID header string false "User provided request ID to match against logs"
-// @Success 200 {object} BaseResponse "success"
-// @Failure 400 {string} BaseResponse "error"
+// @Success 200 {object} goutils.RestAPIBaseResponse "success"
+// @Failure 400 {object} goutils.RestAPIBaseResponse "error"
 // @Failure 404 {string} string "error"
-// @Failure 500 {object} BaseResponse "error"
+// @Failure 500 {object} goutils.RestAPIBaseResponse "error"
 // @Router /v1/alive [get]
 func (h AuthenticationHandler) Alive(w http.ResponseWriter, r *http.Request) {
 	logTags := h.GetLogTagsForContext(r.Context())
@@ -251,10 +251,10 @@ func (h AuthenticationHandler) AliveHandler() http.HandlerFunc {
 // @tags Authenticate
 // @Produce json
 // @Param Padlock-Request-ID header string false "User provided request ID to match against logs"
-// @Success 200 {object} BaseResponse "success"
-// @Failure 400 {string} BaseResponse "error"
+// @Success 200 {object} goutils.RestAPIBaseResponse "success"
+// @Failure 400 {object} goutils.RestAPIBaseResponse "error"
 // @Failure 404 {string} string "error"
-// @Failure 500 {object} BaseResponse "error"
+// @Failure 500 {object} goutils.RestAPIBaseResponse "error"
 // @Router /v1/ready [get]
 func (h AuthenticationHandler) Ready(w http.ResponseWriter, r *http.Request) {
 	var respCode int

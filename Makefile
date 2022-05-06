@@ -21,7 +21,7 @@ build: lint ## Build the application
 
 .PHONY: openapi
 openapi: .prepare ## Generate the OpenAPI spec
-	@swag init
+	@swag init -g main.go --parseDependency
 	@rm docs/docs.go
 
 .PHONY: compose
