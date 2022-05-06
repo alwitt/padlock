@@ -122,10 +122,12 @@ func TestAuthorization(t *testing.T) {
 		Email:     "X-Caller-Email",
 	}
 
+	requestIDHeader := "Padlock-Unit-Tester"
+
 	checkHeader := func(w http.ResponseWriter, reqID string, stackOffset int) {
 		_, _, ln, ok := runtime.Caller(2)
 		assert.True(ok)
-		assert.Equalf(reqID, w.Header().Get("Padlock-Request-ID"), "Called@%d", ln)
+		assert.Equalf(reqID, w.Header().Get(requestIDHeader), "Called@%d", ln)
 		assert.Equalf("application/json", w.Header().Get("content-type"), "Called@%d", ln)
 	}
 
@@ -133,7 +135,7 @@ func TestAuthorization(t *testing.T) {
 	// First test without auto add
 
 	uut, err := defineAuthorizationHandler(
-		common.HTTPRequestLogging{DoNotLogHeaders: []string{}},
+		common.HTTPRequestLogging{DoNotLogHeaders: []string{}, RequestIDHeader: requestIDHeader},
 		mgmtCore,
 		restRequestMatcher,
 		supportMatch,
@@ -147,7 +149,7 @@ func TestAuthorization(t *testing.T) {
 		rid := uuid.New().String()
 		req, err := http.NewRequest("GET", "/v1/ready", nil)
 		assert.Nil(err)
-		req.Header.Add("Padlock-Request-ID", rid)
+		req.Header.Add(requestIDHeader, rid)
 
 		respRecorder := httptest.NewRecorder()
 		handler := uut.LoggingMiddleware(uut.ReadyHandler())
@@ -169,7 +171,7 @@ func TestAuthorization(t *testing.T) {
 		rid := uuid.New().String()
 		req, err := http.NewRequest("GET", "/v1/allow", nil)
 		assert.Nilf(err, "Called@%d", ln)
-		req.Header.Add("Padlock-Request-ID", rid)
+		req.Header.Add(requestIDHeader, rid)
 
 		// Add parameter for request to authorize
 		req.Header.Add(authRequestParamLoc.Host, tc.host)
@@ -263,7 +265,7 @@ func TestAuthorization(t *testing.T) {
 	// Then test with auto add
 
 	uut, err = defineAuthorizationHandler(
-		common.HTTPRequestLogging{DoNotLogHeaders: []string{}},
+		common.HTTPRequestLogging{DoNotLogHeaders: []string{}, RequestIDHeader: requestIDHeader},
 		mgmtCore,
 		restRequestMatcher,
 		supportMatch,
@@ -277,7 +279,7 @@ func TestAuthorization(t *testing.T) {
 		rid := uuid.New().String()
 		req, err := http.NewRequest("GET", "/v1/ready", nil)
 		assert.Nil(err)
-		req.Header.Add("Padlock-Request-ID", rid)
+		req.Header.Add(requestIDHeader, rid)
 
 		respRecorder := httptest.NewRecorder()
 		handler := uut.LoggingMiddleware(uut.ReadyHandler())

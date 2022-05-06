@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	goutils "github.com/alwitt/go-utils"
 	"github.com/alwitt/padlock/common"
 	"github.com/alwitt/padlock/match"
 	"github.com/alwitt/padlock/models"
@@ -15,7 +16,7 @@ import (
 
 // AuthorizationHandler the request authorization REST API handler
 type AuthorizationHandler struct {
-	APIRestHandler
+	goutils.RestAPIHandler
 	validate       *validator.Validate
 	core           users.Management
 	checkHeaders   common.AuthorizeRequestParamLocConfig
@@ -42,9 +43,16 @@ func defineAuthorizationHandler(
 	}
 
 	return AuthorizationHandler{
-		APIRestHandler: APIRestHandler{
-			Component: common.Component{LogTags: logTags},
-			offLimitHeadersForLog: func() map[string]bool {
+		RestAPIHandler: goutils.RestAPIHandler{
+			Component: goutils.Component{
+				LogTags: logTags,
+				LogTagModifiers: []goutils.LogMetadataModifier{
+					goutils.ModifyLogMetadataByRestRequestParam,
+					common.ModifyLogMetadataByAccessAuthorizeParam,
+				},
+			},
+			CallRequestIDHeaderField: &logConfig.RequestIDHeader,
+			DoNotLogHeaders: func() map[string]bool {
 				result := map[string]bool{}
 				for _, v := range logConfig.DoNotLogHeaders {
 					result[v] = true
@@ -111,7 +119,7 @@ func (h AuthorizationHandler) Allow(w http.ResponseWriter, r *http.Request) {
 	var response interface{}
 	logTags := h.GetLogTagsForContext(r.Context())
 	defer func() {
-		if err := writeRESTResponse(w, r, respCode, response, nil); err != nil {
+		if err := h.WriteRESTResponse(w, respCode, response, nil); err != nil {
 			log.WithError(err).WithFields(logTags).Error("Failed to form response")
 		}
 	}()
@@ -122,7 +130,7 @@ func (h AuthorizationHandler) Allow(w http.ResponseWriter, r *http.Request) {
 		err := fmt.Errorf("missing parameter regarding REST API call to authorize")
 		log.WithError(err).WithFields(logTags).Errorf(msg)
 		respCode = http.StatusBadRequest
-		response = getStdRESTErrorMsg(r.Context(), http.StatusBadRequest, msg, err.Error())
+		response = h.GetStdRESTErrorMsg(r.Context(), http.StatusBadRequest, msg, err.Error())
 		return
 	}
 
@@ -133,14 +141,14 @@ func (h AuthorizationHandler) Allow(w http.ResponseWriter, r *http.Request) {
 		err := fmt.Errorf("AuthorizationHandler.paramReadMiddleware() malfunction")
 		log.WithError(err).WithFields(logTags).Errorf(msg)
 		respCode = http.StatusInternalServerError
-		response = getStdRESTErrorMsg(r.Context(), http.StatusInternalServerError, msg, err.Error())
+		response = h.GetStdRESTErrorMsg(r.Context(), http.StatusInternalServerError, msg, err.Error())
 		return
 	}
 	if err := h.validate.Struct(&params); err != nil {
 		msg := "Manditory parameters for REST request to authorize not valid"
 		log.WithError(err).WithFields(logTags).Errorf(msg)
 		respCode = http.StatusBadRequest
-		response = getStdRESTErrorMsg(r.Context(), http.StatusBadRequest, msg, err.Error())
+		response = h.GetStdRESTErrorMsg(r.Context(), http.StatusBadRequest, msg, err.Error())
 		return
 	}
 
@@ -154,7 +162,7 @@ func (h AuthorizationHandler) Allow(w http.ResponseWriter, r *http.Request) {
 		)
 		log.WithError(err).WithFields(logTags).Errorf(msg)
 		respCode = http.StatusBadRequest
-		response = getStdRESTErrorMsg(r.Context(), http.StatusBadRequest, msg, err.Error())
+		response = h.GetStdRESTErrorMsg(r.Context(), http.StatusBadRequest, msg, err.Error())
 		return
 	}
 
@@ -164,12 +172,12 @@ func (h AuthorizationHandler) Allow(w http.ResponseWriter, r *http.Request) {
 		// User is known
 		if allowed {
 			respCode = http.StatusOK
-			response = getStdRESTSuccessMsg(r.Context())
+			response = h.GetStdRESTSuccessMsg(r.Context())
 		} else {
 			msg := fmt.Sprintf("User ID %s not allow to '%s'", params.UserID, params.String())
 			log.WithFields(logTags).Errorf(msg)
 			respCode = http.StatusForbidden
-			response = getStdRESTErrorMsg(r.Context(), http.StatusForbidden, msg, "")
+			response = h.GetStdRESTErrorMsg(r.Context(), http.StatusForbidden, msg, "")
 		}
 	} else {
 		// This user is not known
@@ -199,21 +207,21 @@ func (h AuthorizationHandler) Allow(w http.ResponseWriter, r *http.Request) {
 				msg := fmt.Sprintf("Failed to record user ID %s", params.UserID)
 				log.WithError(err).WithFields(logTags).Errorf(msg)
 				respCode = http.StatusInternalServerError
-				response = getStdRESTErrorMsg(
+				response = h.GetStdRESTErrorMsg(
 					r.Context(), http.StatusInternalServerError, msg, err.Error(),
 				)
 			} else {
 				msg := fmt.Sprintf("Recorded new user ID %s with no permissions", params.UserID)
 				log.WithFields(logTags).Errorf(msg)
 				respCode = http.StatusForbidden
-				response = getStdRESTErrorMsg(r.Context(), http.StatusForbidden, msg, "")
+				response = h.GetStdRESTErrorMsg(r.Context(), http.StatusForbidden, msg, "")
 			}
 		} else {
 			// User must be manually registered with the system
 			msg := fmt.Sprintf("User ID %s is unknown", params.UserID)
 			log.WithFields(logTags).Errorf(msg)
 			respCode = http.StatusForbidden
-			response = getStdRESTErrorMsg(r.Context(), http.StatusForbidden, msg, "")
+			response = h.GetStdRESTErrorMsg(r.Context(), http.StatusForbidden, msg, "")
 		}
 	}
 }
@@ -241,8 +249,8 @@ func (h AuthorizationHandler) AllowHandler() http.HandlerFunc {
 // @Router /v1/alive [get]
 func (h AuthorizationHandler) Alive(w http.ResponseWriter, r *http.Request) {
 	logTags := h.GetLogTagsForContext(r.Context())
-	if err := writeRESTResponse(
-		w, r, http.StatusOK, getStdRESTSuccessMsg(r.Context()), nil,
+	if err := h.WriteRESTResponse(
+		w, http.StatusOK, h.GetStdRESTSuccessMsg(r.Context()), nil,
 	); err != nil {
 		log.WithError(err).WithFields(logTags).Error("Failed to form response")
 	}
@@ -273,18 +281,18 @@ func (h AuthorizationHandler) Ready(w http.ResponseWriter, r *http.Request) {
 	var response interface{}
 	logTags := h.GetLogTagsForContext(r.Context())
 	defer func() {
-		if err := writeRESTResponse(w, r, respCode, response, nil); err != nil {
+		if err := h.WriteRESTResponse(w, respCode, response, nil); err != nil {
 			log.WithError(err).WithFields(logTags).Error("Failed to form response")
 		}
 	}()
 	if err := h.core.Ready(); err != nil {
 		respCode = http.StatusInternalServerError
-		response = getStdRESTErrorMsg(
+		response = h.GetStdRESTErrorMsg(
 			r.Context(), http.StatusInternalServerError, "not ready", err.Error(),
 		)
 	} else {
 		respCode = http.StatusOK
-		response = getStdRESTSuccessMsg(r.Context())
+		response = h.GetStdRESTSuccessMsg(r.Context())
 	}
 }
 

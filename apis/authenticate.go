@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strings"
 
+	goutils "github.com/alwitt/go-utils"
 	"github.com/alwitt/padlock/authenticate"
 	"github.com/alwitt/padlock/common"
 	"github.com/alwitt/padlock/models"
@@ -15,7 +16,7 @@ import (
 
 // AuthenticationHandler the request authentication REST API handler
 type AuthenticationHandler struct {
-	APIRestHandler
+	goutils.RestAPIHandler
 	oidClient       authenticate.OpenIDIssuerClient
 	targetClaims    common.OpenIDClaimsOfInterestConfig
 	respHeaderParam common.AuthorizeRequestParamLocConfig
@@ -33,9 +34,15 @@ func defineAuthenticationHandler(
 	}
 
 	return AuthenticationHandler{
-		APIRestHandler: APIRestHandler{
-			Component: common.Component{LogTags: logTags},
-			offLimitHeadersForLog: func() map[string]bool {
+		RestAPIHandler: goutils.RestAPIHandler{
+			Component: goutils.Component{
+				LogTags: logTags,
+				LogTagModifiers: []goutils.LogMetadataModifier{
+					goutils.ModifyLogMetadataByRestRequestParam,
+				},
+			},
+			CallRequestIDHeaderField: &logConfig.RequestIDHeader,
+			DoNotLogHeaders: func() map[string]bool {
 				result := map[string]bool{}
 				for _, v := range logConfig.DoNotLogHeaders {
 					result[v] = true
@@ -69,7 +76,7 @@ func (h AuthenticationHandler) Authenticate(w http.ResponseWriter, r *http.Reque
 	respHeaders := map[string]string{}
 	logTags := h.GetLogTagsForContext(r.Context())
 	defer func() {
-		if err := writeRESTResponse(w, r, respCode, response, respHeaders); err != nil {
+		if err := h.WriteRESTResponse(w, respCode, response, respHeaders); err != nil {
 			log.WithError(err).WithFields(logTags).Error("Failed to form response")
 		}
 	}()
@@ -80,7 +87,7 @@ func (h AuthenticationHandler) Authenticate(w http.ResponseWriter, r *http.Reque
 		msg := "Header 'Authorization' missing"
 		log.WithFields(logTags).Errorf(msg)
 		respCode = http.StatusBadRequest
-		response = getStdRESTErrorMsg(r.Context(), http.StatusBadRequest, msg, "")
+		response = h.GetStdRESTErrorMsg(r.Context(), http.StatusBadRequest, msg, "")
 		return
 	}
 	bearerParts := strings.Split(bearer, " ")
@@ -88,7 +95,7 @@ func (h AuthenticationHandler) Authenticate(w http.ResponseWriter, r *http.Reque
 		msg := "Bearer 'Authorization' has incorrect format"
 		log.WithFields(logTags).Errorf(msg)
 		respCode = http.StatusBadRequest
-		response = getStdRESTErrorMsg(r.Context(), http.StatusBadRequest, msg, "")
+		response = h.GetStdRESTErrorMsg(r.Context(), http.StatusBadRequest, msg, "")
 		return
 	}
 	rawToken := bearerParts[1]
@@ -100,7 +107,7 @@ func (h AuthenticationHandler) Authenticate(w http.ResponseWriter, r *http.Reque
 		msg := "Unable to parse JWT bearer token"
 		log.WithError(err).WithFields(logTags).Errorf(msg)
 		respCode = http.StatusBadRequest
-		response = getStdRESTErrorMsg(r.Context(), http.StatusBadRequest, msg, err.Error())
+		response = h.GetStdRESTErrorMsg(r.Context(), http.StatusBadRequest, msg, err.Error())
 		return
 	}
 
@@ -122,7 +129,7 @@ func (h AuthenticationHandler) Authenticate(w http.ResponseWriter, r *http.Reque
 	errMacro := func(msg string, err error) {
 		log.WithError(err).WithFields(logTags).Errorf(msg)
 		respCode = http.StatusBadRequest
-		response = getStdRESTErrorMsg(r.Context(), http.StatusBadRequest, msg, err.Error())
+		response = h.GetStdRESTErrorMsg(r.Context(), http.StatusBadRequest, msg, err.Error())
 	}
 
 	// Parse out the critical fields
@@ -196,7 +203,7 @@ func (h AuthenticationHandler) Authenticate(w http.ResponseWriter, r *http.Reque
 	// Set the response headers
 
 	respCode = http.StatusOK
-	response = getStdRESTSuccessMsg(r.Context())
+	response = h.GetStdRESTSuccessMsg(r.Context())
 }
 
 // AuthenticateHandler Wrapper around Authenticate
@@ -222,8 +229,8 @@ func (h AuthenticationHandler) AuthenticateHandler() http.HandlerFunc {
 // @Router /v1/alive [get]
 func (h AuthenticationHandler) Alive(w http.ResponseWriter, r *http.Request) {
 	logTags := h.GetLogTagsForContext(r.Context())
-	if err := writeRESTResponse(
-		w, r, http.StatusOK, getStdRESTSuccessMsg(r.Context()), nil,
+	if err := h.WriteRESTResponse(
+		w, http.StatusOK, h.GetStdRESTSuccessMsg(r.Context()), nil,
 	); err != nil {
 		log.WithError(err).WithFields(logTags).Error("Failed to form response")
 	}
@@ -254,13 +261,12 @@ func (h AuthenticationHandler) Ready(w http.ResponseWriter, r *http.Request) {
 	var response interface{}
 	logTags := h.GetLogTagsForContext(r.Context())
 	defer func() {
-		if err := writeRESTResponse(w, r, respCode, response, nil); err != nil {
+		if err := h.WriteRESTResponse(w, respCode, response, nil); err != nil {
 			log.WithError(err).WithFields(logTags).Error("Failed to form response")
 		}
 	}()
-	// TODO: once a core logic is in place, refer to that instead for ready.
 	respCode = http.StatusOK
-	response = getStdRESTSuccessMsg(r.Context())
+	response = h.GetStdRESTSuccessMsg(r.Context())
 }
 
 // ReadyHandler Wrapper around Alive

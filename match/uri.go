@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	goutils "github.com/alwitt/go-utils"
 	"github.com/alwitt/padlock/common"
 	"github.com/apex/log"
 	"github.com/go-playground/validator/v10"
@@ -11,7 +12,7 @@ import (
 
 // targetPathMatcher implements RequestMatch for path level matching
 type targetPathMatcher struct {
-	common.Component
+	goutils.Component
 	TargetPathSpec
 	regex    common.RegexCheck
 	validate *validator.Validate
@@ -55,7 +56,13 @@ func defineTargetPathMatcher(targetHost string, spec TargetPathSpec) (*targetPat
 	}
 
 	return &targetPathMatcher{
-		Component:      common.Component{LogTags: logTags},
+		Component: goutils.Component{
+			LogTags: logTags,
+			LogTagModifiers: []goutils.LogMetadataModifier{
+				goutils.ModifyLogMetadataByRestRequestParam,
+				common.ModifyLogMetadataByAccessAuthorizeParam,
+			},
+		},
 		TargetPathSpec: spec,
 		regex:          regex,
 		validate:       validate,

@@ -8,6 +8,7 @@ import (
 	"math/big"
 	"net/http"
 
+	goutils "github.com/alwitt/go-utils"
 	"github.com/alwitt/padlock/common"
 	"github.com/apex/log"
 	"github.com/golang-jwt/jwt"
@@ -65,7 +66,7 @@ type OIDSigningJWK struct {
 
 // openIDIssuerClientImpl implements OpenIDIssuerClient
 type openIDIssuerClientImpl struct {
-	common.Component
+	goutils.Component
 	cfg        OpenIDIssuerConfig
 	httpClient *http.Client
 	publicKey  map[string]interface{}
@@ -150,7 +151,13 @@ func DefineOpenIDClient(issuer string, httpClient *http.Client) (OpenIDIssuerCli
 	}
 
 	return &openIDIssuerClientImpl{
-		Component:  common.Component{LogTags: logTags},
+		Component: goutils.Component{
+			LogTags: logTags,
+			LogTagModifiers: []goutils.LogMetadataModifier{
+				goutils.ModifyLogMetadataByRestRequestParam,
+				common.ModifyLogMetadataByAccessAuthorizeParam,
+			},
+		},
 		cfg:        cfg,
 		httpClient: httpClient,
 		publicKey:  keyMaterial,

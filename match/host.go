@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sort"
 
+	goutils "github.com/alwitt/go-utils"
 	"github.com/alwitt/padlock/common"
 	"github.com/apex/log"
 	"github.com/go-playground/validator/v10"
@@ -14,7 +15,7 @@ import (
 
 // targetHostMatcher implements RequestMatch for host level matching
 type targetHostMatcher struct {
-	common.Component
+	goutils.Component
 	targetHost   string
 	pathMatchers []*targetPathMatcher
 	validate     *validator.Validate
@@ -50,7 +51,13 @@ func defineTargetHostMatcher(spec TargetHostSpec) (*targetHostMatcher, error) {
 		return len(pathMatchers[i].PathPattern) > len(pathMatchers[j].PathPattern)
 	})
 	return &targetHostMatcher{
-		Component:    common.Component{LogTags: logTags},
+		Component: goutils.Component{
+			LogTags: logTags,
+			LogTagModifiers: []goutils.LogMetadataModifier{
+				goutils.ModifyLogMetadataByRestRequestParam,
+				common.ModifyLogMetadataByAccessAuthorizeParam,
+			},
+		},
 		targetHost:   spec.TargetHost,
 		pathMatchers: pathMatchers,
 		validate:     validate,

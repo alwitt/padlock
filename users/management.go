@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"sync"
 
+	goutils "github.com/alwitt/go-utils"
 	"github.com/alwitt/padlock/common"
 	"github.com/alwitt/padlock/models"
 	"github.com/apex/log"
@@ -14,7 +15,7 @@ import (
 
 // managementImpl implements Management
 type managementImpl struct {
-	common.Component
+	goutils.Component
 	// db the client object for interacting with the database
 	db models.ManagementDBClient
 	// roles is the roles provided through configurations
@@ -32,7 +33,13 @@ CreateManagement defines a new Management
 func CreateManagement(db models.ManagementDBClient) (Management, error) {
 	logTags := log.Fields{"module": "user", "component": "management"}
 	return &managementImpl{
-		Component: common.Component{LogTags: logTags},
+		Component: goutils.Component{
+			LogTags: logTags,
+			LogTagModifiers: []goutils.LogMetadataModifier{
+				goutils.ModifyLogMetadataByRestRequestParam,
+				common.ModifyLogMetadataByAccessAuthorizeParam,
+			},
+		},
 		db:        db,
 		roles:     make(map[string]common.UserRoleConfig),
 		rolesLock: &sync.RWMutex{},

@@ -62,6 +62,8 @@ type HTTPServerConfig struct {
 
 // HTTPRequestLogging defines HTTP request logging parameters
 type HTTPRequestLogging struct {
+	// RequestIDHeader is the HTTP header containing the API request ID
+	RequestIDHeader string `mapstructure:"requestIDHeader" json:"requestIDHeader"`
 	// DoNotLogHeaders is the list of headers to not include in logging metadata
 	DoNotLogHeaders []string `mapstructure:"skipHeaders" json:"skipHeaders"`
 }
@@ -289,6 +291,7 @@ func InstallDefaultAuthorizationServerConfigValues() {
 	viper.SetDefault("userManagement.service.timeoutSecs.read", 60)
 	viper.SetDefault("userManagement.service.timeoutSecs.write", 60)
 	viper.SetDefault("userManagement.service.timeoutSecs.idle", 600)
+	viper.SetDefault("userManagement.apis.requestLogging.requestIDHeader", "Padlock-Request-ID")
 	viper.SetDefault(
 		"userManagement.apis.requestLogging.skipHeaders", []string{
 			"WWW-Authenticate", "Authorization", "Proxy-Authenticate", "Proxy-Authorization",
@@ -303,6 +306,7 @@ func InstallDefaultAuthorizationServerConfigValues() {
 	viper.SetDefault("authorize.service.timeoutSecs.read", 60)
 	viper.SetDefault("authorize.service.timeoutSecs.write", 60)
 	viper.SetDefault("authorize.service.timeoutSecs.idle", 600)
+	viper.SetDefault("authorize.apis.requestLogging.requestIDHeader", "Padlock-Request-ID")
 	viper.SetDefault(
 		"authorize.apis.requestLogging.skipHeaders", []string{
 			"WWW-Authenticate", "Authorization", "Proxy-Authenticate", "Proxy-Authorization",
@@ -325,6 +329,7 @@ func InstallDefaultAuthorizationServerConfigValues() {
 	viper.SetDefault("authenticate.service.timeoutSecs.read", 60)
 	viper.SetDefault("authenticate.service.timeoutSecs.write", 60)
 	viper.SetDefault("authenticate.service.timeoutSecs.idle", 600)
+	viper.SetDefault("authenticate.apis.requestLogging.requestIDHeader", "Padlock-Request-ID")
 	viper.SetDefault(
 		"authenticate.apis.requestLogging.skipHeaders", []string{
 			"WWW-Authenticate", "Authorization", "Proxy-Authenticate", "Proxy-Authorization",

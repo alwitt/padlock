@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	goutils "github.com/alwitt/go-utils"
 	"github.com/alwitt/padlock/common"
 	"github.com/apex/log"
 	"github.com/go-playground/validator/v10"
@@ -174,7 +175,7 @@ type ManagementDBClient interface {
 
 // roleManagementDBClientImpl implements ManagementDBClient
 type managementDBClientImpl struct {
-	common.Component
+	goutils.Component
 	db                    *gorm.DB
 	validate              *validator.Validate
 	customValidateSupport common.CustomFieldValidator
@@ -205,7 +206,13 @@ func CreateManagementDBClient(db *gorm.DB, validateSupport common.CustomFieldVal
 	}
 
 	return &managementDBClientImpl{
-		Component:             common.Component{LogTags: logTags},
+		Component: goutils.Component{
+			LogTags: logTags,
+			LogTagModifiers: []goutils.LogMetadataModifier{
+				goutils.ModifyLogMetadataByRestRequestParam,
+				common.ModifyLogMetadataByAccessAuthorizeParam,
+			},
+		},
 		db:                    db,
 		validate:              validate,
 		customValidateSupport: validateSupport,

@@ -3,6 +3,7 @@ package match
 import (
 	"context"
 
+	goutils "github.com/alwitt/go-utils"
 	"github.com/alwitt/padlock/common"
 	"github.com/apex/log"
 	"github.com/go-playground/validator/v10"
@@ -12,7 +13,7 @@ import (
 
 // targetGroupMatcher implements RequestMatch for host group level matching
 type targetGroupMatcher struct {
-	common.Component
+	goutils.Component
 	hostMatchers map[string]*targetHostMatcher
 	validate     *validator.Validate
 }
@@ -41,7 +42,13 @@ func DefineTargetGroupMatcher(spec TargetGroupSpec) (RequestMatch, error) {
 		hostMatchers[hostName] = matcher
 	}
 	return &targetGroupMatcher{
-		Component: common.Component{LogTags: logTags}, hostMatchers: hostMatchers, validate: validate,
+		Component: goutils.Component{
+			LogTags: logTags,
+			LogTagModifiers: []goutils.LogMetadataModifier{
+				goutils.ModifyLogMetadataByRestRequestParam,
+				common.ModifyLogMetadataByAccessAuthorizeParam,
+			},
+		}, hostMatchers: hostMatchers, validate: validate,
 	}, nil
 }
 

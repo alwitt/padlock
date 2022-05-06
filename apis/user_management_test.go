@@ -43,13 +43,17 @@ func TestRoleManagementAPI(t *testing.T) {
 	assert.Nil(err)
 	assert.Nil(mgmtCore.Ready())
 
+	requestIDHeader := "Padlock-Unit-Tester"
+
 	uut, err := defineUserManagementHandler(
-		common.HTTPRequestLogging{DoNotLogHeaders: []string{}}, mgmtCore, supportMatch,
+		common.HTTPRequestLogging{DoNotLogHeaders: []string{}, RequestIDHeader: requestIDHeader},
+		mgmtCore,
+		supportMatch,
 	)
 	assert.Nil(err)
 
 	checkHeader := func(w http.ResponseWriter, reqID string) {
-		assert.Equal(reqID, w.Header().Get("Padlock-Request-ID"))
+		assert.Equal(reqID, w.Header().Get(requestIDHeader))
 		assert.Equal("application/json", w.Header().Get("content-type"))
 	}
 
@@ -58,7 +62,7 @@ func TestRoleManagementAPI(t *testing.T) {
 		rid := uuid.New().String()
 		req, err := http.NewRequest("GET", "/v1/ready", nil)
 		assert.Nil(err)
-		req.Header.Add("Padlock-Request-ID", rid)
+		req.Header.Add(requestIDHeader, rid)
 
 		respRecorder := httptest.NewRecorder()
 		handler := uut.LoggingMiddleware(uut.ReadyHandler())
@@ -73,7 +77,7 @@ func TestRoleManagementAPI(t *testing.T) {
 		rid := uuid.New().String()
 		req, err := http.NewRequest("GET", fmt.Sprintf("/v1/role/%s", uuid.New().String()), nil)
 		assert.Nil(err)
-		req.Header.Add("Padlock-Request-ID", rid)
+		req.Header.Add(requestIDHeader, rid)
 
 		router := mux.NewRouter()
 		respRecorder := httptest.NewRecorder()
@@ -105,7 +109,7 @@ func TestRoleManagementAPI(t *testing.T) {
 		rid := uuid.New().String()
 		req, err := http.NewRequest("GET", "/v1/role", nil)
 		assert.Nil(err)
-		req.Header.Add("Padlock-Request-ID", rid)
+		req.Header.Add(requestIDHeader, rid)
 
 		respRecorder := httptest.NewRecorder()
 		handler := uut.LoggingMiddleware(uut.ListAllRolesHandler())
@@ -130,7 +134,7 @@ func TestRoleManagementAPI(t *testing.T) {
 		rid := uuid.New().String()
 		req, err := http.NewRequest("GET", fmt.Sprintf("/v1/role/%s", roles[2]), nil)
 		assert.Nil(err)
-		req.Header.Add("Padlock-Request-ID", rid)
+		req.Header.Add(requestIDHeader, rid)
 
 		router := mux.NewRouter()
 		respRecorder := httptest.NewRecorder()
@@ -172,13 +176,17 @@ func TestUserManagementAPI(t *testing.T) {
 	assert.Nil(err)
 	assert.Nil(mgmtCore.Ready())
 
+	requestIDHeader := "Padlock-Unit-Tester"
+
 	uut, err := defineUserManagementHandler(
-		common.HTTPRequestLogging{DoNotLogHeaders: []string{}}, mgmtCore, supportMatch,
+		common.HTTPRequestLogging{DoNotLogHeaders: []string{}, RequestIDHeader: requestIDHeader},
+		mgmtCore,
+		supportMatch,
 	)
 	assert.Nil(err)
 
 	checkHeader := func(w http.ResponseWriter, reqID string) {
-		assert.Equal(reqID, w.Header().Get("Padlock-Request-ID"))
+		assert.Equal(reqID, w.Header().Get(requestIDHeader))
 		assert.Equal("application/json", w.Header().Get("content-type"))
 	}
 
@@ -187,7 +195,7 @@ func TestUserManagementAPI(t *testing.T) {
 		rid := uuid.New().String()
 		req, err := http.NewRequest("GET", "/v1/ready", nil)
 		assert.Nil(err)
-		req.Header.Add("Padlock-Request-ID", rid)
+		req.Header.Add(requestIDHeader, rid)
 
 		respRecorder := httptest.NewRecorder()
 		handler := uut.LoggingMiddleware(uut.ReadyHandler())
@@ -218,7 +226,7 @@ func TestUserManagementAPI(t *testing.T) {
 		rid := uuid.New().String()
 		req, err := http.NewRequest("GET", fmt.Sprintf("/v1/user/%s", uuid.New().String()), nil)
 		assert.Nil(err)
-		req.Header.Add("Padlock-Request-ID", rid)
+		req.Header.Add(requestIDHeader, rid)
 
 		router := mux.NewRouter()
 		respRecorder := httptest.NewRecorder()
@@ -232,7 +240,7 @@ func TestUserManagementAPI(t *testing.T) {
 		rid := uuid.New().String()
 		req, err := http.NewRequest("GET", "/v1/user", nil)
 		assert.Nil(err)
-		req.Header.Add("Padlock-Request-ID", rid)
+		req.Header.Add(requestIDHeader, rid)
 
 		router := mux.NewRouter()
 		respRecorder := httptest.NewRecorder()
@@ -259,7 +267,7 @@ func TestUserManagementAPI(t *testing.T) {
 		rid := uuid.New().String()
 		req, err := http.NewRequest("POST", "/v1/user", bytes.NewReader(t))
 		assert.Nil(err)
-		req.Header.Add("Padlock-Request-ID", rid)
+		req.Header.Add(requestIDHeader, rid)
 
 		router := mux.NewRouter()
 		respRecorder := httptest.NewRecorder()
@@ -273,7 +281,7 @@ func TestUserManagementAPI(t *testing.T) {
 		rid := uuid.New().String()
 		req, err := http.NewRequest("GET", fmt.Sprintf("/v1/user/%s", user2), nil)
 		assert.Nil(err)
-		req.Header.Add("Padlock-Request-ID", rid)
+		req.Header.Add(requestIDHeader, rid)
 
 		router := mux.NewRouter()
 		respRecorder := httptest.NewRecorder()
@@ -309,7 +317,7 @@ func TestUserManagementAPI(t *testing.T) {
 		rid := uuid.New().String()
 		req, err := http.NewRequest("PUT", fmt.Sprintf("/v1/user/%s/roles", user2), bytes.NewReader(t))
 		assert.Nil(err)
-		req.Header.Add("Padlock-Request-ID", rid)
+		req.Header.Add(requestIDHeader, rid)
 
 		router := mux.NewRouter()
 		respRecorder := httptest.NewRecorder()
@@ -325,7 +333,7 @@ func TestUserManagementAPI(t *testing.T) {
 		rid := uuid.New().String()
 		req, err := http.NewRequest("GET", fmt.Sprintf("/v1/user/%s", user2), nil)
 		assert.Nil(err)
-		req.Header.Add("Padlock-Request-ID", rid)
+		req.Header.Add(requestIDHeader, rid)
 
 		router := mux.NewRouter()
 		respRecorder := httptest.NewRecorder()
@@ -358,7 +366,7 @@ func TestUserManagementAPI(t *testing.T) {
 		rid := uuid.New().String()
 		req, err := http.NewRequest("PUT", fmt.Sprintf("/v1/user/%s", user2), bytes.NewReader(t))
 		assert.Nil(err)
-		req.Header.Add("Padlock-Request-ID", rid)
+		req.Header.Add(requestIDHeader, rid)
 
 		router := mux.NewRouter()
 		respRecorder := httptest.NewRecorder()
@@ -372,7 +380,7 @@ func TestUserManagementAPI(t *testing.T) {
 		rid := uuid.New().String()
 		req, err := http.NewRequest("GET", fmt.Sprintf("/v1/user/%s", user2), nil)
 		assert.Nil(err)
-		req.Header.Add("Padlock-Request-ID", rid)
+		req.Header.Add(requestIDHeader, rid)
 
 		router := mux.NewRouter()
 		respRecorder := httptest.NewRecorder()
@@ -393,7 +401,7 @@ func TestUserManagementAPI(t *testing.T) {
 		rid := uuid.New().String()
 		req, err := http.NewRequest("DELETE", fmt.Sprintf("/v1/user/%s", user2), nil)
 		assert.Nil(err)
-		req.Header.Add("Padlock-Request-ID", rid)
+		req.Header.Add(requestIDHeader, rid)
 
 		router := mux.NewRouter()
 		respRecorder := httptest.NewRecorder()
@@ -407,7 +415,7 @@ func TestUserManagementAPI(t *testing.T) {
 		rid := uuid.New().String()
 		req, err := http.NewRequest("GET", fmt.Sprintf("/v1/user/%s", user2), nil)
 		assert.Nil(err)
-		req.Header.Add("Padlock-Request-ID", rid)
+		req.Header.Add(requestIDHeader, rid)
 
 		router := mux.NewRouter()
 		respRecorder := httptest.NewRecorder()
@@ -429,7 +437,7 @@ func TestUserManagementAPI(t *testing.T) {
 		rid := uuid.New().String()
 		req, err := http.NewRequest("POST", "/v1/user", bytes.NewReader(t))
 		assert.Nil(err)
-		req.Header.Add("Padlock-Request-ID", rid)
+		req.Header.Add(requestIDHeader, rid)
 
 		router := mux.NewRouter()
 		respRecorder := httptest.NewRecorder()
@@ -443,7 +451,7 @@ func TestUserManagementAPI(t *testing.T) {
 		rid := uuid.New().String()
 		req, err := http.NewRequest("GET", fmt.Sprintf("/v1/user/%s", user6), nil)
 		assert.Nil(err)
-		req.Header.Add("Padlock-Request-ID", rid)
+		req.Header.Add(requestIDHeader, rid)
 
 		router := mux.NewRouter()
 		respRecorder := httptest.NewRecorder()
