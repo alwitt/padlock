@@ -36,7 +36,7 @@ clean: ## Clean up development environment
 	@pip3 install --user pre-commit
 	@pre-commit install
 	@pre-commit install-hooks
-	@GO111MODULE=on go install github.com/go-critic/go-critic/cmd/gocritic@v0.5.4
+	@GO111MODULE=on go install -v github.com/go-critic/go-critic/cmd/gocritic@latest
 	@GO111MODULE=on go get -v -u github.com/swaggo/swag/cmd/swag
 	@touch .prepare
 

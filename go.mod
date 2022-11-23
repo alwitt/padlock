@@ -10,9 +10,9 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0
 	github.com/spf13/viper v1.11.0
-	github.com/stretchr/testify v1.7.1
-	github.com/urfave/cli/v2 v2.5.1
-	golang.org/x/net v0.0.0-20220425223048-2871e0cb64e4
+	github.com/stretchr/testify v1.8.0
+	github.com/urfave/cli/v2 v2.23.5
+	golang.org/x/net v0.2.0
 	gorm.io/driver/postgres v1.3.5
 	gorm.io/driver/sqlite v1.3.2
 	gorm.io/gorm v1.23.5
@@ -50,10 +50,11 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/subosito/gotenv v1.2.0 // indirect
 	github.com/urfave/negroni v1.0.0 // indirect
+	github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 // indirect
 	golang.org/x/crypto v0.0.0-20220411220226-7b82a4e95df4 // indirect
-	golang.org/x/sys v0.0.0-20220502124256-b6088ccd6cba // indirect
-	golang.org/x/text v0.3.7 // indirect
+	golang.org/x/sys v0.2.0 // indirect
+	golang.org/x/text v0.4.0 // indirect
 	gopkg.in/ini.v1 v1.66.4 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
