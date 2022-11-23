@@ -4,9 +4,8 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"io/ioutil"
-	"net"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/alwitt/padlock/authenticate"
@@ -25,10 +24,10 @@ import (
 /*
 BuildUserManagementServer creates the user management server
 
- @param httpCfg common.HTTPConfig - HTTP server config
- @param manager users.Management - core user management logic block
- @param validateSupport common.CustomFieldValidator - customer validator support object
- @return the http.Server
+	@param httpCfg common.HTTPConfig - HTTP server config
+	@param manager users.Management - core user management logic block
+	@param validateSupport common.CustomFieldValidator - customer validator support object
+	@return the http.Server
 */
 func BuildUserManagementServer(
 	httpCfg common.APIServerConfig,
@@ -101,14 +100,14 @@ func BuildUserManagementServer(
 /*
 BuildAuthorizationServer creates the authorization server
 
- @param httpCfg common.HTTPConfig - HTTP server config
- @param manager users.Management - core user management logic block
- @param requestMatcher match.RequestMatch - the request matcher
- @param validateSupport common.CustomFieldValidator - customer validator support object
- @param checkHeaders common.AuthorizeRequestParamLocConfig - param on which headers to search for
- parameters regarding a REST API to authorize.
- @param forUnknownUser common.UnknownUserActionConfig - param on how to handle new unknown user
- @return the http.Server
+	@param httpCfg common.HTTPConfig - HTTP server config
+	@param manager users.Management - core user management logic block
+	@param requestMatcher match.RequestMatch - the request matcher
+	@param validateSupport common.CustomFieldValidator - customer validator support object
+	@param checkHeaders common.AuthorizeRequestParamLocConfig - param on which headers to search for
+	parameters regarding a REST API to authorize.
+	@param forUnknownUser common.UnknownUserActionConfig - param on how to handle new unknown user
+	@return the http.Server
 */
 func BuildAuthorizationServer(
 	httpCfg common.APIServerConfig,
@@ -177,13 +176,13 @@ func BuildAuthorizationServer(
 /*
 BuildAuthenticationServer creates the authentication server
 
- @param httpCfg common.HTTPConfig - HTTP server config
- @param openIDCfg common.OpenIDIssuerConfig - OpenID issuer configuration
- @param targetClaims common.OpenIDClaimsOfInterestConfig - config which JWT token claims to parse
- to fetch a user's parameters.
- @param respHeaderParam common.AuthorizeRequestParamLocConfig - config which indicates what
- response headers to output the user parameters on.
- @return the http.Server
+	@param httpCfg common.HTTPConfig - HTTP server config
+	@param openIDCfg common.OpenIDIssuerConfig - OpenID issuer configuration
+	@param targetClaims common.OpenIDClaimsOfInterestConfig - config which JWT token claims to parse
+	to fetch a user's parameters.
+	@param respHeaderParam common.AuthorizeRequestParamLocConfig - config which indicates what
+	response headers to output the user parameters on.
+	@return the http.Server
 */
 func BuildAuthenticationServer(
 	httpCfg common.APIServerConfig,
@@ -195,7 +194,7 @@ func BuildAuthenticationServer(
 	oidHTTPClient := http.Client{}
 	// Define the TLS settings if custom CA was provided
 	if openIDCfg.CustomCA != nil {
-		caCert, err := ioutil.ReadFile(*openIDCfg.CustomCA)
+		caCert, err := os.ReadFile(*openIDCfg.CustomCA)
 		if err != nil {
 			log.WithError(err).Errorf("Unable to read %s", *openIDCfg.CustomCA)
 			return nil, err
@@ -204,8 +203,6 @@ func BuildAuthenticationServer(
 		caCertPool.AppendCertsFromPEM(caCert)
 		tlsConfig := &tls.Config{RootCAs: caCertPool}
 		oidHTTPClient.Transport = &http.Transport{TLSClientConfig: tlsConfig}
-	} else {
-		oidHTTPClient.Transport = &http.Transport{DialTLS: net.Dial}
 	}
 
 	oidClient, err := authenticate.DefineOpenIDClient(openIDCfg.Issuer, &oidHTTPClient)

@@ -21,9 +21,9 @@ type targetPathMatcher struct {
 /*
 defineTargetPathMatcher defines a new RequestMatch for matching request at path level
 
- @param targetHost string - the host name this matcher is associated with
- @param spec TargetPathSpec - the matcher specification
- @return new targetPathMatcher instance
+	@param targetHost string - the host name this matcher is associated with
+	@param spec TargetPathSpec - the matcher specification
+	@return new targetPathMatcher instance
 */
 func defineTargetPathMatcher(targetHost string, spec TargetPathSpec) (*targetPathMatcher, error) {
 	validate := validator.New()
@@ -77,11 +77,10 @@ func (m *targetPathMatcher) checkPath(requestPath string) (bool, error) {
 /*
 match is core logic for targetPathMatcher.Match
 
- @param ctxt context.Context - context calling this API
- @param request RequestParam - request parameters
- @param skipPathCheck bool - whether to skip the path REGEX matching
- @return if a match, the list permissions needed to proceed
-         an error otherwise
+	@param ctxt context.Context - context calling this API
+	@param request RequestParam - request parameters
+	@param skipPathCheck bool - whether to skip the path REGEX matching
+	@return if a match, the list permissions needed to proceed, or an error otherwise
 */
 func (m *targetPathMatcher) match(ctxt context.Context, request RequestParam, skipPathCheck bool) (
 	[]string, error,
@@ -132,10 +131,9 @@ func (m *targetPathMatcher) match(ctxt context.Context, request RequestParam, sk
 /*
 Match checks whether a request matches against defined parameters
 
- @param ctxt context.Context - context calling this API
- @param request RequestParam - request parameters
- @return if a match, the list permissions needed to proceed
-         an error otherwise
+	@param ctxt context.Context - context calling this API
+	@param request RequestParam - request parameters
+	@return if a match, the list permissions needed to proceed, or an error otherwise
 */
 func (m *targetPathMatcher) Match(ctxt context.Context, request RequestParam) ([]string, error) {
 	return m.match(ctxt, request, false)
@@ -144,7 +142,7 @@ func (m *targetPathMatcher) Match(ctxt context.Context, request RequestParam) ([
 /*
 String returns an ASCII description of the object
 
- @return an ASCII description of the object
+	@return an ASCII description of the object
 */
 func (m *targetPathMatcher) String() string {
 	return fmt.Sprintf("PATH-MATCH['%s']", m.PathPattern)

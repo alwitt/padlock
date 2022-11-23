@@ -21,7 +21,7 @@ type RequestParam struct {
 /*
 String returns an ASCII description of the object
 
- @return an ASCII description of the object
+	@return an ASCII description of the object
 */
 func (p RequestParam) String() string {
 	if p.Host != nil {
@@ -69,8 +69,7 @@ type RequestMatch interface {
 
 		 @param ctxt context.Context - context calling this API
 		 @param request RequestParam - request parameters
-		 @return if a match, the list permissions needed to proceed
-		         an error otherwise
+		 @return if a match, the list permissions needed to proceed, or an error otherwise
 	*/
 	Match(ctxt context.Context, request RequestParam) ([]string, error)
 
@@ -85,8 +84,8 @@ type RequestMatch interface {
 /*
 ConvertConfigToTargetGroupSpec convert a common.AuthorizationConfig into TargetGroupSpec
 
- @param cfg *common.AuthorizationConfig -  the authorize config section
- @return the converted TargetGroupSpec
+	@param cfg *common.AuthorizationConfig -  the authorize config section
+	@return the converted TargetGroupSpec
 */
 func ConvertConfigToTargetGroupSpec(cfg *common.AuthorizationConfig) (TargetGroupSpec, error) {
 	result := TargetGroupSpec{AllowedHosts: make(map[string]TargetHostSpec)}

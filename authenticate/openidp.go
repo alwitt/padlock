@@ -75,9 +75,9 @@ type openIDIssuerClientImpl struct {
 /*
 DefineOpenIDClient defines a new OpenID issuer client
 
- @param issuer string - the URI of this OpenID issuer
- @param httpClient *http.Client - the HTTP client to use to communicate with the OpenID issuer
- @return new client instance
+	@param issuer string - the URI of this OpenID issuer
+	@param httpClient *http.Client - the HTTP client to use to communicate with the OpenID issuer
+	@return new client instance
 */
 func DefineOpenIDClient(issuer string, httpClient *http.Client) (OpenIDIssuerClient, error) {
 	logTags := log.Fields{"module": "authenticate", "component": "openid-client", "issuer": issuer}
@@ -85,16 +85,16 @@ func DefineOpenIDClient(issuer string, httpClient *http.Client) (OpenIDIssuerCli
 	// Read the OpenID config first
 	var cfg OpenIDIssuerConfig
 	cfgEP := fmt.Sprintf("%s/.well-known/openid-configuration", issuer)
-	log.WithFields(logTags).Debugf("OpenID issuer is %s", cfgEP)
+	log.WithFields(logTags).Debugf("OpenID issuer config at %s", cfgEP)
 	resp, err := httpClient.Get(cfgEP)
 	if err != nil {
-		log.WithError(err).WithFields(logTags).Errorf("Failed to GET %s", cfgEP)
+		log.WithError(err).WithFields(logTags).Errorf("GET %s call failure", cfgEP)
 		return nil, err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
 		err := fmt.Errorf("reading OpenID configuration from %s returned %d", cfgEP, resp.StatusCode)
-		log.WithError(err).WithFields(logTags).Errorf("Failed to GET %s", cfgEP)
+		log.WithError(err).WithFields(logTags).Errorf("GET %s unsuccessful", cfgEP)
 		return nil, err
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&cfg); err != nil {
@@ -105,13 +105,13 @@ func DefineOpenIDClient(issuer string, httpClient *http.Client) (OpenIDIssuerCli
 	// Read the issuer's signing public key
 	resp, err = httpClient.Get(cfg.JwksURI)
 	if err != nil {
-		log.WithError(err).WithFields(logTags).Errorf("Failed to GET %s", cfg.JwksURI)
+		log.WithError(err).WithFields(logTags).Errorf("GET %s unsuccessful", cfg.JwksURI)
 		return nil, err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
 		err := fmt.Errorf("reading JWKS from %s returned %d", cfg.JwksURI, resp.StatusCode)
-		log.WithError(err).WithFields(logTags).Errorf("Failed to GET %s", cfg.JwksURI)
+		log.WithError(err).WithFields(logTags).Errorf("GET %s unsuccessful", cfg.JwksURI)
 		return nil, err
 	}
 	type jwksResp struct {
@@ -167,8 +167,8 @@ func DefineOpenIDClient(issuer string, httpClient *http.Client) (OpenIDIssuerCli
 /*
 AssociatedPublicKey fetches the associated public based on "kid" value of a JWT token
 
- @param token *jwt.Token - the JWT token to find the public key for
- @return public key material
+	@param token *jwt.Token - the JWT token to find the public key for
+	@return public key material
 */
 func (c *openIDIssuerClientImpl) AssociatedPublicKey(token *jwt.Token) (interface{}, error) {
 	kidRaw, ok := token.Header["kid"]
@@ -190,9 +190,9 @@ func (c *openIDIssuerClientImpl) AssociatedPublicKey(token *jwt.Token) (interfac
 /*
 ParseJWT parses a string into a JWT token object.
 
- @param raw string - the original JWT string
- @param claimStore jwt.Claims - the object to store the claims in
- @return the parsed JWT token object
+	@param raw string - the original JWT string
+	@param claimStore jwt.Claims - the object to store the claims in
+	@return the parsed JWT token object
 */
 func (c *openIDIssuerClientImpl) ParseJWT(raw string, claimStore jwt.Claims) (*jwt.Token, error) {
 	return jwt.ParseWithClaims(raw, claimStore, c.AssociatedPublicKey)

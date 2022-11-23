@@ -69,12 +69,12 @@ type customValidatorImpl struct {
 /*
 GetCustomFieldValidator get new CustomFieldValidator instance
 
- @param userIDRegex string - usr ID validation regex
- @param usernameRegex string - username validation regex
- @param nameRegex string - personal name validation regex
- @param roleNameRegex string - role name validation regex
- @param permissionRegex string - permission name validation regex
- @return new CustomFieldValidator instance
+	@param userIDRegex string - usr ID validation regex
+	@param usernameRegex string - username validation regex
+	@param nameRegex string - personal name validation regex
+	@param roleNameRegex string - role name validation regex
+	@param permissionRegex string - permission name validation regex
+	@return new CustomFieldValidator instance
 */
 func GetCustomFieldValidator(
 	userIDRegex string,
@@ -115,8 +115,8 @@ func GetCustomFieldValidator(
 /*
 RegisterWithValidator register with the validator this customer validation support
 
- @param v *validator.Validate - the validator to register against
- @return whether successful
+	@param v *validator.Validate - the validator to register against
+	@return whether successful
 */
 func (m *customValidatorImpl) RegisterWithValidator(v *validator.Validate) error {
 	if err := v.RegisterValidation("user_id", m.ValidateUserID); err != nil {
@@ -140,8 +140,8 @@ func (m *customValidatorImpl) RegisterWithValidator(v *validator.Validate) error
 /*
 ValidateUserID custom user ID validation function
 
- @param fl validator.FieldLevel - the field to validate
- @return whether is valid
+	@param fl validator.FieldLevel - the field to validate
+	@return whether is valid
 */
 func (m *customValidatorImpl) ValidateUserID(fl validator.FieldLevel) bool {
 	if fl.Field().Kind() != reflect.String {
@@ -158,8 +158,8 @@ func (m *customValidatorImpl) ValidateUserID(fl validator.FieldLevel) bool {
 /*
 ValidateUserName custom user name validation function
 
- @param fl validator.FieldLevel - the field to validate
- @return whether is valid
+	@param fl validator.FieldLevel - the field to validate
+	@return whether is valid
 */
 func (m *customValidatorImpl) ValidateUserName(fl validator.FieldLevel) bool {
 	if fl.Field().Kind() != reflect.String {
@@ -176,8 +176,8 @@ func (m *customValidatorImpl) ValidateUserName(fl validator.FieldLevel) bool {
 /*
 ValidatePersonalName custom surname and family name validation function
 
- @param fl validator.FieldLevel - the field to validate
- @return whether is valid
+	@param fl validator.FieldLevel - the field to validate
+	@return whether is valid
 */
 func (m *customValidatorImpl) ValidatePersonalName(fl validator.FieldLevel) bool {
 	if fl.Field().Kind() != reflect.String {
@@ -194,8 +194,8 @@ func (m *customValidatorImpl) ValidatePersonalName(fl validator.FieldLevel) bool
 /*
 ValidateRoleName custom role name validation function
 
- @param fl validator.FieldLevel - the field to validate
- @return whether is valid
+	@param fl validator.FieldLevel - the field to validate
+	@return whether is valid
 */
 func (m *customValidatorImpl) ValidateRoleName(fl validator.FieldLevel) bool {
 	if fl.Field().Kind() != reflect.String {
@@ -212,8 +212,8 @@ func (m *customValidatorImpl) ValidateRoleName(fl validator.FieldLevel) bool {
 /*
 ValidatePermissionName custom permission name validation function
 
- @param fl validator.FieldLevel - the field to validate
- @return whether is valid
+	@param fl validator.FieldLevel - the field to validate
+	@return whether is valid
 */
 func (m *customValidatorImpl) ValidatePermissionName(fl validator.FieldLevel) bool {
 	if fl.Field().Kind() != reflect.String {

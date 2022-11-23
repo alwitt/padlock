@@ -24,8 +24,8 @@ type targetHostMatcher struct {
 /*
 defineTargetHostMatcher defines a new RequestMatch for matching request at host level
 
- @param spec TargetHostSpec - the matcher specification
- @return new targetHostMatcher instance
+	@param spec TargetHostSpec - the matcher specification
+	@return new targetHostMatcher instance
 */
 func defineTargetHostMatcher(spec TargetHostSpec) (*targetHostMatcher, error) {
 	validate := validator.New()
@@ -67,10 +67,9 @@ func defineTargetHostMatcher(spec TargetHostSpec) (*targetHostMatcher, error) {
 /*
 Match checks whether a request matches against defined parameters
 
- @param ctxt context.Context - context calling this API
- @param request RequestParam - request parameters
- @return if a match, the list permissions needed to proceed
-         an error otherwise
+	@param ctxt context.Context - context calling this API
+	@param request RequestParam - request parameters
+	@return if a match, the list permissions needed to proceed, or an error otherwise
 */
 func (m *targetHostMatcher) Match(ctxt context.Context, request RequestParam) (
 	[]string, error,
@@ -117,7 +116,7 @@ func (m *targetHostMatcher) Match(ctxt context.Context, request RequestParam) (
 /*
 String returns an ASCII description of the object
 
- @return an ASCII description of the object
+	@return an ASCII description of the object
 */
 func (m *targetHostMatcher) String() string {
 	return fmt.Sprintf("HOST-MATCH['%s']", m.targetHost)

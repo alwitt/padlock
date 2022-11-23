@@ -184,8 +184,8 @@ type managementDBClientImpl struct {
 /*
 CreateManagementDBClient create a new DB client
 
- @param db *gorm.DB - GORM DB client
- @return client
+	@param db *gorm.DB - GORM DB client
+	@return client
 */
 func CreateManagementDBClient(db *gorm.DB, validateSupport common.CustomFieldValidator) (
 	ManagementDBClient, error,
@@ -224,7 +224,7 @@ func CreateManagementDBClient(db *gorm.DB, validateSupport common.CustomFieldVal
 /*
 Ready checks whether the client is ready for use.
 
- @return nil if ready, or an error otherwise
+	@return nil if ready, or an error otherwise
 */
 func (c *managementDBClientImpl) Ready() error {
 	var users []dbUser
@@ -243,9 +243,9 @@ func (c *managementDBClientImpl) Ready() error {
 /*
 AlignRolesWithConfig aligns the role entries in the DB with the configuration provided
 
- @param ctxt context.Context - context calling this API
- @param configuredRoles []string - the list of configured roles
- @return whether successful
+	@param ctxt context.Context - context calling this API
+	@param configuredRoles []string - the list of configured roles
+	@return whether successful
 */
 func (c *managementDBClientImpl) AlignRolesWithConfig(
 	ctxt context.Context, configuredRoles []string,
@@ -315,10 +315,10 @@ func (c *managementDBClientImpl) AlignRolesWithConfig(
 /*
 createRoles create a set of new roles
 
- @param ctxt context.Context - context calling this API
- @param tx *gorm.DB - DB session object
- @param roles []string - list of roles to create for
- @return the set of role objects
+	@param ctxt context.Context - context calling this API
+	@param tx *gorm.DB - DB session object
+	@param roles []string - list of roles to create for
+	@return the set of role objects
 */
 func (c *managementDBClientImpl) createRoles(ctxt context.Context, tx *gorm.DB, roles []string) (
 	[]dbRole, error,
@@ -355,10 +355,10 @@ func (c *managementDBClientImpl) createRoles(ctxt context.Context, tx *gorm.DB, 
 /*
 deleteRoles delete a set of roles
 
- @param ctxt context.Context - context calling this API
- @param tx *gorm.DB - DB session object
- @param roles []string - list of roles to delete
- @return whether successful
+	@param ctxt context.Context - context calling this API
+	@param tx *gorm.DB - DB session object
+	@param roles []string - list of roles to delete
+	@return whether successful
 */
 func (c *managementDBClientImpl) deleteRoles(
 	ctxt context.Context, tx *gorm.DB, roles []string,
@@ -380,8 +380,8 @@ func (c *managementDBClientImpl) deleteRoles(
 /*
 ListAllRoles query for the list of known roles within the DB
 
- @param ctxt context.Context - context calling this API
- @return the list roles in the DB
+	@param ctxt context.Context - context calling this API
+	@return the list roles in the DB
 */
 func (c *managementDBClientImpl) ListAllRoles(ctxt context.Context) ([]string, error) {
 	var result []string
@@ -402,9 +402,9 @@ func (c *managementDBClientImpl) ListAllRoles(ctxt context.Context) ([]string, e
 /*
 GetUsersOfRole query for the list of users which have that role.
 
- @param ctxt context.Context - context calling this API
- @param role string - the role
- @return the list of users
+	@param ctxt context.Context - context calling this API
+	@param role string - the role
+	@return the list of users
 */
 func (c *managementDBClientImpl) GetUsersOfRole(ctxt context.Context, role string) (
 	[]UserInfo, error,
@@ -431,10 +431,10 @@ func (c *managementDBClientImpl) GetUsersOfRole(ctxt context.Context, role strin
 /*
 DefineUser define a user entry with roles
 
- @param ctxt context.Context - context calling this API
- @param config UserConfig - user config
- @param roles []string - roles for this user
- @return whether successful
+	@param ctxt context.Context - context calling this API
+	@param config UserConfig - user config
+	@param roles []string - roles for this user
+	@return whether successful
 */
 func (c *managementDBClientImpl) DefineUser(
 	ctxt context.Context, config UserConfig, roles []string,
@@ -476,9 +476,9 @@ func (c *managementDBClientImpl) DefineUser(
 /*
 fetchUser reads a single user entry
 
- @param tx *gorm.DB - the DB client
- @param id string - user entry ID
- @return the user entry from DB
+	@param tx *gorm.DB - the DB client
+	@param id string - user entry ID
+	@return the user entry from DB
 */
 func (c *managementDBClientImpl) fetchUser(tx *gorm.DB, id string) (dbUser, error) {
 	var userEntry dbUser
@@ -491,9 +491,9 @@ func (c *managementDBClientImpl) fetchUser(tx *gorm.DB, id string) (dbUser, erro
 /*
 fetchUserWithRoles reads a single user entry with it associated roles
 
- @param tx *gorm.DB - the DB client
- @param id string - user entry ID
- @return the user entry from DB
+	@param tx *gorm.DB - the DB client
+	@param id string - user entry ID
+	@return the user entry from DB
 */
 func (c *managementDBClientImpl) fetchUserWithRoles(tx *gorm.DB, id string) (dbUser, error) {
 	var userEntry dbUser
@@ -506,9 +506,9 @@ func (c *managementDBClientImpl) fetchUserWithRoles(tx *gorm.DB, id string) (dbU
 /*
 GetUser query for a user by ID
 
- @param ctxt context.Context - context calling this API
- @param id string - user entry ID
- @return the user information
+	@param ctxt context.Context - context calling this API
+	@param id string - user entry ID
+	@return the user information
 */
 func (c *managementDBClientImpl) GetUser(ctxt context.Context, id string) (UserDetails, error) {
 	var result UserDetails
@@ -531,8 +531,8 @@ func (c *managementDBClientImpl) GetUser(ctxt context.Context, id string) (UserD
 /*
 ListAllUsers query for all users in system
 
- @param ctxt context.Context - context calling this API
- @return the list of users in system
+	@param ctxt context.Context - context calling this API
+	@return the list of users in system
 */
 func (c *managementDBClientImpl) ListAllUsers(ctxt context.Context) ([]UserInfo, error) {
 	var result []UserInfo
@@ -554,9 +554,9 @@ func (c *managementDBClientImpl) ListAllUsers(ctxt context.Context) ([]UserInfo,
 /*
 DeleteUser deletes a user
 
- @param ctxt context.Context - context calling this API
- @param id string - user entry ID
- @return whether successful
+	@param ctxt context.Context - context calling this API
+	@param id string - user entry ID
+	@return whether successful
 */
 func (c *managementDBClientImpl) DeleteUser(ctxt context.Context, id string) error {
 	logTags := c.GetLogTagsForContext(ctxt)
@@ -585,10 +585,10 @@ func (c *managementDBClientImpl) DeleteUser(ctxt context.Context, id string) err
 /*
 UpdateUser update the parameters for a user
 
- @param ctxt context.Context - context calling this API
- @param id string - user entry ID
- @param newConfig UserConfig - new user config
- @return whether successful
+	@param ctxt context.Context - context calling this API
+	@param id string - user entry ID
+	@param newConfig UserConfig - new user config
+	@return whether successful
 */
 func (c *managementDBClientImpl) UpdateUser(
 	ctxt context.Context, id string, newConfig UserConfig,
@@ -622,10 +622,10 @@ func (c *managementDBClientImpl) UpdateUser(
 /*
 AddRolesToUser add new roles to a user
 
- @param ctxt context.Context - context calling this API
- @param id string - user entry ID
- @param newRoles []string - new roles for this user
- @return whether successful
+	@param ctxt context.Context - context calling this API
+	@param id string - user entry ID
+	@param newRoles []string - new roles for this user
+	@return whether successful
 */
 func (c *managementDBClientImpl) AddRolesToUser(
 	ctxt context.Context, id string, newRoles []string,
@@ -657,10 +657,10 @@ func (c *managementDBClientImpl) AddRolesToUser(
 /*
 SetUserRoles change the roles of a user
 
- @param ctxt context.Context - context calling this API
- @param id string - user entry ID
- @param newRoles []string - new roles for this user
- @return whether successful
+	@param ctxt context.Context - context calling this API
+	@param id string - user entry ID
+	@param newRoles []string - new roles for this user
+	@return whether successful
 */
 func (c *managementDBClientImpl) SetUserRoles(
 	ctxt context.Context, id string, newRoles []string,
@@ -697,10 +697,10 @@ func (c *managementDBClientImpl) SetUserRoles(
 /*
 RemoveRolesFromUser remove roles from user
 
- @param ctxt context.Context - context calling this API
- @param id string - user entry ID
- @param roles []string - roles to remove from user
- @return whether successful
+	@param ctxt context.Context - context calling this API
+	@param id string - user entry ID
+	@param roles []string - roles to remove from user
+	@return whether successful
 */
 func (c *managementDBClientImpl) RemoveRolesFromUser(
 	ctxt context.Context, id string, roles []string,

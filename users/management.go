@@ -27,8 +27,8 @@ type managementImpl struct {
 /*
 CreateManagement defines a new Management
 
- @param db models.ManagementDBClient - the DB client object
- @return instance of Management
+	@param db models.ManagementDBClient - the DB client object
+	@return instance of Management
 */
 func CreateManagement(db models.ManagementDBClient) (Management, error) {
 	logTags := log.Fields{"module": "user", "component": "management"}
@@ -49,7 +49,7 @@ func CreateManagement(db models.ManagementDBClient) (Management, error) {
 /*
 Ready checks whether the client is ready for use.
 
- @return nil if ready, or an error otherwise
+	@return nil if ready, or an error otherwise
 */
 func (m *managementImpl) Ready() error {
 	return m.db.Ready()
@@ -61,10 +61,10 @@ func (m *managementImpl) Ready() error {
 /*
 AlignRolesWithConfig aligns the role entries on record with the configuration provided
 
- @param ctxt context.Context - context calling this API
- @param configuredRoles configuredRoles map[string]common.UserRoleConfig - the set of
- configured roles
- @return whether successful
+	@param ctxt context.Context - context calling this API
+	@param configuredRoles configuredRoles map[string]common.UserRoleConfig - the set of
+	configured roles
+	@return whether successful
 */
 func (m *managementImpl) AlignRolesWithConfig(
 	ctxt context.Context, configuredRoles map[string]common.UserRoleConfig,
@@ -101,8 +101,8 @@ func (m *managementImpl) AlignRolesWithConfig(
 /*
 ListAllRoles query for the list of known roles on record
 
- @param ctxt context.Context - context calling this API
- @return the list roles on record
+	@param ctxt context.Context - context calling this API
+	@return the list roles on record
 */
 func (m *managementImpl) ListAllRoles(ctxt context.Context) (
 	map[string]common.UserRoleConfig, error,
@@ -115,9 +115,9 @@ func (m *managementImpl) ListAllRoles(ctxt context.Context) (
 /*
 GetRole query for a particular role on record
 
- @param ctxt context.Context - context calling this API
- @param role string - the role
- @return that role
+	@param ctxt context.Context - context calling this API
+	@param role string - the role
+	@return that role
 */
 func (m *managementImpl) GetRole(ctxt context.Context, role string) (common.UserRoleConfig, error) {
 	m.rolesLock.RLock()
@@ -132,9 +132,9 @@ func (m *managementImpl) GetRole(ctxt context.Context, role string) (common.User
 /*
 GetRoleWithLinkedUsers query for a particular role on record along with its associated users
 
- @param ctxt context.Context - context calling this API
- @param role string - the role
- @return that role, and its associated users.
+	@param ctxt context.Context - context calling this API
+	@param role string - the role
+	@return that role, and its associated users.
 */
 func (m *managementImpl) GetRoleWithLinkedUsers(ctxt context.Context, role string) (
 	common.UserRoleConfig, []models.UserInfo, error,
@@ -160,10 +160,10 @@ func (m *managementImpl) GetRoleWithLinkedUsers(ctxt context.Context, role strin
 /*
 DefineUser define a user entry with roles
 
- @param ctxt context.Context - context calling this API
- @param config UserConfig - user config
- @param roles []string - roles for this user
- @return whether successful
+	@param ctxt context.Context - context calling this API
+	@param config UserConfig - user config
+	@param roles []string - roles for this user
+	@return whether successful
 */
 func (m *managementImpl) DefineUser(
 	ctxt context.Context, config models.UserConfig, roles []string,
@@ -201,9 +201,9 @@ func (m *managementImpl) readPermissionSetOfRoles(roles []string) map[string]boo
 /*
 GetUser query for a user by ID
 
- @param ctxt context.Context - context calling this API
- @param id string - user entry ID
- @return the user information
+	@param ctxt context.Context - context calling this API
+	@param id string - user entry ID
+	@return the user information
 */
 func (m *managementImpl) GetUser(ctxt context.Context, id string) (
 	UserDetailsWithPermission, error,
@@ -229,10 +229,10 @@ func (m *managementImpl) GetUser(ctxt context.Context, id string) (
 /*
 DoesUserHavePermission checks whether a particular user has at least one of the allowed permissions.
 
- @param ctxt context.Context - context calling this API
- @param id string - user entry ID
- @param allowedPermissions []string - list of allowed permissions
- @return whether the user has at least one of the allowed permissions.
+	@param ctxt context.Context - context calling this API
+	@param id string - user entry ID
+	@param allowedPermissions []string - list of allowed permissions
+	@return whether the user has at least one of the allowed permissions.
 */
 func (m *managementImpl) DoesUserHavePermission(
 	ctxt context.Context, id string, allowedPermissions []string,
@@ -258,8 +258,8 @@ func (m *managementImpl) DoesUserHavePermission(
 /*
 ListAllUsers query for all users in system
 
- @param ctxt context.Context - context calling this API
- @return the list of users in system
+	@param ctxt context.Context - context calling this API
+	@return the list of users in system
 */
 func (m *managementImpl) ListAllUsers(ctxt context.Context) ([]models.UserInfo, error) {
 	return m.db.ListAllUsers(ctxt)
@@ -268,9 +268,9 @@ func (m *managementImpl) ListAllUsers(ctxt context.Context) ([]models.UserInfo, 
 /*
 DeleteUser deletes a user
 
- @param ctxt context.Context - context calling this API
- @param id string - user entry ID
- @return whether successful
+	@param ctxt context.Context - context calling this API
+	@param id string - user entry ID
+	@return whether successful
 */
 func (m *managementImpl) DeleteUser(ctxt context.Context, id string) error {
 	return m.db.DeleteUser(ctxt, id)
@@ -279,10 +279,10 @@ func (m *managementImpl) DeleteUser(ctxt context.Context, id string) error {
 /*
 UpdateUser update the parameters for a user
 
- @param ctxt context.Context - context calling this API
- @param id string - user entry ID
- @param newConfig UserConfig - new user config
- @return whether successful
+	@param ctxt context.Context - context calling this API
+	@param id string - user entry ID
+	@param newConfig UserConfig - new user config
+	@return whether successful
 */
 func (m *managementImpl) UpdateUser(
 	ctxt context.Context, id string, newConfig models.UserConfig,
@@ -293,10 +293,10 @@ func (m *managementImpl) UpdateUser(
 /*
 AddRolesToUser add new roles to a user
 
- @param ctxt context.Context - context calling this API
- @param id string - user entry ID
- @param newRoles []string - new roles for this user
- @return whether successful
+	@param ctxt context.Context - context calling this API
+	@param id string - user entry ID
+	@param newRoles []string - new roles for this user
+	@return whether successful
 */
 func (m *managementImpl) AddRolesToUser(ctxt context.Context, id string, newRoles []string) error {
 	m.rolesLock.RLock()
@@ -313,10 +313,10 @@ func (m *managementImpl) AddRolesToUser(ctxt context.Context, id string, newRole
 /*
 SetUserRoles change the roles of a user
 
- @param ctxt context.Context - context calling this API
- @param id string - user entry ID
- @param newRoles []string - new roles for this user
- @return whether successful
+	@param ctxt context.Context - context calling this API
+	@param id string - user entry ID
+	@param newRoles []string - new roles for this user
+	@return whether successful
 */
 func (m *managementImpl) SetUserRoles(ctxt context.Context, id string, newRoles []string) error {
 	m.rolesLock.RLock()
@@ -333,10 +333,10 @@ func (m *managementImpl) SetUserRoles(ctxt context.Context, id string, newRoles 
 /*
 RemoveRolesFromUser remove roles from user
 
- @param ctxt context.Context - context calling this API
- @param id string - user entry ID
- @param roles []string - roles to remove from user
- @return whether successful
+	@param ctxt context.Context - context calling this API
+	@param id string - user entry ID
+	@param roles []string - roles to remove from user
+	@return whether successful
 */
 func (m *managementImpl) RemoveRolesFromUser(
 	ctxt context.Context, id string, roles []string,

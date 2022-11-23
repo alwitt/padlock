@@ -22,7 +22,7 @@ type CustomValidationsConfig struct {
 /*
 DefineCustomFieldValidator defines a CustomFieldValidator based on the config parameters
 
- @return the defined CustomFieldValidator
+	@return the defined CustomFieldValidator
 */
 func (c CustomValidationsConfig) DefineCustomFieldValidator() (CustomFieldValidator, error) {
 	return GetCustomFieldValidator(

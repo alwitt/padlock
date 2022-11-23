@@ -30,7 +30,7 @@ func (i *AccessAuthorizeParam) String() string {
 /*
 UpdateLogTags updates Apex log.Fields map with values from the parameter
 
- @param tags log.Fields - log.Fields to update
+	@param tags log.Fields - log.Fields to update
 */
 func (i *AccessAuthorizeParam) UpdateLogTags(tags log.Fields) {
 	tags["auth_user_id"] = i.UserID
@@ -42,8 +42,8 @@ func (i *AccessAuthorizeParam) UpdateLogTags(tags log.Fields) {
 /*
 ModifyLogMetadataByAccessAuthorizeParam update log metadata with info from AccessAuthorizeParam
 
- @param ctxt context.Context - a request context
- @param theTags log.Fields - a log metadata to update
+	@param ctxt context.Context - a request context
+	@param theTags log.Fields - a log metadata to update
 */
 func ModifyLogMetadataByAccessAuthorizeParam(ctxt context.Context, theTags log.Fields) {
 	if ctxt.Value(AccessAuthorizeParamKey{}) != nil {

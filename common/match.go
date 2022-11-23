@@ -32,8 +32,8 @@ type regexCheckImpl struct {
 /*
 Match checks whether this regex finds a match against the input
 
- @param s []byte - the string against
- @return whether the input matchs against the regex
+	@param s []byte - the string against
+	@return whether the input matchs against the regex
 */
 func (c *regexCheckImpl) Match(s []byte) (bool, error) {
 	if c.core.Find(s) == nil {
@@ -45,7 +45,7 @@ func (c *regexCheckImpl) Match(s []byte) (bool, error) {
 /*
 String returns an ASCII description of the object
 
- @return an ASCII description of the object
+	@return an ASCII description of the object
 */
 func (c *regexCheckImpl) String() string {
 	return fmt.Sprintf("REGEX['%s']", c.pattern)
@@ -54,8 +54,8 @@ func (c *regexCheckImpl) String() string {
 /*
 NewRegexCheck defines a new RegexCheck object
 
- @param pattern string - regex pattern
- @return the RegexCheck instance
+	@param pattern string - regex pattern
+	@return the RegexCheck instance
 */
 func NewRegexCheck(pattern string) (RegexCheck, error) {
 	reg, err := regexp.Compile(pattern)

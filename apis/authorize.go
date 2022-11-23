@@ -72,8 +72,8 @@ func defineAuthorizationHandler(
 ParamReadMiddleware is a support middleware to be used with Mux to extract the mandatory
 parameters needed to authorize a REST API call and record it in the context.
 
- @param next http.HandlerFunc - the core request handler function
- @return middleware http.HandlerFunc
+	@param next http.HandlerFunc - the core request handler function
+	@return middleware http.HandlerFunc
 */
 func (h AuthorizationHandler) ParamReadMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {

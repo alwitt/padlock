@@ -9,6 +9,7 @@ lint: .prepare ## Lint the files
 .PHONY: fix
 fix: .prepare ## Lint and fix vialoations
 	@go mod tidy
+	@go fmt ./...
 	@golangci-lint run --fix ./...
 
 .PHONY: test

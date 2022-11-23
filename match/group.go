@@ -21,8 +21,8 @@ type targetGroupMatcher struct {
 /*
 DefineTargetGroupMatcher defines a new RequestMatch for matching at host group level
 
- @param spec TargetGroupSpec - the matcher specification
- @return new RequestMatch instance
+	@param spec TargetGroupSpec - the matcher specification
+	@return new RequestMatch instance
 */
 func DefineTargetGroupMatcher(spec TargetGroupSpec) (RequestMatch, error) {
 	validate := validator.New()
@@ -55,10 +55,9 @@ func DefineTargetGroupMatcher(spec TargetGroupSpec) (RequestMatch, error) {
 /*
 Match checks whether a request matches against defined parameters
 
- @param ctxt context.Context - context calling this API
- @param request RequestParam - request parameters
- @return if a match, the list permissions needed to proceed
-         an error otherwise
+	@param ctxt context.Context - context calling this API
+	@param request RequestParam - request parameters
+	@return if a match, the list permissions needed to proceed, or an error otherwise
 */
 func (m *targetGroupMatcher) Match(ctxt context.Context, request RequestParam) (
 	[]string, error,
@@ -109,7 +108,7 @@ func (m *targetGroupMatcher) Match(ctxt context.Context, request RequestParam) (
 /*
 String returns an ASCII description of the object
 
- @return an ASCII description of the object
+	@return an ASCII description of the object
 */
 func (m *targetGroupMatcher) String() string {
 	return "HOST-GROUP-MATCH"

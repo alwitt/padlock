@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"os/signal"
@@ -180,72 +179,78 @@ func mainApplication(c *cli.Context) error {
 		return err
 	}
 
-	// Process the database connection parameters
-	var dbParam common.DatabaseConfig
-	{
-		params, err := ioutil.ReadFile(cmdArgs.DBParamFile)
-		if err != nil {
-			log.WithError(err).WithFields(logTags).Errorf("Unable to read %s", cmdArgs.DBParamFile)
-			return err
-		}
-		if err := json.Unmarshal(params, &dbParam); err != nil {
-			log.WithError(err).WithFields(logTags).Errorf("Unable to parse %s", cmdArgs.DBParamFile)
-			return err
-		}
-		if err := validate.Struct(&dbParam); err != nil {
-			log.WithError(err).WithFields(logTags).
-				Errorf("%s content is not valid", cmdArgs.DBParamFile)
-			return err
-		}
-	}
-
 	customValidator, err := appCfg.CustomRegex.DefineCustomFieldValidator()
 	if err != nil {
 		log.WithError(err).WithFields(logTags).Errorf("Unable to define custom validator supporter")
 		return err
 	}
 
-	// Create base DB client
-	dbDSN := fmt.Sprintf(
-		"host=%s user=%s dbname=%s sslmode=disable",
-		dbParam.Host,
-		dbParam.User,
-		dbParam.DB,
-	)
-	if cmdArgs.DBPassword != "" {
-		dbDSN = fmt.Sprintf(
-			"host=%s user=%s dbname=%s password=%s sslmode=disable",
+	var userManager users.Management
+	// Only define user management module if either the
+	//  * user management service
+	//  * user authorization service is enabled
+	if appCfg.UserManagement.Enabled || appCfg.Authorization.Enabled {
+		// Process the database connection parameters
+		var dbParam common.DatabaseConfig
+		{
+			params, err := os.ReadFile(cmdArgs.DBParamFile)
+			if err != nil {
+				log.WithError(err).WithFields(logTags).Errorf("Unable to read %s", cmdArgs.DBParamFile)
+				return err
+			}
+			if err := json.Unmarshal(params, &dbParam); err != nil {
+				log.WithError(err).WithFields(logTags).Errorf("Unable to parse %s", cmdArgs.DBParamFile)
+				return err
+			}
+			if err := validate.Struct(&dbParam); err != nil {
+				log.WithError(err).WithFields(logTags).
+					Errorf("%s content is not valid", cmdArgs.DBParamFile)
+				return err
+			}
+		}
+
+		// Create base DB client
+		dbDSN := fmt.Sprintf(
+			"host=%s user=%s dbname=%s sslmode=disable",
 			dbParam.Host,
 			dbParam.User,
 			dbParam.DB,
-			cmdArgs.DBPassword,
 		)
-	}
-	baseDBClient, err := gorm.Open(postgres.Open(dbDSN))
-	if err != nil {
-		log.WithError(err).WithFields(logTags).Errorf("Failed to create base DB client")
-		return err
-	}
-	dbClient, err := models.CreateManagementDBClient(baseDBClient, customValidator)
-	if err != nil {
-		log.WithError(err).WithFields(logTags).Errorf("Failed to create DB client")
-		return err
-	}
+		if cmdArgs.DBPassword != "" {
+			dbDSN = fmt.Sprintf(
+				"host=%s user=%s dbname=%s password=%s sslmode=disable",
+				dbParam.Host,
+				dbParam.User,
+				dbParam.DB,
+				cmdArgs.DBPassword,
+			)
+		}
+		baseDBClient, err := gorm.Open(postgres.Open(dbDSN))
+		if err != nil {
+			log.WithError(err).WithFields(logTags).Errorf("Failed to create base DB client")
+			return err
+		}
+		dbClient, err := models.CreateManagementDBClient(baseDBClient, customValidator)
+		if err != nil {
+			log.WithError(err).WithFields(logTags).Errorf("Failed to create DB client")
+			return err
+		}
 
-	// Define user management client
-	userManager, err := users.CreateManagement(dbClient)
-	if err != nil {
-		log.WithError(err).WithFields(logTags).Errorf("Failed to define user management instance")
-		return err
-	}
+		// Define user management client
+		userManager, err = users.CreateManagement(dbClient)
+		if err != nil {
+			log.WithError(err).WithFields(logTags).Errorf("Failed to define user management instance")
+			return err
+		}
 
-	// Synchronize role configuration
-	err = userManager.AlignRolesWithConfig(
-		context.Background(), appCfg.UserManagement.AvailableRoles,
-	)
-	if err != nil {
-		log.WithError(err).WithFields(logTags).Errorf("Failed to perform initial role config sync")
-		return err
+		// Synchronize role configuration
+		err = userManager.AlignRolesWithConfig(
+			context.Background(), appCfg.UserManagement.AvailableRoles,
+		)
+		if err != nil {
+			log.WithError(err).WithFields(logTags).Errorf("Failed to perform initial role config sync")
+			return err
+		}
 	}
 
 	// ------------------------------------------------------------------------------------
@@ -330,7 +335,7 @@ func mainApplication(c *cli.Context) error {
 		}
 		// Parse OpenID issuer parameter file
 		var oidParam common.OpenIDIssuerConfig
-		params, err := ioutil.ReadFile(cmdArgs.OpenIDIssuerParamFile)
+		params, err := os.ReadFile(cmdArgs.OpenIDIssuerParamFile)
 		if err != nil {
 			log.WithError(err).WithFields(logTags).
 				Errorf("Unable to read %s", cmdArgs.OpenIDIssuerParamFile)

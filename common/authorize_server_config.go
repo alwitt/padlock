@@ -11,7 +11,7 @@ import (
 /*
 Validate the authorization server config
 
- @return nil if valid, or an error
+	@return nil if valid, or an error
 */
 func (c AuthorizationServerConfig) Validate() error {
 	validate := validator.New()
