@@ -86,7 +86,7 @@ func (h AuthenticationHandler) Authenticate(w http.ResponseWriter, r *http.Reque
 	if bearer == "" {
 		msg := "Header 'Authorization' missing"
 		log.WithFields(logTags).Errorf(msg)
-		respCode = http.StatusBadRequest
+		respCode = http.StatusUnauthorized
 		response = h.GetStdRESTErrorMsg(r.Context(), http.StatusBadRequest, msg, "")
 		return
 	}
@@ -94,7 +94,7 @@ func (h AuthenticationHandler) Authenticate(w http.ResponseWriter, r *http.Reque
 	if len(bearerParts) != 2 {
 		msg := "Bearer 'Authorization' has incorrect format"
 		log.WithFields(logTags).Errorf(msg)
-		respCode = http.StatusBadRequest
+		respCode = http.StatusUnauthorized
 		response = h.GetStdRESTErrorMsg(r.Context(), http.StatusBadRequest, msg, "")
 		return
 	}
@@ -106,7 +106,7 @@ func (h AuthenticationHandler) Authenticate(w http.ResponseWriter, r *http.Reque
 	if err != nil {
 		msg := "Unable to parse JWT bearer token"
 		log.WithError(err).WithFields(logTags).Errorf(msg)
-		respCode = http.StatusBadRequest
+		respCode = http.StatusUnauthorized
 		response = h.GetStdRESTErrorMsg(r.Context(), http.StatusBadRequest, msg, err.Error())
 		return
 	}
