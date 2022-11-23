@@ -117,7 +117,7 @@ type UserRoleConfig struct {
 // UserRolesConfig a group of user roles
 type UserRolesConfig struct {
 	// AvailableRoles is the set of roles supported by the system
-	AvailableRoles map[string]UserRoleConfig `mapstructure:"userRoles" json:"userRoles" validate:"required,gte=1,dive"`
+	AvailableRoles map[string]UserRoleConfig `mapstructure:"userRoles" json:"userRoles" validate:"required_with=Enabled,dive"`
 }
 
 // ===============================================================================
@@ -196,7 +196,7 @@ type AuthorizationConfig struct {
 	// Rules is the list of TargetHostSpec supported by the server. The host of "*"
 	// functions as a wildcard. If a request host is not explicitly listed here, it may match
 	// against "*" if that was defined.
-	Rules []HostAuthorizationConfig `mapstructure:"rules" json:"rules" validate:"required,gte=1,dive"`
+	Rules []HostAuthorizationConfig `mapstructure:"rules" json:"rules" validate:"required_with=Enabled,dive"`
 	// RequestParamLocation sets which HTTP headers to parse to get the parameters of
 	// a REST request to authorize. It is expected that the component (i.e. a proxy) requesting
 	// authorization for a request will provide the needed values through these headers when it

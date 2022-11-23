@@ -22,6 +22,11 @@ func (c AuthorizationServerConfig) Validate() error {
 		return err
 	}
 
+	// Short circuit if authorization server not enabled
+	if !c.Authorization.Enabled {
+		return nil
+	}
+
 	// Create a custom validator
 	customValidate, err := c.CustomRegex.DefineCustomFieldValidator()
 	if err != nil {

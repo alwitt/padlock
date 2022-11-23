@@ -28,7 +28,7 @@ type cliArgs struct {
 	JSONLog               bool
 	LogLevel              string `validate:"required,oneof=debug info warn error"`
 	ConfigFile            string `validate:"file"`
-	DBParamFile           string `validate:"file"`
+	DBParamFile           string `validate:"omitempty,file"`
 	DBPassword            string
 	OpenIDIssuerParamFile string `validate:"omitempty,file"`
 	Hostname              string
@@ -39,7 +39,7 @@ var cmdArgs cliArgs
 var logTags log.Fields
 
 // @title padlock
-// @version v0.3.0
+// @version v0.3.1
 // @description External AuthN / AuthZ support service for REST API RBAC
 
 // @host localhost:3000
@@ -60,7 +60,7 @@ func main() {
 	common.InstallDefaultAuthorizationServerConfigValues()
 
 	app := &cli.App{
-		Version:     "v0.3.0",
+		Version:     "v0.3.1",
 		Usage:       "application entrypoint",
 		Description: "An external AuthN / AuthZ support service for REST API RBAC",
 		Flags: []cli.Flag{
@@ -100,7 +100,7 @@ func main() {
 				Aliases:     []string{"d"},
 				EnvVars:     []string{"DB_CONNECT_PARAM_FILE"},
 				Destination: &cmdArgs.DBParamFile,
-				Required:    true,
+				Required:    false,
 			},
 			&cli.StringFlag{
 				Name:        "db-user-password",
