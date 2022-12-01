@@ -135,13 +135,6 @@ func (h AuthenticationHandler) Authenticate(w http.ResponseWriter, r *http.Reque
 	// Parse out the critical fields
 	userParams := models.UserConfig{}
 
-	// Token ID
-	tokenID, err := fetchClaimAsString("jti")
-	if err != nil {
-		errMacro("Unable to parse out 'jti'", err)
-		return
-	}
-
 	// User ID
 	uid, err := fetchClaimAsString(h.targetClaims.UserIDClaim)
 	if err != nil {
@@ -197,7 +190,7 @@ func (h AuthenticationHandler) Authenticate(w http.ResponseWriter, r *http.Reque
 
 	{
 		t, _ := json.MarshalIndent(userParams, "", "  ")
-		log.WithFields(logTags).Debugf("User parameters in Token %s\n%s", tokenID, t)
+		log.WithFields(logTags).Debugf("User parameters in Token\n%s", t)
 	}
 
 	// Set the response headers
