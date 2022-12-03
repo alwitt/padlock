@@ -204,7 +204,7 @@ func (c *tokenCacheImpl) ValidTokenInCache(
 		c.lock.RLocker().Lock()
 		entry, ok := c.cache[tokenHash]
 		if !ok {
-			log.WithFields(logtags).Infof("Token [%s] is unknown", tokenHash)
+			log.WithFields(logtags).Debugf("Token [%s] is unknown", tokenHash)
 			c.lock.RLocker().Unlock()
 			return false, nil
 		}
@@ -228,14 +228,14 @@ func (c *tokenCacheImpl) ValidTokenInCache(
 
 	// Check whether the token has expired
 	if timestamp.Unix() > existingEntry.expire {
-		log.WithFields(logtags).Infof("Token [%s] has expired. Removing from cache...", tokenHash)
+		log.WithFields(logtags).Debugf("Token [%s] has expired. Removing from cache...", tokenHash)
 		removeToken()
 		return false, nil
 	}
 
 	// Check whether the cache entry need to be refreshed
-	if timestamp.After(existingEntry.recorded) && timestamp.Sub(existingEntry.recorded) > c.refreshInt {
-		log.WithFields(logtags).Infof(
+	if timestamp.After(existingEntry.recorded) && timestamp.Sub(existingEntry.recorded) >= c.refreshInt {
+		log.WithFields(logtags).Debugf(
 			"Token [%s] needs to be re-validated. Removing from cache...", tokenHash,
 		)
 		removeToken()
@@ -265,7 +265,7 @@ func (c *tokenCacheImpl) RemoveExpiredFromCache(ctxt context.Context, timestamp 
 	}
 	for _, id := range toRemove {
 		delete(c.cache, id)
-		log.WithFields(logtags).Infof("Token [%s] has expired. Removing from cache...", id)
+		log.WithFields(logtags).Debugf("Token [%s] has expired. Removing from cache...", id)
 	}
 	return nil
 }
