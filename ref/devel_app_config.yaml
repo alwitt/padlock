@@ -23,6 +23,8 @@ customValidationRegex:
 # assignment through this submodule.
 #
 userManagement:
+  # Whether to enable the user / role management submodule
+  enabled: true
   ####################################
   # REST API configuration
   #
@@ -108,6 +110,8 @@ userManagement:
 # to authorize must be presented via HTTP headers.
 #
 authorize:
+  # Whether to enable the authorization submodule
+  enabled: true
   ####################################
   # REST API configuration
   #
@@ -325,3 +329,15 @@ authenticate:
     firstName: given_name
     # Last name claim
     lastName: family_name
+  ####################################
+  # OAuth2 token introspection config
+  #
+  introspect:
+    # Whether introspection is enabled
+    enabled: false
+    # Interval (sec) to periodically re-introspect cached tokens
+    recheckIntervalSec: 300
+    # Interval (sec) to periodically clear expired tokens from cache
+    cacheCleanIntervalSec: 3600
+    # Interval (sec) to periodically purge the token cache
+    cachePurgeIntervalSec: 43200

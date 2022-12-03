@@ -14,6 +14,6 @@ See below for an example of the OpenID provider connection parameter file for Pa
 | Field | Required | Description | Note |
 |-------|----------|-------------|------|
 | `issuer` | YES | The OpenID issuer URL | The application will fetch the OpenID provider configuration from `/.well-known/openid-configuration` relative to this URL. |
-| `client_id` | NO | The OAuth2 client ID to operate as | Currently not used. |
-| `client_cred` | NO | The OAuth2 client credentials | Currently not used. |
+| `client_id` | NO | The OAuth2 client ID to operate as | Only required if performing introspection. |
+| `client_cred` | NO | The OAuth2 client credentials | Only required if performing introspection. |
 | `http_tlc_ca` | NO | Path to a certificate authority PEM to use for the HTTPS connection | Only needed if this OpenID provider uses a custom / private trust chain that is not recorded in the system trust store. |

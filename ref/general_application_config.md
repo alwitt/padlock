@@ -32,6 +32,8 @@ This is the administrative API for padlock. An administrator operates user CRUD,
 
 ```yaml
 userManagement:
+  # Whether to enable the user / role management submodule
+  enabled: true
   ####################################
   # REST API configuration
   #
@@ -118,6 +120,8 @@ The authorization submodule accepts verification requests from HTTP request prox
 
 ```yaml
 authorize:
+  # Whether to enable the authorization submodule
+  enabled: true
   ####################################
   # REST API configuration
   #
@@ -333,6 +337,18 @@ authenticate:
     firstName: given_name
     # Last name claim
     lastName: family_name
+  ####################################
+  # OAuth2 token introspection config
+  #
+  introspect:
+    # Whether introspection is enabled
+    enabled: true
+    # Interval (sec) to periodically re-introspect cached tokens
+    recheckIntervalSec: 300
+    # Interval (sec) to periodically clear expired tokens from cache
+    cacheCleanIntervalSec: 3600
+    # Interval (sec) to periodically purge the token cache
+    cachePurgeIntervalSec: 43200
 ```
 
 # Default Configuration
@@ -348,6 +364,7 @@ customValidationRegex:
   permission: "^([[:alnum:]]|-|_|:)+$"
 
 userManagement:
+  enabled: True
   apis:
     endPoint:
       pathPrefix: "/"
@@ -366,6 +383,7 @@ userManagement:
       write: 60
 
 authorize:
+  enabled: True
   apis:
     endPoint:
       pathPrefix: "/"
@@ -412,6 +430,11 @@ authenticate:
       write: 60
   targetClaims:
     userID: sub
+  introspect:
+    enabled: false
+    recheckIntervalSec: 300
+    cacheCleanIntervalSec: 3600
+    cachePurgeIntervalSec: 43200
 ```
 
 A user's configuration may skip these fields; the application will merge the provided configuration with the default values to form the final runtime configuration. **However, the user must provide the missing configuration.**
