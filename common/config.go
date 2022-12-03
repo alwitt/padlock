@@ -246,10 +246,24 @@ type OpenIDClaimsOfInterestConfig struct {
 	EmailClaim *string `mapstructure:"email,omitempty" json:"email,omitempty"`
 }
 
+// IntrospectionConfig OAuth2 token introspect operation config
+type IntrospectionConfig struct {
+	// Enabled whether introspection enabled
+	Enabled bool `mapstructure:"enabled" json:"enabled"`
+	// ReIntrospectInterval interval (sec) to periodically re-introspect cached tokens
+	ReIntrospectInterval int `mapstructure:"recheckIntervalSec" json:"recheck_interval_sec" validate:"gte=30"`
+	// CacheCleanInterval interval (sec) to periodically clear expired tokens from cache
+	CacheCleanInterval int `mapstructure:"cacheCleanIntervalSec" json:"cache_clean_interval_sec" validate:"gte=30"`
+	// CachePurgeInterval interval (sec) to periodically purge the token cache
+	CachePurgeInterval int `mapstructure:"cachePurgeIntervalSec" json:"cache_purge_interval_sec" validate:"gte=60"`
+}
+
 // AuthenticationConfig describes the REST API authentication config
 type AuthenticationConfig struct {
 	// TargetClaims sets which claims to parse from a token to get key parameters regarding a user.
-	TargetClaims OpenIDClaimsOfInterestConfig `mapstructure:"targetClaims" json:"targetClaims" validate:"required,dive"`
+	TargetClaims OpenIDClaimsOfInterestConfig `mapstructure:"targetClaims" json:"target_claims" validate:"required,dive"`
+	// Introspection define OAuth2 token introspect operation config
+	Introspection IntrospectionConfig `mapstructure:"introspect" json:"introspect" validate:"required,dive"`
 }
 
 // AuthenticationSubmodule defines authentication submodule config
@@ -337,4 +351,8 @@ func InstallDefaultAuthorizationServerConfigValues() {
 	)
 	viper.SetDefault("authenticate.apis.endPoint.pathPrefix", "/")
 	viper.SetDefault("authenticate.targetClaims.userID", "sub")
+	viper.SetDefault("authenticate.introspect.enabled", false)
+	viper.SetDefault("authenticate.introspect.recheckIntervalSec", 300)
+	viper.SetDefault("authenticate.introspect.cacheCleanIntervalSec", 3600)
+	viper.SetDefault("authenticate.introspect.cachePurgeIntervalSec", 43200)
 }

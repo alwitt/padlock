@@ -64,6 +64,13 @@ type TokenCache interface {
 		@return whether successful
 	*/
 	RemoveExpiredFromCache(ctxt context.Context, timestamp time.Time) error
+
+	/*
+		ClearCache remove all entries from cache
+
+		@param ctxt context.Context - the operating context
+	*/
+	ClearCache(ctxt context.Context)
 }
 
 // tokenCacheImpl implements TokenCache
@@ -268,4 +275,15 @@ func (c *tokenCacheImpl) RemoveExpiredFromCache(ctxt context.Context, timestamp 
 		log.WithFields(logtags).Debugf("Token [%s] has expired. Removing from cache...", id)
 	}
 	return nil
+}
+
+/*
+ClearCache remove all entries from cache
+
+@param ctxt context.Context - the operating context
+*/
+func (c *tokenCacheImpl) ClearCache(ctxt context.Context) {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	c.cache = make(map[string]cacheEntry)
 }

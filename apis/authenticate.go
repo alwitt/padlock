@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/alwitt/goutils"
 	"github.com/alwitt/padlock/authenticate"
@@ -17,15 +18,19 @@ import (
 // AuthenticationHandler the request authentication REST API handler
 type AuthenticationHandler struct {
 	goutils.RestAPIHandler
-	oidClient       authenticate.OpenIDIssuerClient
-	targetClaims    common.OpenIDClaimsOfInterestConfig
-	respHeaderParam common.AuthorizeRequestParamLocConfig
+	oidClient         authenticate.OpenIDIssuerClient
+	performIntrospect bool
+	introspector      authenticate.Introspector
+	targetClaims      common.OpenIDClaimsOfInterestConfig
+	respHeaderParam   common.AuthorizeRequestParamLocConfig
 }
 
 // defineAuthenticationHandler define a new AuthenticationHandler instance
 func defineAuthenticationHandler(
 	logConfig common.HTTPRequestLogging,
 	oid authenticate.OpenIDIssuerClient,
+	performIntrospect bool,
+	introspector authenticate.Introspector,
 	targetClaims common.OpenIDClaimsOfInterestConfig,
 	respHeaderParam common.AuthorizeRequestParamLocConfig,
 ) (AuthenticationHandler, error) {
@@ -49,7 +54,12 @@ func defineAuthenticationHandler(
 				}
 				return result
 			}(),
-		}, oidClient: oid, targetClaims: targetClaims, respHeaderParam: respHeaderParam,
+		},
+		oidClient:         oid,
+		performIntrospect: performIntrospect,
+		introspector:      introspector,
+		targetClaims:      targetClaims,
+		respHeaderParam:   respHeaderParam,
 	}, nil
 }
 
@@ -81,33 +91,36 @@ func (h AuthenticationHandler) Authenticate(w http.ResponseWriter, r *http.Reque
 		}
 	}()
 
+	errMacroNoErr := func(msg string) {
+		log.WithFields(logTags).Errorf(msg)
+		respCode = http.StatusUnauthorized
+		response = h.GetStdRESTErrorMsg(r.Context(), http.StatusUnauthorized, msg, "")
+	}
+
 	// Read the JWT Bearer token
 	bearer := r.Header.Get("Authorization")
 	if bearer == "" {
-		msg := "Header 'Authorization' missing"
-		log.WithFields(logTags).Errorf(msg)
-		respCode = http.StatusUnauthorized
-		response = h.GetStdRESTErrorMsg(r.Context(), http.StatusBadRequest, msg, "")
+		errMacroNoErr("Header 'Authorization' missing")
 		return
 	}
 	bearerParts := strings.Split(bearer, " ")
 	if len(bearerParts) != 2 {
-		msg := "Bearer 'Authorization' has incorrect format"
-		log.WithFields(logTags).Errorf(msg)
-		respCode = http.StatusUnauthorized
-		response = h.GetStdRESTErrorMsg(r.Context(), http.StatusBadRequest, msg, "")
+		errMacroNoErr("Bearer 'Authorization' has incorrect format")
 		return
 	}
 	rawToken := bearerParts[1]
+
+	errMacro := func(msg string, err error) {
+		log.WithError(err).WithFields(logTags).Errorf(msg)
+		respCode = http.StatusUnauthorized
+		response = h.GetStdRESTErrorMsg(r.Context(), http.StatusUnauthorized, msg, err.Error())
+	}
 
 	// Parse the JWT token
 	userClaims := new(jwt.MapClaims)
 	_, err := h.oidClient.ParseJWT(rawToken, userClaims)
 	if err != nil {
-		msg := "Unable to parse JWT bearer token"
-		log.WithError(err).WithFields(logTags).Errorf(msg)
-		respCode = http.StatusUnauthorized
-		response = h.GetStdRESTErrorMsg(r.Context(), http.StatusBadRequest, msg, err.Error())
+		errMacro("Unable to parse JWT bearer token", err)
 		return
 	}
 
@@ -126,7 +139,41 @@ func (h AuthenticationHandler) Authenticate(w http.ResponseWriter, r *http.Reque
 		return "", fmt.Errorf("bearer 'Authorization' token missing %s", target)
 	}
 
-	errMacro := func(msg string, err error) {
+	fetchClaimAsFloat := func(target string) (float64, error) {
+		if v, ok := (*userClaims)[target]; ok {
+			if value, ok := v.(float64); ok {
+				return value, nil
+			}
+			return 0, fmt.Errorf("bearer 'Authorization' token's claim %s is not a FLOAT64", target)
+		}
+		return 0, fmt.Errorf("bearer 'Authorization' token missing %s", target)
+	}
+
+	// OAuth2 introspect
+	if h.performIntrospect {
+		if !h.oidClient.CanIntrospect() {
+			errMacroNoErr("Missing required settings to perform introspection")
+			return
+		}
+		expirationTime, err := fetchClaimAsFloat("exp")
+		if err != nil {
+			errMacro("Unable to parse out 'exp' claim", err)
+			return
+		}
+		isValid, err := h.introspector.VerifyToken(
+			r.Context(), rawToken, int64(expirationTime), time.Now().UTC(),
+		)
+		if err != nil {
+			errMacro("Introspection process errored", err)
+			return
+		}
+		if !isValid {
+			errMacroNoErr("Token no longer active")
+			return
+		}
+	}
+
+	errMacro = func(msg string, err error) {
 		log.WithError(err).WithFields(logTags).Errorf(msg)
 		respCode = http.StatusBadRequest
 		response = h.GetStdRESTErrorMsg(r.Context(), http.StatusBadRequest, msg, err.Error())
@@ -138,7 +185,7 @@ func (h AuthenticationHandler) Authenticate(w http.ResponseWriter, r *http.Reque
 	// User ID
 	uid, err := fetchClaimAsString(h.targetClaims.UserIDClaim)
 	if err != nil {
-		errMacro(fmt.Sprintf("Unable to parse out '%s'", h.targetClaims.UserIDClaim), err)
+		errMacro(fmt.Sprintf("Unable to parse out '%s' claim", h.targetClaims.UserIDClaim), err)
 		return
 	}
 	userParams.UserID = uid
@@ -148,7 +195,7 @@ func (h AuthenticationHandler) Authenticate(w http.ResponseWriter, r *http.Reque
 	if h.targetClaims.UsernameClaim != nil {
 		username, err := fetchClaimAsString(*h.targetClaims.UsernameClaim)
 		if err != nil {
-			errMacro(fmt.Sprintf("Unable to parse out '%s'", *h.targetClaims.UsernameClaim), err)
+			errMacro(fmt.Sprintf("Unable to parse out '%s' claim", *h.targetClaims.UsernameClaim), err)
 			return
 		}
 		userParams.Username = &username
@@ -159,7 +206,7 @@ func (h AuthenticationHandler) Authenticate(w http.ResponseWriter, r *http.Reque
 	if h.targetClaims.FirstNameClaim != nil {
 		firstName, err := fetchClaimAsString(*h.targetClaims.FirstNameClaim)
 		if err != nil {
-			errMacro(fmt.Sprintf("Unable to parse out '%s'", *h.targetClaims.FirstNameClaim), err)
+			errMacro(fmt.Sprintf("Unable to parse out '%s' claim", *h.targetClaims.FirstNameClaim), err)
 			return
 		}
 		userParams.FirstName = &firstName
@@ -170,7 +217,7 @@ func (h AuthenticationHandler) Authenticate(w http.ResponseWriter, r *http.Reque
 	if h.targetClaims.LastNameClaim != nil {
 		lastName, err := fetchClaimAsString(*h.targetClaims.LastNameClaim)
 		if err != nil {
-			errMacro(fmt.Sprintf("Unable to parse out '%s'", *h.targetClaims.LastNameClaim), err)
+			errMacro(fmt.Sprintf("Unable to parse out '%s' claim", *h.targetClaims.LastNameClaim), err)
 			return
 		}
 		userParams.LastName = &lastName
@@ -181,7 +228,7 @@ func (h AuthenticationHandler) Authenticate(w http.ResponseWriter, r *http.Reque
 	if h.targetClaims.EmailClaim != nil {
 		email, err := fetchClaimAsString(*h.targetClaims.EmailClaim)
 		if err != nil {
-			errMacro(fmt.Sprintf("Unable to parse out '%s'", *h.targetClaims.EmailClaim), err)
+			errMacro(fmt.Sprintf("Unable to parse out '%s' claim", *h.targetClaims.EmailClaim), err)
 			return
 		}
 		userParams.Email = &email

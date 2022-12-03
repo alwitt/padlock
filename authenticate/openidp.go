@@ -1,10 +1,13 @@
 package authenticate
 
 import (
+	"bytes"
+	"context"
 	"crypto/rsa"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io"
 	"math/big"
 	"net/http"
 
@@ -32,6 +35,22 @@ type OpenIDIssuerClient interface {
 		 @return the parsed JWT token object
 	*/
 	ParseJWT(raw string, claimStore jwt.Claims) (*jwt.Token, error)
+
+	/*
+		CanIntrospect whether the client can perform introspection
+
+		 @return whether the client can perform introspection
+	*/
+	CanIntrospect() bool
+
+	/*
+		IntrospectToken perform introspection for a token
+
+		 @param ctxt context.Context - the operating context
+		 @param token string - the token to introspect
+		 @return whether token is still valid
+	*/
+	IntrospectToken(ctxt context.Context, token string) (bool, error)
 }
 
 // OpenIDIssuerConfig holds the OpenID issuer's API info.
@@ -67,24 +86,30 @@ type OIDSigningJWK struct {
 // openIDIssuerClientImpl implements OpenIDIssuerClient
 type openIDIssuerClientImpl struct {
 	goutils.Component
-	cfg        OpenIDIssuerConfig
-	httpClient *http.Client
-	publicKey  map[string]interface{}
+	cfg          OpenIDIssuerConfig
+	httpClient   *http.Client
+	publicKey    map[string]interface{}
+	clientID     *string
+	clientSecret *string
 }
 
 /*
 DefineOpenIDClient defines a new OpenID issuer client
 
-	@param issuer string - the URI of this OpenID issuer
+	@param idpConfig common.OpenIDIssuerConfig - OpenID issuer parameters
 	@param httpClient *http.Client - the HTTP client to use to communicate with the OpenID issuer
 	@return new client instance
 */
-func DefineOpenIDClient(issuer string, httpClient *http.Client) (OpenIDIssuerClient, error) {
-	logTags := log.Fields{"module": "authenticate", "component": "openid-client", "issuer": issuer}
+func DefineOpenIDClient(
+	idpConfig common.OpenIDIssuerConfig, httpClient *http.Client,
+) (OpenIDIssuerClient, error) {
+	logTags := log.Fields{
+		"module": "authenticate", "component": "openid-client", "issuer": idpConfig.Issuer,
+	}
 
 	// Read the OpenID config first
 	var cfg OpenIDIssuerConfig
-	cfgEP := fmt.Sprintf("%s/.well-known/openid-configuration", issuer)
+	cfgEP := fmt.Sprintf("%s/.well-known/openid-configuration", idpConfig.Issuer)
 	log.WithFields(logTags).Debugf("OpenID issuer config at %s", cfgEP)
 	resp, err := httpClient.Get(cfgEP)
 	if err != nil {
@@ -158,9 +183,11 @@ func DefineOpenIDClient(issuer string, httpClient *http.Client) (OpenIDIssuerCli
 				common.ModifyLogMetadataByAccessAuthorizeParam,
 			},
 		},
-		cfg:        cfg,
-		httpClient: httpClient,
-		publicKey:  keyMaterial,
+		cfg:          cfg,
+		httpClient:   httpClient,
+		publicKey:    keyMaterial,
+		clientID:     idpConfig.ClientID,
+		clientSecret: idpConfig.ClientCred,
 	}, nil
 }
 
@@ -196,4 +223,96 @@ ParseJWT parses a string into a JWT token object.
 */
 func (c *openIDIssuerClientImpl) ParseJWT(raw string, claimStore jwt.Claims) (*jwt.Token, error) {
 	return jwt.ParseWithClaims(raw, claimStore, c.AssociatedPublicKey)
+}
+
+// Potential response from introspection
+type introspectResponse struct {
+	ID                string   `json:"jti"`
+	Expire            int64    `json:"exp"`
+	NotValidBefore    int64    `json:"nbf"`
+	IssuedAt          int64    `json:"iat"`
+	Issuer            string   `json:"iss"`
+	Audience          string   `json:"aud"`
+	TokenType         string   `json:"typ"`
+	AuthorizedParty   string   `json:"azp"`
+	AuthenticateTime  int64    `json:"auth_time"`
+	SessionState      string   `json:"session_state"`
+	PerferredUsername string   `json:"preferred_username"`
+	Email             string   `json:"email"`
+	VerifiedEmail     bool     `json:"email_verified"`
+	AuthnContextClass string   `json:"acr"`
+	AllowedOrigins    []string `json:"allowed-origins"`
+	Scope             string   `json:"scope"`
+	ClientID          string   `json:"client_id"`
+	Username          string   `json:"username"`
+	Active            bool     `json:"active"`
+}
+
+/*
+CanIntrospect whether the client can perform introspection
+
+	@return whether the client can perform introspection
+*/
+func (c *openIDIssuerClientImpl) CanIntrospect() bool {
+	if c.clientID == nil || c.clientSecret == nil || c.cfg.IntrospectionEP == "" {
+		// Introspection require
+		// * Introspection endpoint
+		// * Client ID
+		// * Client secret
+		return false
+	}
+	return true
+}
+
+/*
+IntrospectToken perform introspection for a token
+
+	@param ctxt context.Context - the operating context
+	@param token string - the token to introspect
+	@return whether token is still valid
+*/
+func (c *openIDIssuerClientImpl) IntrospectToken(ctxt context.Context, token string) (bool, error) {
+	logtags := c.GetLogTagsForContext(ctxt)
+	if c.clientID == nil || c.clientSecret == nil || c.cfg.IntrospectionEP == "" {
+		// Introspection require
+		// * Introspection endpoint
+		// * Client ID
+		// * Client secret
+		log.WithFields(logtags).Error("Missing required settings to perform introspection")
+		return false, fmt.Errorf("missing required settings to perform introspection")
+	}
+
+	var response introspectResponse
+	introspectURL := c.cfg.IntrospectionEP
+
+	// Prepare the request
+	requestBody := []byte(fmt.Sprintf("token=%s", token))
+	req, err := http.NewRequest("POST", introspectURL, bytes.NewBuffer(requestBody))
+	if err != nil {
+		log.WithError(err).WithFields(logtags).Error("Failed to define introspect POST request")
+		return false, err
+	}
+	req.SetBasicAuth(*c.clientID, *c.clientSecret)
+	req.Header.Set("Accept", "*/*")
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	// Perform the request
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		log.WithError(err).WithFields(logtags).Errorf("Introspect against %s failed", introspectURL)
+		return false, err
+	}
+	defer resp.Body.Close()
+
+	// Parse the response
+	body, _ := io.ReadAll(resp.Body)
+	{
+		log.WithFields(logtags).Debugf("Raw introspect response %s", body)
+	}
+	if err := json.Unmarshal(body, &response); err != nil {
+		log.WithError(err).WithFields(logtags).Error("Failed to process introspect response")
+		return false, err
+	}
+
+	return response.Active, nil
 }

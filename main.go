@@ -10,7 +10,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/alwitt/goutils"
 	"github.com/alwitt/padlock/apis"
+	"github.com/alwitt/padlock/authenticate"
 	"github.com/alwitt/padlock/common"
 	"github.com/alwitt/padlock/match"
 	"github.com/alwitt/padlock/models"
@@ -39,7 +41,7 @@ var cmdArgs cliArgs
 var logTags log.Fields
 
 // @title padlock
-// @version v0.3.2
+// @version v0.4.0
 // @description External AuthN / AuthZ support service for REST API RBAC
 
 // @host localhost:3000
@@ -60,7 +62,7 @@ func main() {
 	common.InstallDefaultAuthorizationServerConfigValues()
 
 	app := &cli.App{
-		Version:     "v0.3.2",
+		Version:     "v0.4.0",
 		Usage:       "application entrypoint",
 		Description: "An external AuthN / AuthZ support service for REST API RBAC",
 		Flags: []cli.Flag{
@@ -259,6 +261,7 @@ func mainApplication(c *cli.Context) error {
 	wg := sync.WaitGroup{}
 	defer wg.Wait()
 	apiServers := map[string]*http.Server{}
+	cleanUpTasks := map[string]func() error{}
 
 	defer func() {
 		// Shutdown the servers
@@ -267,6 +270,12 @@ func mainApplication(c *cli.Context) error {
 			defer cancel()
 			if err := svr.Shutdown(ctx); err != nil {
 				log.WithError(err).Errorf("Failure during HTTP Server %s shutdown", svrInstance)
+			}
+		}
+		// Perform other clean up tasks
+		for taskName, task := range cleanUpTasks {
+			if err := task(); err != nil {
+				log.WithError(err).Errorf("Clean up task '%s' failed", taskName)
 			}
 		}
 	}()
@@ -351,9 +360,77 @@ func mainApplication(c *cli.Context) error {
 				Errorf("%s content is not valid", cmdArgs.OpenIDIssuerParamFile)
 			return err
 		}
+		// Token cache in support of introspection
+		tokenCache := authenticate.DefineTokenCache(
+			time.Second * time.Duration(appCfg.Authentication.Introspection.ReIntrospectInterval),
+		)
+		// Timer to clear out expired tokens from the cache
+		expireTokenCleanupTimer, err := goutils.GetIntervalTimerInstance(
+			context.Background(), &wg, log.Fields{
+				"module":    "main",
+				"component": "timer",
+				"instance":  "expired-token-cleanup",
+			},
+		)
+		if err != nil {
+			log.WithError(err).WithFields(logTags).
+				Errorf("Unable to define expired-token-cleanup timer")
+			return err
+		}
+		// Start timer to clear out expired tokens from the cache
+		if err := expireTokenCleanupTimer.Start(time.Second*time.Duration(
+			appCfg.Authentication.Introspection.CacheCleanInterval), func() error {
+			err := tokenCache.RemoveExpiredFromCache(context.Background(), time.Now().UTC())
+			if err != nil {
+				log.WithError(err).WithFields(logTags).Error("Expired token cleanup in cache failed")
+			}
+			return err
+		}, false,
+		); err != nil {
+			log.WithError(err).WithFields(logTags).
+				Errorf("Unable to start expired-token-cleanup timer")
+			return err
+		}
+		// Stop the expired token cleanup timer on exit
+		cleanUpTasks["Stop expired-token-cache-cleanup timer"] = func() error {
+			return expireTokenCleanupTimer.Stop()
+		}
+		// Timer to purge token cache
+		tokenCachePurgeTimer, err := goutils.GetIntervalTimerInstance(
+			context.Background(), &wg, log.Fields{
+				"module":    "main",
+				"component": "timer",
+				"instance":  "token-cache-purge",
+			},
+		)
+		if err != nil {
+			log.WithError(err).WithFields(logTags).
+				Errorf("Unable to define token-cache-purge timer")
+			return err
+		}
+		// Start timer to purge token cache
+		if err := tokenCachePurgeTimer.Start(time.Second*time.Duration(
+			appCfg.Authentication.Introspection.CachePurgeInterval), func() error {
+			err := tokenCache.RemoveExpiredFromCache(context.Background(), time.Now().UTC())
+			if err != nil {
+				log.WithError(err).WithFields(logTags).Error("Token cache purge failed")
+			}
+			return err
+		}, false,
+		); err != nil {
+			log.WithError(err).WithFields(logTags).
+				Errorf("Unable to start token-cache-purge timer")
+			return err
+		}
+		// Stop the token cache purge timer on exit
+		cleanUpTasks["Stop token-cache-purge timer"] = func() error {
+			return tokenCachePurgeTimer.Stop()
+		}
 		svr, err := apis.BuildAuthenticationServer(
 			appCfg.Authentication.APIServerConfig,
 			oidParam,
+			appCfg.Authentication.Introspection.Enabled,
+			tokenCache,
 			appCfg.Authentication.TargetClaims,
 			appCfg.Authorization.RequestParamLocation,
 		)

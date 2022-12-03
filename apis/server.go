@@ -178,6 +178,8 @@ BuildAuthenticationServer creates the authentication server
 
 	@param httpCfg common.HTTPConfig - HTTP server config
 	@param openIDCfg common.OpenIDIssuerConfig - OpenID issuer configuration
+	@parem performIntrospection bool - whether to perform introspection
+	@param tokenCache authenticate.TokenCache - cache to reduce number of introspections
 	@param targetClaims common.OpenIDClaimsOfInterestConfig - config which JWT token claims to parse
 	to fetch a user's parameters.
 	@param respHeaderParam common.AuthorizeRequestParamLocConfig - config which indicates what
@@ -187,6 +189,8 @@ BuildAuthenticationServer creates the authentication server
 func BuildAuthenticationServer(
 	httpCfg common.APIServerConfig,
 	openIDCfg common.OpenIDIssuerConfig,
+	performIntrospection bool,
+	tokenCache authenticate.TokenCache,
 	targetClaims common.OpenIDClaimsOfInterestConfig,
 	respHeaderParam common.AuthorizeRequestParamLocConfig,
 ) (*http.Server, error) {
@@ -205,13 +209,19 @@ func BuildAuthenticationServer(
 		oidHTTPClient.Transport = &http.Transport{TLSClientConfig: tlsConfig}
 	}
 
-	oidClient, err := authenticate.DefineOpenIDClient(openIDCfg.Issuer, &oidHTTPClient)
+	oidClient, err := authenticate.DefineOpenIDClient(openIDCfg, &oidHTTPClient)
 	if err != nil {
 		return nil, err
 	}
 
+	introspector := authenticate.DefineIntrospector(tokenCache, oidClient.IntrospectToken)
 	httpHandler, err := defineAuthenticationHandler(
-		httpCfg.APIs.RequestLogging, oidClient, targetClaims, respHeaderParam,
+		httpCfg.APIs.RequestLogging,
+		oidClient,
+		performIntrospection,
+		introspector,
+		targetClaims,
+		respHeaderParam,
 	)
 	if err != nil {
 		return nil, err

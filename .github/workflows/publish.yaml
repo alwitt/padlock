@@ -10,7 +10,7 @@ jobs:
 
     env:
       IMAGE_REPO: alwitt/padlock
-      IMAGE_TAG: "0.3.2"
+      IMAGE_TAG: "0.4.0"
 
     steps:
       - uses: actions/checkout@v2
