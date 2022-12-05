@@ -87,6 +87,7 @@ type OIDSigningJWK struct {
 type openIDIssuerClientImpl struct {
 	goutils.Component
 	cfg          OpenIDIssuerConfig
+	hostOverride *string
 	httpClient   *http.Client
 	publicKey    map[string]interface{}
 	clientID     *string
@@ -175,6 +176,12 @@ func DefineOpenIDClient(
 		log.WithFields(logTags).Debugf("OpenID issuer parameters\n%s", t)
 	}
 
+	if idpConfig.RequestHostOverride != nil {
+		log.WithFields(logTags).Warnf(
+			"Using host override '%s' when communicating with IDP", *idpConfig.RequestHostOverride,
+		)
+	}
+
 	return &openIDIssuerClientImpl{
 		Component: goutils.Component{
 			LogTags: logTags,
@@ -184,6 +191,7 @@ func DefineOpenIDClient(
 			},
 		},
 		cfg:          cfg,
+		hostOverride: idpConfig.RequestHostOverride,
 		httpClient:   httpClient,
 		publicKey:    keyMaterial,
 		clientID:     idpConfig.ClientID,
@@ -295,6 +303,9 @@ func (c *openIDIssuerClientImpl) IntrospectToken(ctxt context.Context, token str
 	req.SetBasicAuth(*c.clientID, *c.clientSecret)
 	req.Header.Set("Accept", "*/*")
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	if c.hostOverride != nil {
+		req.Host = *c.hostOverride
+	}
 
 	// Perform the request
 	resp, err := c.httpClient.Do(req)

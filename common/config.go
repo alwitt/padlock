@@ -226,6 +226,8 @@ type OpenIDIssuerConfig struct {
 	ClientCred *string `json:"client_cred" validate:"omitempty"`
 	// CustomCA if provided, is the custom CA to use for the TLS session with this issuer.
 	CustomCA *string `json:"http_tls_ca,omitempty" validate:"omitempty,file"`
+	// RequestHostOverride if specified, use this as "Host" header when communicating with issuer
+	RequestHostOverride *string `json:"host_override" validate:"omitempty"`
 }
 
 // OpenIDClaimsOfInterestConfig sets which claims to parse from a token to get key
