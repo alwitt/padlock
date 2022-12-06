@@ -373,4 +373,23 @@ authorize:
 		assert.Nil(viper.Unmarshal(&cfg))
 		assert.Nil(cfg.Validate())
 	}
+
+	// Case 13: disable authorization and user management server, authentication server config given
+	{
+		config := []byte(`---
+userManagement:
+  enabled: false
+authorize:
+  enabled: false
+authenticate:
+  enabled: true
+  introspect:
+    cacheCleanIntervalSec: 10`)
+		viper.SetConfigType("yaml")
+		err := viper.ReadConfig(bytes.NewBuffer(config))
+		assert.Nil(err)
+		var cfg AuthorizationServerConfig
+		assert.Nil(viper.Unmarshal(&cfg))
+		assert.NotNil(cfg.Validate())
+	}
 }

@@ -22,11 +22,6 @@ func (c AuthorizationServerConfig) Validate() error {
 		return err
 	}
 
-	// Short circuit if authorization server not enabled
-	if !c.Authorization.Enabled {
-		return nil
-	}
-
 	// Create a custom validator
 	customValidate, err := c.CustomRegex.DefineCustomFieldValidator()
 	if err != nil {
@@ -36,6 +31,19 @@ func (c AuthorizationServerConfig) Validate() error {
 	if err := customValidate.RegisterWithValidator(validate); err != nil {
 		log.WithError(err).Errorf("Unable to update validator with custom tags")
 		return err
+	}
+
+	// Validate the authentication server config
+	if c.Authentication.Enabled {
+		if err := validate.Struct(&c.Authentication); err != nil {
+			log.WithError(err).Errorf("Authentication server config parse failure")
+			return err
+		}
+	}
+
+	// Short circuit if authorization or user management server not enabled
+	if !c.Authorization.Enabled || !c.UserManagement.Enabled {
+		return nil
 	}
 
 	// Perform basic validation
