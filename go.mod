@@ -6,7 +6,7 @@ require (
 	github.com/alwitt/goutils v0.3.3
 	github.com/apex/log v1.9.0
 	github.com/go-playground/validator/v10 v10.11.0
-	github.com/golang-jwt/jwt v3.2.2+incompatible
+	github.com/golang-jwt/jwt/v4 v4.4.3
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0
 	github.com/spf13/viper v1.11.0

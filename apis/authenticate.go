@@ -12,7 +12,7 @@ import (
 	"github.com/alwitt/padlock/common"
 	"github.com/alwitt/padlock/models"
 	"github.com/apex/log"
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v4"
 )
 
 // AuthenticationHandler the request authentication REST API handler

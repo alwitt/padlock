@@ -14,7 +14,7 @@ import (
 	"github.com/alwitt/goutils"
 	"github.com/alwitt/padlock/common"
 	"github.com/apex/log"
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v4"
 )
 
 // OpenIDIssuerClient a client to interact with an OpenID issuer
@@ -235,25 +235,25 @@ func (c *openIDIssuerClientImpl) ParseJWT(raw string, claimStore jwt.Claims) (*j
 
 // Potential response from introspection
 type introspectResponse struct {
-	ID                string   `json:"jti"`
-	Expire            int64    `json:"exp"`
-	NotValidBefore    int64    `json:"nbf"`
-	IssuedAt          int64    `json:"iat"`
-	Issuer            string   `json:"iss"`
-	Audience          string   `json:"aud"`
-	TokenType         string   `json:"typ"`
-	AuthorizedParty   string   `json:"azp"`
-	AuthenticateTime  int64    `json:"auth_time"`
-	SessionState      string   `json:"session_state"`
-	PerferredUsername string   `json:"preferred_username"`
-	Email             string   `json:"email"`
-	VerifiedEmail     bool     `json:"email_verified"`
-	AuthnContextClass string   `json:"acr"`
-	AllowedOrigins    []string `json:"allowed-origins"`
-	Scope             string   `json:"scope"`
-	ClientID          string   `json:"client_id"`
-	Username          string   `json:"username"`
-	Active            bool     `json:"active"`
+	ID                string           `json:"jti"`
+	Expire            int64            `json:"exp"`
+	NotValidBefore    int64            `json:"nbf"`
+	IssuedAt          int64            `json:"iat"`
+	Issuer            string           `json:"iss"`
+	Audience          jwt.ClaimStrings `json:"aud"`
+	TokenType         string           `json:"typ"`
+	AuthorizedParty   string           `json:"azp"`
+	AuthenticateTime  int64            `json:"auth_time"`
+	SessionState      string           `json:"session_state"`
+	PerferredUsername string           `json:"preferred_username"`
+	Email             string           `json:"email"`
+	VerifiedEmail     bool             `json:"email_verified"`
+	AuthnContextClass string           `json:"acr"`
+	AllowedOrigins    []string         `json:"allowed-origins"`
+	Scope             string           `json:"scope"`
+	ClientID          string           `json:"client_id"`
+	Username          string           `json:"username"`
+	Active            bool             `json:"active"`
 }
 
 /*
