@@ -326,6 +326,9 @@ authenticate:
   ####################################
   # User OpenID token claims of interest
   #
+  # If specified, the token must contain an "aud" claim which matches this value.
+  #targetAudience:
+  # User parameter claims
   targetClaims:
     # User ID claim
     userID: sub

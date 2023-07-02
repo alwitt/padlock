@@ -262,6 +262,8 @@ type IntrospectionConfig struct {
 
 // AuthenticationConfig describes the REST API authentication config
 type AuthenticationConfig struct {
+	// TargetAudience if specified, the token must contain an "aud" claim which matches this value.
+	TargetAudience *string `mapstructure:"targetAudience" json:"target_audience,omitempty" validate:"omitempty,url"`
 	// TargetClaims sets which claims to parse from a token to get key parameters regarding a user.
 	TargetClaims OpenIDClaimsOfInterestConfig `mapstructure:"targetClaims" json:"target_claims" validate:"required,dive"`
 	// Introspection define OAuth2 token introspect operation config

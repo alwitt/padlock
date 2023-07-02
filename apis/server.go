@@ -180,8 +180,7 @@ BuildAuthenticationServer creates the authentication server
 	@param openIDCfg common.OpenIDIssuerConfig - OpenID issuer configuration
 	@parem performIntrospection bool - whether to perform introspection
 	@param tokenCache authenticate.TokenCache - cache to reduce number of introspections
-	@param targetClaims common.OpenIDClaimsOfInterestConfig - config which JWT token claims to parse
-	to fetch a user's parameters.
+	@param authnConfig common.AuthenticationConfig - authentication submodule configuration
 	@param respHeaderParam common.AuthorizeRequestParamLocConfig - config which indicates what
 	response headers to output the user parameters on.
 	@return the http.Server
@@ -191,7 +190,7 @@ func BuildAuthenticationServer(
 	openIDCfg common.OpenIDIssuerConfig,
 	performIntrospection bool,
 	tokenCache authenticate.TokenCache,
-	targetClaims common.OpenIDClaimsOfInterestConfig,
+	authnConfig common.AuthenticationConfig,
 	respHeaderParam common.AuthorizeRequestParamLocConfig,
 ) (*http.Server, error) {
 	// Define custom HTTP client for connecting with OpenID issuer
@@ -220,7 +219,7 @@ func BuildAuthenticationServer(
 		oidClient,
 		performIntrospection,
 		introspector,
-		targetClaims,
+		authnConfig,
 		respHeaderParam,
 	)
 	if err != nil {

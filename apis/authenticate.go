@@ -21,6 +21,7 @@ type AuthenticationHandler struct {
 	oidClient         authenticate.OpenIDIssuerClient
 	performIntrospect bool
 	introspector      authenticate.Introspector
+	targetAudience    *string
 	targetClaims      common.OpenIDClaimsOfInterestConfig
 	respHeaderParam   common.AuthorizeRequestParamLocConfig
 }
@@ -31,7 +32,7 @@ func defineAuthenticationHandler(
 	oid authenticate.OpenIDIssuerClient,
 	performIntrospect bool,
 	introspector authenticate.Introspector,
-	targetClaims common.OpenIDClaimsOfInterestConfig,
+	authnCfg common.AuthenticationConfig,
 	respHeaderParam common.AuthorizeRequestParamLocConfig,
 ) (AuthenticationHandler, error) {
 	logTags := log.Fields{
@@ -58,7 +59,8 @@ func defineAuthenticationHandler(
 		oidClient:         oid,
 		performIntrospect: performIntrospect,
 		introspector:      introspector,
-		targetClaims:      targetClaims,
+		targetAudience:    authnCfg.TargetAudience,
+		targetClaims:      authnCfg.TargetClaims,
 		respHeaderParam:   respHeaderParam,
 	}, nil
 }
@@ -177,6 +179,21 @@ func (h AuthenticationHandler) Authenticate(w http.ResponseWriter, r *http.Reque
 		log.WithError(err).WithFields(logTags).Errorf(msg)
 		respCode = http.StatusBadRequest
 		response = h.GetStdRESTErrorMsg(r.Context(), http.StatusBadRequest, msg, err.Error())
+	}
+
+	// Check "aud" if target audience specified
+	if h.targetAudience != nil {
+		aud, err := fetchClaimAsString("aud")
+		if err != nil {
+			errMacro("Unable to parse out 'aud' claim", err)
+			return
+		}
+		// Verify audience matches
+		if aud != *h.targetAudience {
+			err := fmt.Errorf("'aud' claim does not match expectation")
+			errMacro("Invalid token", err)
+			return
+		}
 	}
 
 	// Parse out the critical fields

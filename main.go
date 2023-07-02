@@ -431,7 +431,7 @@ func mainApplication(c *cli.Context) error {
 			oidParam,
 			appCfg.Authentication.Introspection.Enabled,
 			tokenCache,
-			appCfg.Authentication.TargetClaims,
+			appCfg.Authentication.AuthenticationConfig,
 			appCfg.Authorization.RequestParamLocation,
 		)
 		if err != nil {
