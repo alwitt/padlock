@@ -1,6 +1,9 @@
 package common
 
-import "github.com/spf13/viper"
+import (
+	"github.com/alwitt/goutils"
+	"github.com/spf13/viper"
+)
 
 // ===============================================================================
 // Utility Config
@@ -62,6 +65,10 @@ type HTTPServerConfig struct {
 
 // HTTPRequestLogging defines HTTP request logging parameters
 type HTTPRequestLogging struct {
+	// LogLevel output request logs at this level
+	LogLevel goutils.HTTPRequestLogLevel `mapstructure:"logLevel" json:"logLevel" validate:"oneof=warn info debug"`
+	// HealthLogLevel output health check logs at this level
+	HealthLogLevel goutils.HTTPRequestLogLevel `mapstructure:"healthLogLevel" json:"healthLogLevel" validate:"oneof=warn info debug"`
 	// RequestIDHeader is the HTTP header containing the API request ID
 	RequestIDHeader string `mapstructure:"requestIDHeader" json:"requestIDHeader"`
 	// DoNotLogHeaders is the list of headers to not include in logging metadata
@@ -309,7 +316,9 @@ func InstallDefaultAuthorizationServerConfigValues() {
 	viper.SetDefault("userManagement.service.timeoutSecs.read", 60)
 	viper.SetDefault("userManagement.service.timeoutSecs.write", 60)
 	viper.SetDefault("userManagement.service.timeoutSecs.idle", 600)
-	viper.SetDefault("userManagement.apis.requestLogging.requestIDHeader", "Padlock-Request-ID")
+	viper.SetDefault("userManagement.apis.requestLogging.logLevel", "warn")
+	viper.SetDefault("userManagement.apis.requestLogging.healthLogLevel", "debug")
+	viper.SetDefault("userManagement.apis.requestLogging.requestIDHeader", "X-Request-ID")
 	viper.SetDefault(
 		"userManagement.apis.requestLogging.skipHeaders", []string{
 			"WWW-Authenticate", "Authorization", "Proxy-Authenticate", "Proxy-Authorization",
@@ -324,7 +333,9 @@ func InstallDefaultAuthorizationServerConfigValues() {
 	viper.SetDefault("authorize.service.timeoutSecs.read", 60)
 	viper.SetDefault("authorize.service.timeoutSecs.write", 60)
 	viper.SetDefault("authorize.service.timeoutSecs.idle", 600)
-	viper.SetDefault("authorize.apis.requestLogging.requestIDHeader", "Padlock-Request-ID")
+	viper.SetDefault("authorize.apis.requestLogging.logLevel", "warn")
+	viper.SetDefault("authorize.apis.requestLogging.healthLogLevel", "debug")
+	viper.SetDefault("authorize.apis.requestLogging.requestIDHeader", "X-Request-ID")
 	viper.SetDefault(
 		"authorize.apis.requestLogging.skipHeaders", []string{
 			"WWW-Authenticate", "Authorization", "Proxy-Authenticate", "Proxy-Authorization",
@@ -347,7 +358,9 @@ func InstallDefaultAuthorizationServerConfigValues() {
 	viper.SetDefault("authenticate.service.timeoutSecs.read", 60)
 	viper.SetDefault("authenticate.service.timeoutSecs.write", 60)
 	viper.SetDefault("authenticate.service.timeoutSecs.idle", 600)
-	viper.SetDefault("authenticate.apis.requestLogging.requestIDHeader", "Padlock-Request-ID")
+	viper.SetDefault("authenticate.apis.requestLogging.logLevel", "warn")
+	viper.SetDefault("authenticate.apis.requestLogging.healthLogLevel", "debug")
+	viper.SetDefault("authenticate.apis.requestLogging.requestIDHeader", "X-Request-ID")
 	viper.SetDefault(
 		"authenticate.apis.requestLogging.skipHeaders", []string{
 			"WWW-Authenticate", "Authorization", "Proxy-Authenticate", "Proxy-Authorization",

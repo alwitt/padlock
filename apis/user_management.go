@@ -52,6 +52,7 @@ func defineUserManagementHandler(
 				}
 				return result
 			}(),
+			LogLevel: logConfig.LogLevel,
 		},
 		validate: validate,
 		core:     core,
@@ -593,6 +594,42 @@ func (h UserManagementHandler) UpdateUserRolesHandler() http.HandlerFunc {
 // ====================================================================================
 // Utilities
 
+// UserManagementLivenessHandler the user / role management REST API liveness handler
+type UserManagementLivenessHandler struct {
+	goutils.RestAPIHandler
+	core users.Management
+}
+
+func defineUserManagementLivenessHandler(
+	logConfig common.HTTPRequestLogging,
+	core users.Management,
+) UserManagementLivenessHandler {
+	logTags := log.Fields{
+		"module": "apis", "component": "api-handler", "instance": "user-management-liveness",
+	}
+
+	return UserManagementLivenessHandler{
+		RestAPIHandler: goutils.RestAPIHandler{
+			Component: goutils.Component{
+				LogTags: logTags,
+				LogTagModifiers: []goutils.LogMetadataModifier{
+					goutils.ModifyLogMetadataByRestRequestParam,
+					common.ModifyLogMetadataByAccessAuthorizeParam,
+				},
+			},
+			CallRequestIDHeaderField: &logConfig.RequestIDHeader,
+			DoNotLogHeaders: func() map[string]bool {
+				result := map[string]bool{}
+				for _, v := range logConfig.DoNotLogHeaders {
+					result[v] = true
+				}
+				return result
+			}(),
+			LogLevel: logConfig.HealthLogLevel,
+		}, core: core,
+	}
+}
+
 // Alive godoc
 // @Summary User Management API liveness check
 // @Description Will return success to indicate user management REST API module is live
@@ -604,7 +641,7 @@ func (h UserManagementHandler) UpdateUserRolesHandler() http.HandlerFunc {
 // @Failure 404 {string} string "error"
 // @Failure 500 {object} goutils.RestAPIBaseResponse "error"
 // @Router /v1/alive [get]
-func (h UserManagementHandler) Alive(w http.ResponseWriter, r *http.Request) {
+func (h UserManagementLivenessHandler) Alive(w http.ResponseWriter, r *http.Request) {
 	logTags := h.GetLogTagsForContext(r.Context())
 	if err := h.WriteRESTResponse(
 		w, http.StatusOK, h.GetStdRESTSuccessMsg(r.Context()), nil,
@@ -614,7 +651,7 @@ func (h UserManagementHandler) Alive(w http.ResponseWriter, r *http.Request) {
 }
 
 // AliveHandler Wrapper around Alive
-func (h UserManagementHandler) AliveHandler() http.HandlerFunc {
+func (h UserManagementLivenessHandler) AliveHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		h.Alive(w, r)
 	}
@@ -633,7 +670,7 @@ func (h UserManagementHandler) AliveHandler() http.HandlerFunc {
 // @Failure 404 {string} string "error"
 // @Failure 500 {object} goutils.RestAPIBaseResponse "error"
 // @Router /v1/ready [get]
-func (h UserManagementHandler) Ready(w http.ResponseWriter, r *http.Request) {
+func (h UserManagementLivenessHandler) Ready(w http.ResponseWriter, r *http.Request) {
 	var respCode int
 	var response interface{}
 	logTags := h.GetLogTagsForContext(r.Context())
@@ -654,7 +691,7 @@ func (h UserManagementHandler) Ready(w http.ResponseWriter, r *http.Request) {
 }
 
 // ReadyHandler Wrapper around Alive
-func (h UserManagementHandler) ReadyHandler() http.HandlerFunc {
+func (h UserManagementLivenessHandler) ReadyHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		h.Ready(w, r)
 	}

@@ -34,50 +34,55 @@ func BuildUserManagementServer(
 	manager users.Management,
 	validateSupport common.CustomFieldValidator,
 ) (*http.Server, error) {
-	httpHandler, err := defineUserManagementHandler(
+	coreHandler, err := defineUserManagementHandler(
 		httpCfg.APIs.RequestLogging, manager, validateSupport,
 	)
 	if err != nil {
 		return nil, err
 	}
+	livenessHandler := defineUserManagementLivenessHandler(httpCfg.APIs.RequestLogging, manager)
 
 	router := mux.NewRouter()
 	mainRouter := registerPathPrefix(router, httpCfg.APIs.Endpoint.PathPrefix, nil)
+	livenessRouter := registerPathPrefix(mainRouter, "/liveness", nil)
 	v1Router := registerPathPrefix(mainRouter, "/v1", nil)
 
 	// Role management
 	roleRouter := registerPathPrefix(v1Router, "/role", map[string]http.HandlerFunc{
-		"get": httpHandler.ListAllRolesHandler(),
+		"get": coreHandler.ListAllRolesHandler(),
 	})
 	_ = registerPathPrefix(roleRouter, "/{roleName}", map[string]http.HandlerFunc{
-		"get": httpHandler.GetRoleHandler(),
+		"get": coreHandler.GetRoleHandler(),
 	})
 
 	// User management
 	userRouter := registerPathPrefix(v1Router, "/user", map[string]http.HandlerFunc{
-		"post": httpHandler.DefineUserHandler(),
-		"get":  httpHandler.ListAllUsersHandler(),
+		"post": coreHandler.DefineUserHandler(),
+		"get":  coreHandler.ListAllUsersHandler(),
 	})
 	perUserRouter := registerPathPrefix(userRouter, "/{userID}", map[string]http.HandlerFunc{
-		"get":    httpHandler.GetUserHandler(),
-		"delete": httpHandler.DeleteUserHandler(),
-		"put":    httpHandler.UpdateUserHandler(),
+		"get":    coreHandler.GetUserHandler(),
+		"delete": coreHandler.DeleteUserHandler(),
+		"put":    coreHandler.UpdateUserHandler(),
 	})
 	_ = registerPathPrefix(perUserRouter, "/roles", map[string]http.HandlerFunc{
-		"put": httpHandler.UpdateUserRolesHandler(),
+		"put": coreHandler.UpdateUserRolesHandler(),
 	})
 
 	// Health check
-	_ = registerPathPrefix(v1Router, "/alive", map[string]http.HandlerFunc{
-		"get": httpHandler.AliveHandler(),
+	_ = registerPathPrefix(livenessRouter, "/alive", map[string]http.HandlerFunc{
+		"get": livenessHandler.AliveHandler(),
 	})
-	_ = registerPathPrefix(v1Router, "/ready", map[string]http.HandlerFunc{
-		"get": httpHandler.ReadyHandler(),
+	_ = registerPathPrefix(livenessRouter, "/ready", map[string]http.HandlerFunc{
+		"get": livenessHandler.ReadyHandler(),
 	})
 
 	// Add logging middleware
-	router.Use(func(next http.Handler) http.Handler {
-		return httpHandler.LoggingMiddleware(next.ServeHTTP)
+	v1Router.Use(func(next http.Handler) http.Handler {
+		return coreHandler.LoggingMiddleware(next.ServeHTTP)
+	})
+	livenessRouter.Use(func(next http.Handler) http.Handler {
+		return livenessHandler.LoggingMiddleware(next.ServeHTTP)
 	})
 
 	serverListen := fmt.Sprintf(
@@ -117,7 +122,7 @@ func BuildAuthorizationServer(
 	checkHeaders common.AuthorizeRequestParamLocConfig,
 	forUnknownUser common.UnknownUserActionConfig,
 ) (*http.Server, error) {
-	httpHandler, err := defineAuthorizationHandler(
+	coreHandler, err := defineAuthorizationHandler(
 		httpCfg.APIs.RequestLogging,
 		manager,
 		requestMatcher,
@@ -128,32 +133,37 @@ func BuildAuthorizationServer(
 	if err != nil {
 		return nil, err
 	}
+	livenessHandler := defineAuthorizationLivenessHandler(httpCfg.APIs.RequestLogging, manager)
 
 	router := mux.NewRouter()
 	mainRouter := registerPathPrefix(router, httpCfg.APIs.Endpoint.PathPrefix, nil)
+	livenessRouter := registerPathPrefix(mainRouter, "/liveness", nil)
 	v1Router := registerPathPrefix(mainRouter, "/v1", nil)
 
 	// Authorize
 	_ = registerPathPrefix(v1Router, "/allow", map[string]http.HandlerFunc{
-		"get": httpHandler.AllowHandler(),
+		"get": coreHandler.AllowHandler(),
 	})
 
 	// Health check
-	_ = registerPathPrefix(v1Router, "/alive", map[string]http.HandlerFunc{
-		"get": httpHandler.AliveHandler(),
+	_ = registerPathPrefix(livenessRouter, "/alive", map[string]http.HandlerFunc{
+		"get": livenessHandler.AliveHandler(),
 	})
-	_ = registerPathPrefix(v1Router, "/ready", map[string]http.HandlerFunc{
-		"get": httpHandler.ReadyHandler(),
+	_ = registerPathPrefix(livenessRouter, "/ready", map[string]http.HandlerFunc{
+		"get": livenessHandler.ReadyHandler(),
 	})
 
 	// Add logging middleware
-	router.Use(func(next http.Handler) http.Handler {
-		return httpHandler.LoggingMiddleware(next.ServeHTTP)
+	v1Router.Use(func(next http.Handler) http.Handler {
+		return coreHandler.LoggingMiddleware(next.ServeHTTP)
+	})
+	livenessRouter.Use(func(next http.Handler) http.Handler {
+		return livenessHandler.LoggingMiddleware(next.ServeHTTP)
 	})
 
 	// Add request parameter extract middleware
-	router.Use(func(next http.Handler) http.Handler {
-		return httpHandler.ParamReadMiddleware(next.ServeHTTP)
+	v1Router.Use(func(next http.Handler) http.Handler {
+		return coreHandler.ParamReadMiddleware(next.ServeHTTP)
 	})
 
 	serverListen := fmt.Sprintf(
@@ -214,7 +224,7 @@ func BuildAuthenticationServer(
 	}
 
 	introspector := authenticate.DefineIntrospector(tokenCache, oidClient.IntrospectToken)
-	httpHandler, err := defineAuthenticationHandler(
+	coreHandler, err := defineAuthenticationHandler(
 		httpCfg.APIs.RequestLogging,
 		oidClient,
 		performIntrospection,
@@ -225,27 +235,32 @@ func BuildAuthenticationServer(
 	if err != nil {
 		return nil, err
 	}
+	livenessHandler := defineAuthenticationLivenessHandler(httpCfg.APIs.RequestLogging)
 
 	router := mux.NewRouter()
 	mainRouter := registerPathPrefix(router, httpCfg.APIs.Endpoint.PathPrefix, nil)
+	livenessRouter := registerPathPrefix(mainRouter, "/liveness", nil)
 	v1Router := registerPathPrefix(mainRouter, "/v1", nil)
 
 	// Authentication
 	_ = registerPathPrefix(v1Router, "/authenticate", map[string]http.HandlerFunc{
-		"get": httpHandler.AuthenticateHandler(),
+		"get": coreHandler.AuthenticateHandler(),
 	})
 
 	// Health check
-	_ = registerPathPrefix(v1Router, "/alive", map[string]http.HandlerFunc{
-		"get": httpHandler.AliveHandler(),
+	_ = registerPathPrefix(livenessRouter, "/alive", map[string]http.HandlerFunc{
+		"get": livenessHandler.AliveHandler(),
 	})
-	_ = registerPathPrefix(v1Router, "/ready", map[string]http.HandlerFunc{
-		"get": httpHandler.ReadyHandler(),
+	_ = registerPathPrefix(livenessRouter, "/ready", map[string]http.HandlerFunc{
+		"get": livenessHandler.ReadyHandler(),
 	})
 
 	// Add logging middleware
-	router.Use(func(next http.Handler) http.Handler {
-		return httpHandler.LoggingMiddleware(next.ServeHTTP)
+	v1Router.Use(func(next http.Handler) http.Handler {
+		return coreHandler.LoggingMiddleware(next.ServeHTTP)
+	})
+	livenessRouter.Use(func(next http.Handler) http.Handler {
+		return livenessHandler.LoggingMiddleware(next.ServeHTTP)
 	})
 
 	serverListen := fmt.Sprintf(

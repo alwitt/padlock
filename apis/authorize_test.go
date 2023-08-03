@@ -143,6 +143,10 @@ func TestAuthorization(t *testing.T) {
 		common.UnknownUserActionConfig{AutoAdd: false},
 	)
 	assert.Nil(err)
+	livness := defineAuthorizationLivenessHandler(
+		common.HTTPRequestLogging{DoNotLogHeaders: []string{}, RequestIDHeader: requestIDHeader},
+		mgmtCore,
+	)
 
 	// Case 0: verify ready
 	{
@@ -152,7 +156,7 @@ func TestAuthorization(t *testing.T) {
 		req.Header.Add(requestIDHeader, rid)
 
 		respRecorder := httptest.NewRecorder()
-		handler := uut.LoggingMiddleware(uut.ReadyHandler())
+		handler := livness.LoggingMiddleware(livness.ReadyHandler())
 		handler.ServeHTTP(respRecorder, req)
 
 		assert.Equal(http.StatusOK, respRecorder.Code)
@@ -282,7 +286,7 @@ func TestAuthorization(t *testing.T) {
 		req.Header.Add(requestIDHeader, rid)
 
 		respRecorder := httptest.NewRecorder()
-		handler := uut.LoggingMiddleware(uut.ReadyHandler())
+		handler := livness.LoggingMiddleware(livness.ReadyHandler())
 		handler.ServeHTTP(respRecorder, req)
 
 		assert.Equal(http.StatusOK, respRecorder.Code)

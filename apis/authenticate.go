@@ -55,6 +55,7 @@ func defineAuthenticationHandler(
 				}
 				return result
 			}(),
+			LogLevel: logConfig.LogLevel,
 		},
 		oidClient:         oid,
 		performIntrospect: performIntrospect,
@@ -273,6 +274,39 @@ func (h AuthenticationHandler) AuthenticateHandler() http.HandlerFunc {
 // ====================================================================================
 // Utilities
 
+// AuthenticationLivenessHandler the request authentication REST API liveness handler
+type AuthenticationLivenessHandler struct {
+	goutils.RestAPIHandler
+}
+
+func defineAuthenticationLivenessHandler(
+	logConfig common.HTTPRequestLogging,
+) AuthenticationLivenessHandler {
+	logTags := log.Fields{
+		"module": "apis", "component": "api-handler", "instance": "authentication-liveness",
+	}
+
+	return AuthenticationLivenessHandler{
+		RestAPIHandler: goutils.RestAPIHandler{
+			Component: goutils.Component{
+				LogTags: logTags,
+				LogTagModifiers: []goutils.LogMetadataModifier{
+					goutils.ModifyLogMetadataByRestRequestParam,
+				},
+			},
+			CallRequestIDHeaderField: &logConfig.RequestIDHeader,
+			DoNotLogHeaders: func() map[string]bool {
+				result := map[string]bool{}
+				for _, v := range logConfig.DoNotLogHeaders {
+					result[v] = true
+				}
+				return result
+			}(),
+			LogLevel: logConfig.HealthLogLevel,
+		},
+	}
+}
+
 // Alive godoc
 // @Summary Authentication API liveness check
 // @Description Will return success to indicate Authentication REST API module is live
@@ -284,7 +318,7 @@ func (h AuthenticationHandler) AuthenticateHandler() http.HandlerFunc {
 // @Failure 404 {string} string "error"
 // @Failure 500 {object} goutils.RestAPIBaseResponse "error"
 // @Router /v1/alive [get]
-func (h AuthenticationHandler) Alive(w http.ResponseWriter, r *http.Request) {
+func (h AuthenticationLivenessHandler) Alive(w http.ResponseWriter, r *http.Request) {
 	logTags := h.GetLogTagsForContext(r.Context())
 	if err := h.WriteRESTResponse(
 		w, http.StatusOK, h.GetStdRESTSuccessMsg(r.Context()), nil,
@@ -294,7 +328,7 @@ func (h AuthenticationHandler) Alive(w http.ResponseWriter, r *http.Request) {
 }
 
 // AliveHandler Wrapper around Alive
-func (h AuthenticationHandler) AliveHandler() http.HandlerFunc {
+func (h AuthenticationLivenessHandler) AliveHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		h.Alive(w, r)
 	}
@@ -313,7 +347,7 @@ func (h AuthenticationHandler) AliveHandler() http.HandlerFunc {
 // @Failure 404 {string} string "error"
 // @Failure 500 {object} goutils.RestAPIBaseResponse "error"
 // @Router /v1/ready [get]
-func (h AuthenticationHandler) Ready(w http.ResponseWriter, r *http.Request) {
+func (h AuthenticationLivenessHandler) Ready(w http.ResponseWriter, r *http.Request) {
 	var respCode int
 	var response interface{}
 	logTags := h.GetLogTagsForContext(r.Context())
@@ -327,7 +361,7 @@ func (h AuthenticationHandler) Ready(w http.ResponseWriter, r *http.Request) {
 }
 
 // ReadyHandler Wrapper around Alive
-func (h AuthenticationHandler) ReadyHandler() http.HandlerFunc {
+func (h AuthenticationLivenessHandler) ReadyHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		h.Ready(w, r)
 	}

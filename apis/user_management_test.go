@@ -51,6 +51,10 @@ func TestRoleManagementAPI(t *testing.T) {
 		supportMatch,
 	)
 	assert.Nil(err)
+	liveness := defineUserManagementLivenessHandler(
+		common.HTTPRequestLogging{DoNotLogHeaders: []string{}, RequestIDHeader: requestIDHeader},
+		mgmtCore,
+	)
 
 	checkHeader := func(w http.ResponseWriter, reqID string) {
 		assert.Equal(reqID, w.Header().Get(requestIDHeader))
@@ -65,7 +69,7 @@ func TestRoleManagementAPI(t *testing.T) {
 		req.Header.Add(requestIDHeader, rid)
 
 		respRecorder := httptest.NewRecorder()
-		handler := uut.LoggingMiddleware(uut.ReadyHandler())
+		handler := liveness.LoggingMiddleware(liveness.ReadyHandler())
 		handler.ServeHTTP(respRecorder, req)
 
 		assert.Equal(http.StatusOK, respRecorder.Code)
@@ -184,6 +188,10 @@ func TestUserManagementAPI(t *testing.T) {
 		supportMatch,
 	)
 	assert.Nil(err)
+	liveness := defineUserManagementLivenessHandler(
+		common.HTTPRequestLogging{DoNotLogHeaders: []string{}, RequestIDHeader: requestIDHeader},
+		mgmtCore,
+	)
 
 	checkHeader := func(w http.ResponseWriter, reqID string) {
 		assert.Equal(reqID, w.Header().Get(requestIDHeader))
@@ -198,7 +206,7 @@ func TestUserManagementAPI(t *testing.T) {
 		req.Header.Add(requestIDHeader, rid)
 
 		respRecorder := httptest.NewRecorder()
-		handler := uut.LoggingMiddleware(uut.ReadyHandler())
+		handler := liveness.LoggingMiddleware(liveness.ReadyHandler())
 		handler.ServeHTTP(respRecorder, req)
 
 		assert.Equal(http.StatusOK, respRecorder.Code)
