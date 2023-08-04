@@ -26,6 +26,7 @@ func defineUserManagementHandler(
 	logConfig common.HTTPRequestLogging,
 	core users.Management,
 	validateSupport common.CustomFieldValidator,
+	metrics goutils.HTTPRequestMetricHelper,
 ) (UserManagementHandler, error) {
 	validate := validator.New()
 	if err := validateSupport.RegisterWithValidator(validate); err != nil {
@@ -52,7 +53,8 @@ func defineUserManagementHandler(
 				}
 				return result
 			}(),
-			LogLevel: logConfig.LogLevel,
+			LogLevel:      logConfig.LogLevel,
+			MetricsHelper: metrics,
 		},
 		validate: validate,
 		core:     core,

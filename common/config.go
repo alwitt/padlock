@@ -99,6 +99,24 @@ type APIServerConfig struct {
 	APIs APIConfig `mapstructure:"apis" json:"apis" validate:"required_with=Enabled,dive"`
 }
 
+// MetricsFeatureConfig metrics framework features config
+type MetricsFeatureConfig struct {
+	// EnableAppMetrics whether to enable Golang application metrics
+	EnableAppMetrics bool `mapstructure:"enableAppMetrics" json:"enableAppMetrics"`
+}
+
+// MetricsConfig application metrics config
+type MetricsConfig struct {
+	// Server defines HTTP server parameters
+	Server HTTPServerConfig `mapstructure:"service" json:"service" validate:"required_with=Enabled,dive"`
+	// MetricsEndpoint path to host the Prometheus metrics endpoint
+	MetricsEndpoint string `mapstructure:"metricsEndpoint" json:"metricsEndpoint" validate:"required"`
+	// MaxRequests max number of metrics requests in parallel to support
+	MaxRequests int `mapstructure:"maxRequests" json:"maxRequests" validate:"gte=1"`
+	// Features metrics framework features to enable
+	Features MetricsFeatureConfig `mapstructure:"features" json:"features" validate:"gte=1"`
+}
+
 // ===============================================================================
 // Database Config
 
@@ -288,6 +306,8 @@ type AuthenticationSubmodule struct {
 
 // AuthorizationServerConfig is the authorization server config
 type AuthorizationServerConfig struct {
+	// Metrics metrics framework configuration
+	Metrics MetricsConfig `mapstructure:"metrics" json:"metrics" validate:"required,dive"`
 	// CustomRegex sets custom regex used by validator for custom field tags
 	CustomRegex CustomValidationsConfig `mapstructure:"customValidationRegex" json:"customValidationRegex" validate:"required,dive"`
 	// UserManagement are the user management submodule configs
@@ -302,6 +322,18 @@ type AuthorizationServerConfig struct {
 
 // InstallDefaultAuthorizationServerConfigValues installs default config parameters in viper
 func InstallDefaultAuthorizationServerConfigValues() {
+	// Default metrics config
+	viper.SetDefault("metrics.metricsEndpoint", "/metrics")
+	viper.SetDefault("metrics.maxRequests", 4)
+	// Default metrics features config
+	viper.SetDefault("metrics.features.enableAppMetrics", false)
+	// Default metrics HTTP server config
+	viper.SetDefault("metrics.service.listenOn", "0.0.0.0")
+	viper.SetDefault("metrics.service.appPort", 2001)
+	viper.SetDefault("metrics.service.timeoutSecs.read", 60)
+	viper.SetDefault("metrics.service.timeoutSecs.write", 60)
+	viper.SetDefault("metrics.service.timeoutSecs.idle", 60)
+
 	// Default custom validation REGEX patterns
 	viper.SetDefault("customValidationRegex.userID", "^([[:alnum:]]|-|_)+$")
 	viper.SetDefault("customValidationRegex.username", "^([[:alnum:]]|-|_)+$")

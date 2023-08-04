@@ -280,9 +280,39 @@ func mainApplication(c *cli.Context) error {
 		}
 	}()
 
+	metrics, err := newMetricsCollector(appCfg.Metrics.Features)
+	if err != nil {
+		log.
+			WithError(err).
+			WithFields(logTags).
+			Error("Failed to create metrics collector")
+		return err
+	}
+	httpMetricsAgent := metrics.InstallHTTPMetrics()
+
+	{
+		svr, err := apis.BuildMetricsCollectionServer(
+			appCfg.Metrics.Server, metrics, appCfg.Metrics.MetricsEndpoint, appCfg.Metrics.MaxRequests,
+		)
+		if err != nil {
+			log.WithError(err).WithFields(logTags).
+				Errorf("Unable to define metrics HTTP Server")
+			return err
+		}
+		apiServers["Metrics"] = svr
+		// Start the server
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			if err := svr.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+				log.WithError(err).Error("Metrics HTTP Server Failure")
+			}
+		}()
+	}
+
 	if appCfg.UserManagement.Enabled {
 		svr, err := apis.BuildUserManagementServer(
-			appCfg.UserManagement.APIServerConfig, userManager, customValidator,
+			appCfg.UserManagement.APIServerConfig, userManager, customValidator, httpMetricsAgent,
 		)
 		if err != nil {
 			log.WithError(err).WithFields(logTags).
@@ -321,6 +351,7 @@ func mainApplication(c *cli.Context) error {
 			customValidator,
 			appCfg.Authorization.RequestParamLocation,
 			appCfg.Authorization.UnknownUser,
+			httpMetricsAgent,
 		)
 		if err != nil {
 			log.WithError(err).WithFields(logTags).
@@ -433,6 +464,7 @@ func mainApplication(c *cli.Context) error {
 			tokenCache,
 			appCfg.Authentication.AuthenticationConfig,
 			appCfg.Authorization.RequestParamLocation,
+			httpMetricsAgent,
 		)
 		if err != nil {
 			log.WithError(err).WithFields(logTags).
@@ -460,4 +492,18 @@ func mainApplication(c *cli.Context) error {
 	<-cc
 
 	return nil
+}
+
+// newMetricsCollector define metrics collector
+func newMetricsCollector(config common.MetricsFeatureConfig) (goutils.MetricsCollector, error) {
+	framework, err := goutils.GetNewMetricsCollector(
+		log.Fields{"module": "goutils", "component": "metrics-core"}, []goutils.LogMetadataModifier{},
+	)
+	if err != nil {
+		return nil, err
+	}
+	if config.EnableAppMetrics {
+		framework.InstallApplicationMetrics()
+	}
+	return framework, nil
 }

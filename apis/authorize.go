@@ -32,6 +32,7 @@ func defineAuthorizationHandler(
 	validateSupport common.CustomFieldValidator,
 	checkHeaders common.AuthorizeRequestParamLocConfig,
 	forUnknownUser common.UnknownUserActionConfig,
+	metrics goutils.HTTPRequestMetricHelper,
 ) (AuthorizationHandler, error) {
 	validate := validator.New()
 	if err := validateSupport.RegisterWithValidator(validate); err != nil {
@@ -59,7 +60,8 @@ func defineAuthorizationHandler(
 				}
 				return result
 			}(),
-			LogLevel: logConfig.LogLevel,
+			LogLevel:      logConfig.LogLevel,
+			MetricsHelper: metrics,
 		},
 		validate:       validate,
 		core:           core,

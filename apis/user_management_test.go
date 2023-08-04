@@ -49,6 +49,7 @@ func TestRoleManagementAPI(t *testing.T) {
 		common.HTTPRequestLogging{DoNotLogHeaders: []string{}, RequestIDHeader: requestIDHeader},
 		mgmtCore,
 		supportMatch,
+		nil,
 	)
 	assert.Nil(err)
 	liveness := defineUserManagementLivenessHandler(
@@ -186,6 +187,7 @@ func TestUserManagementAPI(t *testing.T) {
 		common.HTTPRequestLogging{DoNotLogHeaders: []string{}, RequestIDHeader: requestIDHeader},
 		mgmtCore,
 		supportMatch,
+		nil,
 	)
 	assert.Nil(err)
 	liveness := defineUserManagementLivenessHandler(

@@ -8,6 +8,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/alwitt/goutils"
 	"github.com/alwitt/padlock/authenticate"
 	"github.com/alwitt/padlock/common"
 	"github.com/alwitt/padlock/match"
@@ -18,6 +19,38 @@ import (
 	"golang.org/x/net/http2/h2c"
 )
 
+/*
+BuildMetricsCollectionServer create server to host metrics collection endpoint
+
+	@param httpCfg common.HTTPServerConfig - HTTP server configuration
+	@param metricsCollector goutils.MetricsCollector - metrics collector
+	@param collectionEndpoint string - endpoint to expose the metrics on
+	@param maxRESTRequests int - max number fo parallel requests to support
+	@returns HTTP server instance
+*/
+func BuildMetricsCollectionServer(
+	httpCfg common.HTTPServerConfig,
+	metricsCollector goutils.MetricsCollector,
+	collectionEndpoint string,
+	maxRESTRequests int,
+) (*http.Server, error) {
+	router := mux.NewRouter()
+	metricsCollector.ExposeCollectionEndpoint(router, collectionEndpoint, maxRESTRequests)
+
+	serverListen := fmt.Sprintf(
+		"%s:%d", httpCfg.ListenOn, httpCfg.Port,
+	)
+	httpSrv := &http.Server{
+		Addr:         serverListen,
+		WriteTimeout: time.Second * time.Duration(httpCfg.Timeouts.WriteTimeout),
+		ReadTimeout:  time.Second * time.Duration(httpCfg.Timeouts.ReadTimeout),
+		IdleTimeout:  time.Second * time.Duration(httpCfg.Timeouts.IdleTimeout),
+		Handler:      h2c.NewHandler(router, &http2.Server{}),
+	}
+
+	return httpSrv, nil
+}
+
 // ====================================================================================
 // User Management Server
 
@@ -27,15 +60,17 @@ BuildUserManagementServer creates the user management server
 	@param httpCfg common.HTTPConfig - HTTP server config
 	@param manager users.Management - core user management logic block
 	@param validateSupport common.CustomFieldValidator - customer validator support object
+	@param metrics goutils.HTTPRequestMetricHelper - metric collection agent
 	@return the http.Server
 */
 func BuildUserManagementServer(
 	httpCfg common.APIServerConfig,
 	manager users.Management,
 	validateSupport common.CustomFieldValidator,
+	metrics goutils.HTTPRequestMetricHelper,
 ) (*http.Server, error) {
 	coreHandler, err := defineUserManagementHandler(
-		httpCfg.APIs.RequestLogging, manager, validateSupport,
+		httpCfg.APIs.RequestLogging, manager, validateSupport, metrics,
 	)
 	if err != nil {
 		return nil, err
@@ -112,6 +147,7 @@ BuildAuthorizationServer creates the authorization server
 	@param checkHeaders common.AuthorizeRequestParamLocConfig - param on which headers to search for
 	parameters regarding a REST API to authorize.
 	@param forUnknownUser common.UnknownUserActionConfig - param on how to handle new unknown user
+	@param metrics goutils.HTTPRequestMetricHelper - metric collection agent
 	@return the http.Server
 */
 func BuildAuthorizationServer(
@@ -121,6 +157,7 @@ func BuildAuthorizationServer(
 	validateSupport common.CustomFieldValidator,
 	checkHeaders common.AuthorizeRequestParamLocConfig,
 	forUnknownUser common.UnknownUserActionConfig,
+	metrics goutils.HTTPRequestMetricHelper,
 ) (*http.Server, error) {
 	coreHandler, err := defineAuthorizationHandler(
 		httpCfg.APIs.RequestLogging,
@@ -129,6 +166,7 @@ func BuildAuthorizationServer(
 		validateSupport,
 		checkHeaders,
 		forUnknownUser,
+		metrics,
 	)
 	if err != nil {
 		return nil, err
@@ -193,6 +231,7 @@ BuildAuthenticationServer creates the authentication server
 	@param authnConfig common.AuthenticationConfig - authentication submodule configuration
 	@param respHeaderParam common.AuthorizeRequestParamLocConfig - config which indicates what
 	response headers to output the user parameters on.
+	@param metrics goutils.HTTPRequestMetricHelper - metric collection agent
 	@return the http.Server
 */
 func BuildAuthenticationServer(
@@ -202,6 +241,7 @@ func BuildAuthenticationServer(
 	tokenCache authenticate.TokenCache,
 	authnConfig common.AuthenticationConfig,
 	respHeaderParam common.AuthorizeRequestParamLocConfig,
+	metrics goutils.HTTPRequestMetricHelper,
 ) (*http.Server, error) {
 	// Define custom HTTP client for connecting with OpenID issuer
 	oidHTTPClient := http.Client{}
@@ -231,6 +271,7 @@ func BuildAuthenticationServer(
 		introspector,
 		authnConfig,
 		respHeaderParam,
+		metrics,
 	)
 	if err != nil {
 		return nil, err

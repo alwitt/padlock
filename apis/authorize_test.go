@@ -141,6 +141,7 @@ func TestAuthorization(t *testing.T) {
 		supportMatch,
 		authRequestParamLoc,
 		common.UnknownUserActionConfig{AutoAdd: false},
+		nil,
 	)
 	assert.Nil(err)
 	livness := defineAuthorizationLivenessHandler(
@@ -275,6 +276,7 @@ func TestAuthorization(t *testing.T) {
 		supportMatch,
 		authRequestParamLoc,
 		common.UnknownUserActionConfig{AutoAdd: true},
+		nil,
 	)
 	assert.Nil(err)
 

@@ -34,6 +34,7 @@ func defineAuthenticationHandler(
 	introspector authenticate.Introspector,
 	authnCfg common.AuthenticationConfig,
 	respHeaderParam common.AuthorizeRequestParamLocConfig,
+	metrics goutils.HTTPRequestMetricHelper,
 ) (AuthenticationHandler, error) {
 	logTags := log.Fields{
 		"module": "apis", "component": "api-handler", "instance": "authentication",
@@ -55,7 +56,8 @@ func defineAuthenticationHandler(
 				}
 				return result
 			}(),
-			LogLevel: logConfig.LogLevel,
+			LogLevel:      logConfig.LogLevel,
+			MetricsHelper: metrics,
 		},
 		oidClient:         oid,
 		performIntrospect: performIntrospect,
