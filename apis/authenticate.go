@@ -10,6 +10,7 @@ import (
 	"github.com/alwitt/goutils"
 	"github.com/alwitt/padlock/authenticate"
 	"github.com/alwitt/padlock/common"
+	"github.com/alwitt/padlock/match"
 	"github.com/alwitt/padlock/models"
 	"github.com/apex/log"
 	"github.com/golang-jwt/jwt/v4"
@@ -23,7 +24,9 @@ type AuthenticationHandler struct {
 	introspector      authenticate.Introspector
 	targetAudience    *string
 	targetClaims      common.OpenIDClaimsOfInterestConfig
+	reqHeaderParam    common.AuthenticateRequestParamLocConfig
 	respHeaderParam   common.AuthorizeRequestParamLocConfig
+	bypassChecker     match.AuthBypassMatch
 }
 
 // defineAuthenticationHandler define a new AuthenticationHandler instance
@@ -40,7 +43,7 @@ func defineAuthenticationHandler(
 		"module": "apis", "component": "api-handler", "instance": "authentication",
 	}
 
-	return AuthenticationHandler{
+	instance := AuthenticationHandler{
 		RestAPIHandler: goutils.RestAPIHandler{
 			Component: goutils.Component{
 				LogTags: logTags,
@@ -64,8 +67,21 @@ func defineAuthenticationHandler(
 		introspector:      introspector,
 		targetAudience:    authnCfg.TargetAudience,
 		targetClaims:      authnCfg.TargetClaims,
+		reqHeaderParam:    authnCfg.RequestParamLocation,
 		respHeaderParam:   respHeaderParam,
-	}, nil
+		bypassChecker:     nil,
+	}
+
+	if authnCfg.Bypass != nil {
+		bypassCheck, err := match.DefineAuthBypassMatch(*authnCfg.Bypass)
+		if err != nil {
+			log.WithError(err).WithFields(logTags).Error("Failed define authentication bypass matcher")
+			return AuthenticationHandler{}, err
+		}
+		instance.bypassChecker = bypassCheck
+	}
+
+	return instance, nil
 }
 
 // ====================================================================================
@@ -95,6 +111,31 @@ func (h AuthenticationHandler) Authenticate(w http.ResponseWriter, r *http.Reque
 			log.WithError(err).WithFields(logTags).Error("Failed to form response")
 		}
 	}()
+
+	// Check Bypass rules first
+	if h.bypassChecker != nil {
+		// Pull request parameters
+		t := common.AccessAuthorizeParam{
+			Method: r.Header.Get(h.reqHeaderParam.Method),
+			Path:   r.Header.Get(h.reqHeaderParam.Path),
+			Host:   r.Header.Get(h.reqHeaderParam.Host),
+		}
+		params := match.RequestParam{Host: &t.Host, Method: t.Method, Path: t.Path}
+		matched, err := h.bypassChecker.Match(r.Context(), params)
+		if err != nil {
+			msg := "authn bypass check failed"
+			log.WithError(err).WithFields(logTags).Error(msg)
+			respCode = http.StatusBadRequest
+			response = h.GetStdRESTErrorMsg(r.Context(), http.StatusBadRequest, msg, err.Error())
+			return
+		}
+		// Bypass authentication
+		if matched {
+			respCode = http.StatusOK
+			response = h.GetStdRESTSuccessMsg(r.Context())
+			return
+		}
+	}
 
 	errMacroNoErr := func(msg string) {
 		log.WithFields(logTags).Errorf(msg)

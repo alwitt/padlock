@@ -349,6 +349,17 @@ authenticate:
       # negative value means there will be no timeout.
       write: 60
   ####################################
+  # When a HTTP proxy sends a authentication request to padlock, which HTTP headers
+  # should the submodule fetch request parameters from.
+  #
+  requestParamHeaders:
+    # Host of the request to authorize
+    host: X-Forwarded-Host
+    # URI Path of the request to authorize
+    path: X-Forwarded-Uri
+    # HTTP method of the request to authorize
+    method: X-Forwarded-Method
+  ####################################
   # User OpenID token claims of interest
   #
   # If specified, the token must contain an "aud" claim which matches this value.
@@ -377,3 +388,33 @@ authenticate:
     cacheCleanIntervalSec: 3600
     # Interval (sec) to periodically purge the token cache
     cachePurgeIntervalSec: 43200
+  ####################################
+  # Authentication bypass rules
+  #
+  # This section is OPTIONAL
+  #
+  # Requests which contain
+  # * METHOD
+  # * HOST
+  # * PATH
+  # That match one of the bypass rules will be allowed without authentication checks
+  bypass:
+    rules:
+      # Each rule is defined by a type that indicates which request element this rules applies to
+      - type: method
+        # If a request property matches one of the possibilities, the request can bypass
+        # authentication.
+        #
+        # Match rules for METHOD, and HOST are case insensitive.
+        matches:
+          - OPTIONS
+          - head
+      - type: host
+        matches:
+          - localhost
+          - MY.DEV.ORG
+      - type: path
+        # PATH matches are parsed as REGEX patterns
+        matches:
+          - ^/public/path
+          - ^/path1$

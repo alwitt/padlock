@@ -155,6 +155,37 @@ type UserManageSubmodule struct {
 }
 
 // ===============================================================================
+// REST API Authentication Config
+
+// AuthenticateRequestParamLocConfig defines which HTTP headers to parse to get the parameters of
+// a REST request to authenticate. It is expected that the component (i.e. a proxy) requesting
+// authentication for a request will provide the needed values through these headers when it
+// contacts the authentication server.
+type AuthenticateRequestParamLocConfig struct {
+	// Host is the host / FQDN of the request being authenticated
+	Host string `mapstructure:"host" json:"host" validate:"required"`
+	// Path is the URI path of the request being authenticated
+	Path string `mapstructure:"path" json:"path" validate:"required"`
+	// Method is the HTTP method of the request being authenticated
+	Method string `mapstructure:"method" json:"method" validate:"required"`
+}
+
+// AuthnBypassMatchEntry one authentication bypass rule
+type AuthnBypassMatchEntry struct {
+	// MatchType indicates which request element this rules applies to
+	MatchType string `mapstructure:"type" json:"type" validate:"required,oneof=method host path"`
+	// Matches if a request property matches one of the possibilities, the request can
+	// bypass authentication.
+	Matches []string `mapstructure:"matches" json:"matches" validate:"required,gte=1"`
+}
+
+// AuthnBypassConfig authentication bypass configuration
+type AuthnBypassConfig struct {
+	// Rules the authentication bypass rules to check against
+	Rules []AuthnBypassMatchEntry `mapstructure:"rules,omitempty" json:"rules,omitempty" validate:"omitempty,gte=1,dive"`
+}
+
+// ===============================================================================
 // REST API Authorization Config
 
 // PermissionForAPIMethodConfig lists the permissions needed use a method
@@ -291,8 +322,15 @@ type AuthenticationConfig struct {
 	TargetAudience *string `mapstructure:"targetAudience" json:"target_audience,omitempty" validate:"omitempty,url"`
 	// TargetClaims sets which claims to parse from a token to get key parameters regarding a user.
 	TargetClaims OpenIDClaimsOfInterestConfig `mapstructure:"targetClaims" json:"target_claims" validate:"required,dive"`
+	// RequestParamLocation sets which HTTP headers to parse to get the parameters of
+	// a REST request to authenticate. It is expected that the component (i.e. a proxy) requesting
+	// authentication for a request will provide the needed values through these headers when it
+	// contacts the authentication server.
+	RequestParamLocation AuthenticateRequestParamLocConfig `mapstructure:"requestParamHeaders" json:"requestParamHeaders" validate:"required,dive"`
 	// Introspection define OAuth2 token introspect operation config
 	Introspection IntrospectionConfig `mapstructure:"introspect" json:"introspect" validate:"required,dive"`
+	// Bypass authentication bypass rules
+	Bypass *AuthnBypassConfig `mapstructure:"bypass,omitempty" json:"bypass,omitempty" validate:"omitempty,dive"`
 }
 
 // AuthenticationSubmodule defines authentication submodule config
@@ -400,6 +438,9 @@ func InstallDefaultAuthorizationServerConfigValues() {
 	)
 	viper.SetDefault("authenticate.apis.endPoint.pathPrefix", "/")
 	viper.SetDefault("authenticate.targetClaims.userID", "sub")
+	viper.SetDefault("authenticate.requestParamHeaders.host", "X-Forwarded-Host")
+	viper.SetDefault("authenticate.requestParamHeaders.path", "X-Forwarded-Uri")
+	viper.SetDefault("authenticate.requestParamHeaders.method", "X-Forwarded-Method")
 	viper.SetDefault("authenticate.introspect.enabled", false)
 	viper.SetDefault("authenticate.introspect.recheckIntervalSec", 300)
 	viper.SetDefault("authenticate.introspect.cacheCleanIntervalSec", 3600)
