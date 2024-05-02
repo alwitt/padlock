@@ -29,13 +29,13 @@ openapi: .prepare ## Generate the OpenAPI spec
 	@swag init -g main.go --parseDependency
 	@rm docs/docs.go
 
-.PHONY: compose
-compose: ## Prepare the development docker stack
-	@docker-compose -f docker/docker-compose.yaml up -d
+.PHONY: up
+up: ## Prepare the development docker stack
+	@docker compose -f docker/docker-compose.yaml up -d
 
-.PHONY: clean
-clean: ## Clean up development environment
-	@docker-compose -f docker/docker-compose.yaml down
+.PHONY: down
+down: ## Remove the development docker stack
+	@docker compose -f docker/docker-compose.yaml down
 
 .prepare: ## Prepare the project for local development
 	@pip3 install --user pre-commit

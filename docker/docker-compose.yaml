@@ -1,7 +1,5 @@
-version: '3'
-
 services:
-  db:
+  padlock-dev-db:
     container_name: padlock-dev-db
     hostname: "postgres"
     image: "postgres:15"
@@ -11,3 +9,8 @@ services:
       - POSTGRES_DB=users
       - POSTGRES_USER=admin
       - POSTGRES_PASSWORD=password
+    networks:
+      - padlock-dev
+
+networks:
+  padlock-dev:
