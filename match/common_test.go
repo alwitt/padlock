@@ -102,3 +102,58 @@ authorize:
 		assert.Equal([]string{"all", "write"}, postMethodPerm)
 	}
 }
+
+func TestGetAbsPath(t *testing.T) {
+	assert := assert.New(t)
+	log.SetLevel(log.DebugLevel)
+
+	type testCase struct {
+		original string
+		expected string
+	}
+
+	testCases := []testCase{
+		{
+			original: "/path-A",
+			expected: "/path-A",
+		},
+		{
+			original: "path-A",
+			expected: "/path-A",
+		},
+		{
+			original: "//path-A",
+			expected: "//path-A",
+		},
+		{
+			original: "/path-A/./path-B",
+			expected: "/path-A/path-B",
+		},
+		{
+			original: "/path-A/../path-B",
+			expected: "/path-B",
+		},
+		{
+			original: "/path-A//path-B",
+			expected: "/path-A//path-B",
+		},
+		{
+			original: "/path-A/../path-B/./path-A",
+			expected: "/path-B/path-A",
+		},
+		{
+			original: "/path-A?a=1&b=hello#footer",
+			expected: "/path-A?a=1&b=hello#footer",
+		},
+		{
+			original: "/path-A/./path-B/../path-C?a=1&b=hello#footer",
+			expected: "/path-A/path-C?a=1&b=hello#footer",
+		},
+	}
+
+	for idx, oneTest := range testCases {
+		absPath, err := GetAbsPath(oneTest.original)
+		assert.Nil(err)
+		assert.Equalf(oneTest.expected, absPath, "%d Failed", idx)
+	}
+}

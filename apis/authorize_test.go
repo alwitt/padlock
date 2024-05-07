@@ -318,3 +318,189 @@ func TestAuthorization(t *testing.T) {
 		executeTest(checkParam)
 	}
 }
+
+func TestRelativePathAuthorization(t *testing.T) {
+	assert := assert.New(t)
+	log.SetLevel(log.DebugLevel)
+
+	dbName := fmt.Sprintf("/tmp/models_test_%s.db", uuid.New().String())
+	log.Debugf("Unit-test DB %s", dbName)
+	db, err := gorm.Open(sqlite.Open(dbName), &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Info),
+	})
+	assert.Nil(err)
+	supportMatch, err := common.GetCustomFieldValidator(
+		`^[a-zA-Z0-9-]+$`, `^[a-zA-Z0-9-]+$`, `^[a-zA-Z0-9-]+$`, `^[a-zA-Z0-9-]+$`, `^.+$`,
+	)
+	assert.Nil(err)
+	dbClient, err := models.CreateManagementDBClient(db, supportMatch)
+	assert.Nil(err)
+	assert.Nil(dbClient.Ready())
+
+	mgmtCore, err := users.CreateManagement(dbClient)
+	assert.Nil(err)
+	assert.Nil(mgmtCore.Ready())
+
+	// Define test roles
+	roles := []string{"admin", "user"}
+	permissions := []string{"admin-read", "read"}
+	testRoles := map[string]common.UserRoleConfig{
+		roles[0]: {AssignedPermissions: []string{permissions[0], permissions[1]}},
+		roles[1]: {AssignedPermissions: []string{permissions[1]}},
+	}
+	assert.Nil(mgmtCore.AlignRolesWithConfig(context.Background(), testRoles))
+
+	// Define authorization match rules
+	testHost := fmt.Sprintf("%s.unit-test.org", uuid.New().String())
+	matchRules := match.TargetGroupSpec{
+		AllowedHosts: map[string]match.TargetHostSpec{
+			testHost: {
+				TargetHost: testHost,
+				AllowedPathsForHost: []match.TargetPathSpec{
+					{
+						PathPattern: `^/admin`,
+						PermissionsForMethod: map[string][]string{
+							"GET": {permissions[0]},
+						},
+					},
+					{
+						PathPattern: `^/user`,
+						PermissionsForMethod: map[string][]string{
+							"GET": {permissions[1]},
+						},
+					},
+				},
+			},
+		},
+	}
+	restRequestMatcher, err := match.DefineTargetGroupMatcher(matchRules)
+	assert.Nil(err)
+
+	authRequestParamLoc := common.AuthorizeRequestParamLocConfig{
+		Host:   "X-Forwarded-Host",
+		Path:   "X-Forwarded-Uri",
+		Method: "X-Forwarded-Method",
+		UserID: "X-Caller-UserID",
+	}
+
+	requestIDHeader := "Padlock-Unit-Tester"
+
+	checkHeader := func(w http.ResponseWriter, reqID string, stackOffset int) {
+		_, _, ln, ok := runtime.Caller(2)
+		assert.True(ok)
+		assert.Equalf(reqID, w.Header().Get(requestIDHeader), "Called@%d", ln)
+		assert.Equalf("application/json", w.Header().Get("content-type"), "Called@%d", ln)
+	}
+
+	// Define test users
+	// Admin user
+	adminUser := uuid.NewString()
+	{
+		params := models.UserConfig{UserID: adminUser}
+		assert.Nil(mgmtCore.DefineUser(context.Background(), params, nil))
+		// Assign roles
+		assert.Nil(mgmtCore.SetUserRoles(context.Background(), adminUser, []string{roles[0]}))
+	}
+	// Normal user
+	basicUser := uuid.NewString()
+	{
+		params := models.UserConfig{UserID: basicUser}
+		assert.Nil(mgmtCore.DefineUser(context.Background(), params, nil))
+		// Assign roles
+		assert.Nil(mgmtCore.SetUserRoles(context.Background(), basicUser, []string{roles[1]}))
+	}
+
+	uut, err := defineAuthorizationHandler(
+		common.HTTPRequestLogging{DoNotLogHeaders: []string{}, RequestIDHeader: requestIDHeader},
+		mgmtCore,
+		restRequestMatcher,
+		supportMatch,
+		authRequestParamLoc,
+		common.UnknownUserActionConfig{AutoAdd: false},
+		nil,
+	)
+	assert.Nil(err)
+
+	// Test support
+	type testCase struct {
+		host, path, method, userID           string
+		userName, firstName, lastName, email *string
+		status                               int
+	}
+	executeTest := func(tc testCase) {
+		_, _, ln, ok := runtime.Caller(1)
+		assert.True(ok)
+
+		rid := uuid.New().String()
+		req, err := http.NewRequest("GET", "/v1/allow", nil)
+		assert.Nilf(err, "Called@%d", ln)
+		req.Header.Add(requestIDHeader, rid)
+
+		// Add parameter for request to authorize
+		req.Header.Add(authRequestParamLoc.Host, tc.host)
+		req.Header.Add(authRequestParamLoc.Path, tc.path)
+		req.Header.Add(authRequestParamLoc.Method, tc.method)
+		req.Header.Add(authRequestParamLoc.UserID, tc.userID)
+		if tc.userName != nil {
+			req.Header.Add(authRequestParamLoc.Username, *tc.userName)
+		}
+		if tc.firstName != nil {
+			req.Header.Add(authRequestParamLoc.FirstName, *tc.firstName)
+		}
+		if tc.lastName != nil {
+			req.Header.Add(authRequestParamLoc.LastName, *tc.lastName)
+		}
+		if tc.email != nil {
+			req.Header.Add(authRequestParamLoc.Email, *tc.email)
+		}
+
+		respRecorder := httptest.NewRecorder()
+		handler := uut.LoggingMiddleware(uut.ParamReadMiddleware(uut.AllowHandler()))
+		handler.ServeHTTP(respRecorder, req)
+
+		assert.Equalf(tc.status, respRecorder.Code, "Called@%d", ln)
+		checkHeader(respRecorder, rid, 2)
+	}
+
+	testCases := []testCase{
+		{
+			host:   testHost,
+			path:   "/admin",
+			method: "GET", userID: basicUser,
+			status: http.StatusForbidden,
+		},
+		{
+			host:   testHost,
+			path:   "/admin",
+			method: "GET", userID: adminUser,
+			status: http.StatusOK,
+		},
+		{
+			host:   testHost,
+			path:   "/user",
+			method: "GET", userID: basicUser,
+			status: http.StatusOK,
+		},
+		{
+			host:   testHost,
+			path:   "/user/../admin",
+			method: "GET", userID: basicUser,
+			status: http.StatusForbidden,
+		},
+		{
+			host:   testHost,
+			path:   "/user/../admin/../user",
+			method: "GET", userID: basicUser,
+			status: http.StatusOK,
+		},
+		{
+			host:   testHost,
+			path:   "/user/./admin",
+			method: "GET", userID: basicUser,
+			status: http.StatusOK,
+		},
+	}
+	for _, oneTest := range testCases {
+		executeTest(oneTest)
+	}
+}

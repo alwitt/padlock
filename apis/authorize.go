@@ -155,9 +155,21 @@ func (h AuthorizationHandler) Allow(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Get the absolute path of the request
+	reqAbsPath, err := match.GetAbsPath(params.Path)
+	if err != nil {
+		msg := "Request path normalization failed"
+		log.WithError(err).WithFields(logTags).Errorf(msg)
+		respCode = http.StatusBadRequest
+		response = h.GetStdRESTErrorMsg(r.Context(), http.StatusBadRequest, msg, err.Error())
+		return
+	}
+
+	logTags["auth_abs_path"] = reqAbsPath
+
 	// Determine the accepted permissions to trigger the REST API with method
 	allowedPermissions, err := h.requestMatcher.Match(r.Context(), match.RequestParam{
-		Host: &params.Host, Path: params.Path, Method: params.Method,
+		Host: &params.Host, Path: reqAbsPath, Method: params.Method,
 	})
 	if err != nil {
 		msg := fmt.Sprintf(

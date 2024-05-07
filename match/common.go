@@ -3,6 +3,7 @@ package match
 import (
 	"context"
 	"fmt"
+	"net/url"
 
 	"github.com/alwitt/padlock/common"
 	"github.com/go-playground/validator/v10"
@@ -109,4 +110,22 @@ func ConvertConfigToTargetGroupSpec(cfg *common.AuthorizationConfig) (TargetGrou
 	}
 
 	return result, nil
+}
+
+/*
+GetAbsPath given a URI path, normalize it and remove any relative references
+
+	@param original string - Original URI path
+	@return the absolute path
+*/
+func GetAbsPath(original string) (string, error) {
+	parsedOriginal, err := url.Parse(original)
+	if err != nil {
+		return "", err
+	}
+
+	baseURL, _ := url.Parse("/")
+	absPath := baseURL.ResolveReference(parsedOriginal)
+
+	return absPath.String(), nil
 }
