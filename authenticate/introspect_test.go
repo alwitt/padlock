@@ -2,8 +2,6 @@ package authenticate
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 	"testing"
 	"time"
 
@@ -11,31 +9,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
-
-func TestIntrospectResponseParse(t *testing.T) {
-	assert := assert.New(t)
-	log.SetLevel(log.DebugLevel)
-
-	// Case 0: test introspect response with `aud` as one string
-	{
-		audValue := uuid.NewString()
-		testResponse := fmt.Sprintf("{\"aud\": \"%s\"}", audValue)
-		var parsedResponse introspectResponse
-		assert.Nil(json.Unmarshal([]byte(testResponse), &parsedResponse))
-		assert.Len(parsedResponse.Audience, 1)
-		assert.Equal(audValue, parsedResponse.Audience[0])
-	}
-
-	// Case 1: test introspect response with `aud` as a string array
-	{
-		audList := []string{uuid.NewString(), uuid.NewString()}
-		testResponse := fmt.Sprintf("{\"aud\": [\"%s\", \"%s\"]}", audList[0], audList[1])
-		var parsedResponse introspectResponse
-		assert.Nil(json.Unmarshal([]byte(testResponse), &parsedResponse))
-		assert.Len(parsedResponse.Audience, 2)
-		assert.EqualValues(audList, parsedResponse.Audience)
-	}
-}
 
 func TestIntrospector(t *testing.T) {
 	assert := assert.New(t)

@@ -1,11 +1,9 @@
 package apis
 
 import (
-	"crypto/tls"
-	"crypto/x509"
+	"context"
 	"fmt"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/alwitt/goutils"
@@ -224,6 +222,7 @@ func BuildAuthorizationServer(
 /*
 BuildAuthenticationServer creates the authentication server
 
+	@param parentCtx context.Context
 	@param httpCfg common.HTTPConfig - HTTP server config
 	@param openIDCfg common.OpenIDIssuerConfig - OpenID issuer configuration
 	@parem performIntrospection bool - whether to perform introspection
@@ -235,6 +234,7 @@ BuildAuthenticationServer creates the authentication server
 	@return the http.Server
 */
 func BuildAuthenticationServer(
+	parentCtx context.Context,
 	httpCfg common.APIServerConfig,
 	openIDCfg common.OpenIDIssuerConfig,
 	performIntrospection bool,
@@ -243,30 +243,47 @@ func BuildAuthenticationServer(
 	respHeaderParam common.AuthorizeRequestParamLocConfig,
 	metrics goutils.HTTPRequestMetricHelper,
 ) (*http.Server, error) {
-	// Define custom HTTP client for connecting with OpenID issuer
-	oidHTTPClient := http.Client{}
-	// Define the TLS settings if custom CA was provided
-	if openIDCfg.CustomCA != nil {
-		caCert, err := os.ReadFile(*openIDCfg.CustomCA)
-		if err != nil {
-			log.WithError(err).Errorf("Unable to read %s", *openIDCfg.CustomCA)
-			return nil, err
-		}
-		caCertPool := x509.NewCertPool()
-		caCertPool.AppendCertsFromPEM(caCert)
-		tlsConfig := &tls.Config{RootCAs: caCertPool}
-		oidHTTPClient.Transport = &http.Transport{TLSClientConfig: tlsConfig}
-	}
-
-	oidClient, err := authenticate.DefineOpenIDClient(openIDCfg, &oidHTTPClient)
+	oidpHTTPClient, err := goutils.DefineHTTPClient(
+		parentCtx,
+		goutils.HTTPClientRetryConfig{
+			MaxAttempts:  6,
+			InitWaitTime: 5,
+			MaxWaitTime:  30,
+		},
+		nil,
+		&goutils.HTTPClientTransportConfig{CustomCA: openIDCfg.CustomCA},
+	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to define HTTP client for OIDP client [%w]", err)
 	}
 
-	introspector := authenticate.DefineIntrospector(tokenCache, oidClient.IntrospectToken)
+	oidpTargetAudience := []string{}
+	if authnConfig.TargetAudience != nil {
+		oidpTargetAudience = append(oidpTargetAudience, *authnConfig.TargetAudience)
+	}
+
+	oidpClient, err := goutils.DefineOpenIDProviderClient(
+		goutils.OIDPClientParam{
+			Issuer:              openIDCfg.Issuer,
+			ClientID:            openIDCfg.ClientID,
+			ClientCred:          openIDCfg.ClientCred,
+			RequestHostOverride: openIDCfg.RequestHostOverride,
+			TargetAudiences:     oidpTargetAudience,
+			LogTags:             log.Fields{"module": "apis", "component": "oidp-client"},
+		}, oidpHTTPClient,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("unable to define OIDP client [%w]", err)
+	}
+
+	jwtCheckMiddleware := goutils.DefineJWTCheckMiddleware(
+		oidpClient, log.Fields{"module": "apis", "component": "jwt-check-middleware"},
+	)
+
+	introspector := authenticate.DefineIntrospector(tokenCache, oidpClient.IntrospectToken)
 	coreHandler, err := defineAuthenticationHandler(
 		httpCfg.APIs.RequestLogging,
-		oidClient,
+		oidpClient,
 		performIntrospection,
 		introspector,
 		authnConfig,
@@ -299,6 +316,10 @@ func BuildAuthenticationServer(
 	// Add logging middleware
 	v1Router.Use(func(next http.Handler) http.Handler {
 		return coreHandler.LoggingMiddleware(next.ServeHTTP)
+	})
+	// Add JWT parsing middleware
+	v1Router.Use(func(next http.Handler) http.Handler {
+		return jwtCheckMiddleware.ParseAndValidateJWT(next.ServeHTTP)
 	})
 	livenessRouter.Use(func(next http.Handler) http.Handler {
 		return livenessHandler.LoggingMiddleware(next.ServeHTTP)

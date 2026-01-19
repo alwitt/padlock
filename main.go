@@ -133,7 +133,7 @@ func main() {
 	}
 }
 
-func mainApplication(_ *cli.Context) error {
+func mainApplication(c *cli.Context) error {
 	validate := validator.New()
 	// Validate command line argument
 	if err := validate.Struct(&cmdArgs); err != nil {
@@ -459,6 +459,7 @@ func mainApplication(_ *cli.Context) error {
 			return tokenCachePurgeTimer.Stop()
 		}
 		svr, err := apis.BuildAuthenticationServer(
+			c.Context,
 			appCfg.Authentication.APIServerConfig,
 			oidParam,
 			appCfg.Authentication.Introspection.Enabled,

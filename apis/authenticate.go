@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/alwitt/goutils"
@@ -14,13 +13,13 @@ import (
 	"github.com/alwitt/padlock/match"
 	"github.com/alwitt/padlock/models"
 	"github.com/apex/log"
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 // AuthenticationHandler the request authentication REST API handler
 type AuthenticationHandler struct {
 	goutils.RestAPIHandler
-	oidClient         authenticate.OpenIDIssuerClient
+	oidClient         goutils.OpenIDProviderClient
 	performIntrospect bool
 	introspector      authenticate.Introspector
 	targetAudience    *string
@@ -33,7 +32,7 @@ type AuthenticationHandler struct {
 // defineAuthenticationHandler define a new AuthenticationHandler instance
 func defineAuthenticationHandler(
 	logConfig common.HTTPRequestLogging,
-	oid authenticate.OpenIDIssuerClient,
+	oid goutils.OpenIDProviderClient,
 	performIntrospect bool,
 	introspector authenticate.Introspector,
 	authnCfg common.AuthenticationConfig,
@@ -144,30 +143,27 @@ func (h AuthenticationHandler) Authenticate(w http.ResponseWriter, r *http.Reque
 		response = h.GetStdRESTErrorMsg(r.Context(), http.StatusUnauthorized, msg, "")
 	}
 
-	// Read the JWT Bearer token
-	bearer := r.Header.Get("Authorization")
-	if bearer == "" {
-		errMacroNoErr("Header 'Authorization' missing")
-		return
-	}
-	bearerParts := strings.Split(bearer, " ")
-	if len(bearerParts) != 2 {
-		errMacroNoErr("Bearer 'Authorization' has incorrect format")
-		return
-	}
-	rawToken := bearerParts[1]
-
 	errMacro := func(msg string, err error) {
 		log.WithError(err).WithFields(logTags).Error(msg)
 		respCode = http.StatusUnauthorized
 		response = h.GetStdRESTErrorMsg(r.Context(), http.StatusUnauthorized, msg, err.Error())
 	}
 
-	// Parse the JWT token
-	userClaims := new(jwt.MapClaims)
-	_, err := h.oidClient.ParseJWT(rawToken, userClaims)
+	// Read the JWT Bearer token
+	authToken, err := goutils.GetJWTTokenFromContext(r.Context())
 	if err != nil {
-		errMacro("Unable to parse JWT bearer token", err)
+		errMacro("Missing JWT token from context", err)
+		return
+	}
+	if authToken == nil {
+		errMacroNoErr("Bearer 'Authorization' token")
+		return
+	}
+
+	// Parse the JWT token
+	userClaims, ok := authToken.Claims.(*jwt.MapClaims)
+	if !ok {
+		errMacroNoErr("Auth token missing claims")
 		return
 	}
 
@@ -208,7 +204,7 @@ func (h AuthenticationHandler) Authenticate(w http.ResponseWriter, r *http.Reque
 			return
 		}
 		isValid, err := h.introspector.VerifyToken(
-			r.Context(), rawToken, int64(expirationTime), time.Now().UTC(),
+			r.Context(), authToken.Raw, int64(expirationTime), time.Now().UTC(),
 		)
 		if err != nil {
 			errMacro("Introspection process errored", err)
