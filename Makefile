@@ -23,6 +23,7 @@ one-test: .prepare ## Run one unittest
 .PHONY: build
 build: lint ## Build the application
 	@go build -o padlock .
+	@go build -o tmp/token-helper ./util/token_helper/...
 
 .PHONY: openapi
 openapi: .prepare ## Generate the OpenAPI spec
