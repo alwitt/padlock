@@ -121,7 +121,7 @@ func (h UserManagementHandler) ListAllRolesHandler() http.HandlerFunc {
 type RespRoleInfo struct {
 	goutils.RestAPIBaseResponse
 	// Role is info on this role
-	Role common.UserRoleConfig `json:"role" validate:"required,dive"`
+	Role common.UserRoleConfig `json:"role" validate:"required"`
 	// AssignedUsers is the list of users being assigned this role
 	AssignedUsers []models.UserInfo `json:"assigned_users,omitempty" validate:"omitempty"`
 }
@@ -202,7 +202,7 @@ func (h UserManagementHandler) GetRoleHandler() http.HandlerFunc {
 // ReqNewUserParams is the API request with information on a new user
 type ReqNewUserParams struct {
 	// User contains the new user parameters
-	User models.UserConfig `json:"user" validate:"required,dive"`
+	User models.UserConfig `json:"user" validate:"required"`
 	// Roles list the roles to assign to this user
 	Roles []string `json:"roles" validate:"omitempty,dive,role_name"`
 }
@@ -339,7 +339,7 @@ func (h UserManagementHandler) fetchUserID(r *http.Request) (string, error) {
 type RespUserInfo struct {
 	goutils.RestAPIBaseResponse
 	// User is info on this user
-	User users.UserDetailsWithPermission `json:"user" validate:"required,dive"`
+	User users.UserDetailsWithPermission `json:"user" validate:"required"`
 }
 
 // GetUser godoc

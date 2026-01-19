@@ -60,7 +60,7 @@ type HTTPServerConfig struct {
 	// Port is the port the HTTP server will listen on
 	Port uint16 `mapstructure:"appPort" json:"appPort" validate:"required,gt=0,lt=65536"`
 	// Timeouts sets the HTTP timeout settings
-	Timeouts HTTPServerTimeoutConfig `mapstructure:"timeoutSecs" json:"timeoutSecs" validate:"required,dive"`
+	Timeouts HTTPServerTimeoutConfig `mapstructure:"timeoutSecs" json:"timeoutSecs" validate:"required"`
 }
 
 // HTTPRequestLogging defines HTTP request logging parameters
@@ -84,9 +84,9 @@ type EndpointConfig struct {
 // APIConfig defines API settings for a submodule
 type APIConfig struct {
 	// Endpoint sets API endpoint related parameters
-	Endpoint EndpointConfig `mapstructure:"endPoint" json:"endPoint" validate:"required,dive"`
+	Endpoint EndpointConfig `mapstructure:"endPoint" json:"endPoint" validate:"required"`
 	// RequestLogging sets API request logging parameters
-	RequestLogging HTTPRequestLogging `mapstructure:"requestLogging" json:"requestLogging" validate:"required,dive"`
+	RequestLogging HTTPRequestLogging `mapstructure:"requestLogging" json:"requestLogging" validate:"required"`
 }
 
 // APIServerConfig defines HTTP API / server parameters
@@ -94,9 +94,9 @@ type APIServerConfig struct {
 	// Enabled whether this API is enabled
 	Enabled bool `mapstructure:"enabled" json:"enabled"`
 	// Server defines HTTP server parameters
-	Server HTTPServerConfig `mapstructure:"service" json:"service" validate:"required_with=Enabled,dive"`
+	Server HTTPServerConfig `mapstructure:"service" json:"service" validate:"required_with=Enabled"`
 	// APIs defines API settings for a submodule
-	APIs APIConfig `mapstructure:"apis" json:"apis" validate:"required_with=Enabled,dive"`
+	APIs APIConfig `mapstructure:"apis" json:"apis" validate:"required_with=Enabled"`
 }
 
 // MetricsFeatureConfig metrics framework features config
@@ -108,13 +108,13 @@ type MetricsFeatureConfig struct {
 // MetricsConfig application metrics config
 type MetricsConfig struct {
 	// Server defines HTTP server parameters
-	Server HTTPServerConfig `mapstructure:"service" json:"service" validate:"required_with=Enabled,dive"`
+	Server HTTPServerConfig `mapstructure:"service" json:"service" validate:"required_with=Enabled"`
 	// MetricsEndpoint path to host the Prometheus metrics endpoint
 	MetricsEndpoint string `mapstructure:"metricsEndpoint" json:"metricsEndpoint" validate:"required"`
 	// MaxRequests max number of metrics requests in parallel to support
 	MaxRequests int `mapstructure:"maxRequests" json:"maxRequests" validate:"gte=1"`
 	// Features metrics framework features to enable
-	Features MetricsFeatureConfig `mapstructure:"features" json:"features" validate:"gte=1"`
+	Features MetricsFeatureConfig `mapstructure:"features" json:"features" validate:"required"`
 }
 
 // ===============================================================================
@@ -257,10 +257,10 @@ type AuthorizationConfig struct {
 	// a REST request to authorize. It is expected that the component (i.e. a proxy) requesting
 	// authorization for a request will provide the needed values through these headers when it
 	// contacts the authorization server.
-	RequestParamLocation AuthorizeRequestParamLocConfig `mapstructure:"requestParamHeaders" json:"requestParamHeaders" validate:"required,dive"`
+	RequestParamLocation AuthorizeRequestParamLocConfig `mapstructure:"requestParamHeaders" json:"requestParamHeaders" validate:"required"`
 	// UnknownUser sets what actions to take when the request being authorized is made
 	// by an unknown user
-	UnknownUser UnknownUserActionConfig `mapstructure:"forUnknownUser" json:"forUnknownUser" validate:"required,dive"`
+	UnknownUser UnknownUserActionConfig `mapstructure:"forUnknownUser" json:"forUnknownUser" validate:"required"`
 }
 
 // AuthorizationSubmodule defines authorization submodule config
@@ -321,16 +321,16 @@ type AuthenticationConfig struct {
 	// TargetAudience if specified, the token must contain an "aud" claim which matches this value.
 	TargetAudience *string `mapstructure:"targetAudience,omitempty" json:"target_audience,omitempty" validate:"omitempty"`
 	// TargetClaims sets which claims to parse from a token to get key parameters regarding a user.
-	TargetClaims OpenIDClaimsOfInterestConfig `mapstructure:"targetClaims" json:"target_claims" validate:"required,dive"`
+	TargetClaims OpenIDClaimsOfInterestConfig `mapstructure:"targetClaims" json:"target_claims" validate:"required"`
 	// RequestParamLocation sets which HTTP headers to parse to get the parameters of
 	// a REST request to authenticate. It is expected that the component (i.e. a proxy) requesting
 	// authentication for a request will provide the needed values through these headers when it
 	// contacts the authentication server.
-	RequestParamLocation AuthenticateRequestParamLocConfig `mapstructure:"requestParamHeaders" json:"requestParamHeaders" validate:"required,dive"`
+	RequestParamLocation AuthenticateRequestParamLocConfig `mapstructure:"requestParamHeaders" json:"requestParamHeaders" validate:"required"`
 	// Introspection define OAuth2 token introspect operation config
-	Introspection IntrospectionConfig `mapstructure:"introspect" json:"introspect" validate:"required,dive"`
+	Introspection IntrospectionConfig `mapstructure:"introspect" json:"introspect" validate:"required"`
 	// Bypass authentication bypass rules
-	Bypass *AuthnBypassConfig `mapstructure:"bypass,omitempty" json:"bypass,omitempty" validate:"omitempty,dive"`
+	Bypass *AuthnBypassConfig `mapstructure:"bypass,omitempty" json:"bypass,omitempty" validate:"omitempty"`
 }
 
 // AuthenticationSubmodule defines authentication submodule config
@@ -345,15 +345,15 @@ type AuthenticationSubmodule struct {
 // AuthorizationServerConfig is the authorization server config
 type AuthorizationServerConfig struct {
 	// Metrics metrics framework configuration
-	Metrics MetricsConfig `mapstructure:"metrics" json:"metrics" validate:"required,dive"`
+	Metrics MetricsConfig `mapstructure:"metrics" json:"metrics" validate:"required"`
 	// CustomRegex sets custom regex used by validator for custom field tags
-	CustomRegex CustomValidationsConfig `mapstructure:"customValidationRegex" json:"customValidationRegex" validate:"required,dive"`
+	CustomRegex CustomValidationsConfig `mapstructure:"customValidationRegex" json:"customValidationRegex" validate:"required"`
 	// UserManagement are the user management submodule configs
-	UserManagement UserManageSubmodule `mapstructure:"userManagement" json:"userManagement" validate:"required,dive"`
+	UserManagement UserManageSubmodule `mapstructure:"userManagement" json:"userManagement" validate:"required"`
 	// Authorization are the authorization submodule configs
-	Authorization AuthorizationSubmodule `mapstructure:"authorize" json:"authorize" validate:"required,dive"`
+	Authorization AuthorizationSubmodule `mapstructure:"authorize" json:"authorize" validate:"required"`
 	// Authentication are the authentication submodule configs
-	Authentication AuthenticationSubmodule `mapstructure:"authenticate" json:"authenticate" validate:"required,dive"`
+	Authentication AuthenticationSubmodule `mapstructure:"authenticate" json:"authenticate" validate:"required"`
 }
 
 // ===============================================================================
