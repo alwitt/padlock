@@ -1,3 +1,4 @@
+// Package authenticate - user authentication
 package authenticate
 
 import (

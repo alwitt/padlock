@@ -124,7 +124,7 @@ func TestAuthorization(t *testing.T) {
 
 	requestIDHeader := "Padlock-Unit-Tester"
 
-	checkHeader := func(w http.ResponseWriter, reqID string, stackOffset int) {
+	checkHeader := func(w http.ResponseWriter, reqID string, _ int) {
 		_, _, ln, ok := runtime.Caller(2)
 		assert.True(ok)
 		assert.Equalf(reqID, w.Header().Get(requestIDHeader), "Called@%d", ln)
@@ -385,7 +385,7 @@ func TestRelativePathAuthorization(t *testing.T) {
 
 	requestIDHeader := "Padlock-Unit-Tester"
 
-	checkHeader := func(w http.ResponseWriter, reqID string, stackOffset int) {
+	checkHeader := func(w http.ResponseWriter, reqID string, _ int) {
 		_, _, ln, ok := runtime.Caller(2)
 		assert.True(ok)
 		assert.Equalf(reqID, w.Header().Get(requestIDHeader), "Called@%d", ln)

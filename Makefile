@@ -3,7 +3,7 @@ all: build
 .PHONY: lint
 lint: .prepare ## Lint the files
 	@go mod tidy
-	@golint ./...
+	@revive -config revive.toml ./...
 	@golangci-lint run ./...
 
 .PHONY: fix
@@ -38,10 +38,8 @@ down: ## Remove the development docker stack
 	@docker compose -f docker/docker-compose.yaml down
 
 .prepare: ## Prepare the project for local development
-	@pip3 install --user pre-commit
 	@pre-commit install
 	@pre-commit install-hooks
-	@GO111MODULE=on go install -v github.com/go-critic/go-critic/cmd/gocritic@latest
 	@GO111MODULE=on go get -v -u github.com/swaggo/swag/cmd/swag
 	@touch .prepare
 

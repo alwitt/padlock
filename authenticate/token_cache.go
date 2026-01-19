@@ -1,6 +1,7 @@
 package authenticate
 
 import (
+	"context"
 	"crypto/sha1"
 	"encoding/base64"
 	"fmt"
@@ -10,7 +11,6 @@ import (
 	"github.com/alwitt/goutils"
 	"github.com/alwitt/padlock/common"
 	"github.com/apex/log"
-	"golang.org/x/net/context"
 )
 
 // cacheEntry JWT token entry
@@ -282,7 +282,7 @@ ClearCache remove all entries from cache
 
 @param ctxt context.Context - the operating context
 */
-func (c *tokenCacheImpl) ClearCache(ctxt context.Context) {
+func (c *tokenCacheImpl) ClearCache(_ context.Context) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 	c.cache = make(map[string]cacheEntry)

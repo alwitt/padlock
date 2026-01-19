@@ -1,3 +1,4 @@
+// Package models - project data models
 package models
 
 import (

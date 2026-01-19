@@ -1,0 +1,4 @@
+enableDefaultRules = true
+
+[rule.var-naming]
+arguments = [[], [], [{ skipPackageNameChecks = true }]]

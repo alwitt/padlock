@@ -1,3 +1,4 @@
+// Package apis - application REST API
 package apis
 
 import (
@@ -138,7 +139,7 @@ func (h AuthenticationHandler) Authenticate(w http.ResponseWriter, r *http.Reque
 	}
 
 	errMacroNoErr := func(msg string) {
-		log.WithFields(logTags).Errorf(msg)
+		log.WithFields(logTags).Error(msg)
 		respCode = http.StatusUnauthorized
 		response = h.GetStdRESTErrorMsg(r.Context(), http.StatusUnauthorized, msg, "")
 	}
@@ -157,7 +158,7 @@ func (h AuthenticationHandler) Authenticate(w http.ResponseWriter, r *http.Reque
 	rawToken := bearerParts[1]
 
 	errMacro := func(msg string, err error) {
-		log.WithError(err).WithFields(logTags).Errorf(msg)
+		log.WithError(err).WithFields(logTags).Error(msg)
 		respCode = http.StatusUnauthorized
 		response = h.GetStdRESTErrorMsg(r.Context(), http.StatusUnauthorized, msg, err.Error())
 	}
@@ -220,7 +221,7 @@ func (h AuthenticationHandler) Authenticate(w http.ResponseWriter, r *http.Reque
 	}
 
 	errMacro = func(msg string, err error) {
-		log.WithError(err).WithFields(logTags).Errorf(msg)
+		log.WithError(err).WithFields(logTags).Error(msg)
 		respCode = http.StatusBadRequest
 		response = h.GetStdRESTErrorMsg(r.Context(), http.StatusBadRequest, msg, err.Error())
 	}

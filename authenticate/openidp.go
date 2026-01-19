@@ -117,7 +117,7 @@ func DefineOpenIDClient(
 		log.WithError(err).WithFields(logTags).Errorf("GET %s call failure", cfgEP)
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	if resp.StatusCode != http.StatusOK {
 		err := fmt.Errorf("reading OpenID configuration from %s returned %d", cfgEP, resp.StatusCode)
 		log.WithError(err).WithFields(logTags).Errorf("GET %s unsuccessful", cfgEP)
@@ -134,7 +134,7 @@ func DefineOpenIDClient(
 		log.WithError(err).WithFields(logTags).Errorf("GET %s unsuccessful", cfg.JwksURI)
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	if resp.StatusCode != http.StatusOK {
 		err := fmt.Errorf("reading JWKS from %s returned %d", cfg.JwksURI, resp.StatusCode)
 		log.WithError(err).WithFields(logTags).Errorf("GET %s unsuccessful", cfg.JwksURI)
@@ -218,8 +218,8 @@ func (c *openIDIssuerClientImpl) AssociatedPublicKey(token *jwt.Token) (interfac
 		return pubKey, nil
 	}
 	msg := fmt.Sprintf("Encountered JWT referring public key %s which is unknown", kid)
-	log.WithFields(c.LogTags).Errorf(msg)
-	return nil, fmt.Errorf(msg)
+	log.WithFields(c.LogTags).Errorf("%s", msg)
+	return nil, fmt.Errorf("%s", msg)
 }
 
 /*
@@ -313,7 +313,7 @@ func (c *openIDIssuerClientImpl) IntrospectToken(ctxt context.Context, token str
 		log.WithError(err).WithFields(logtags).Errorf("Introspect against %s failed", introspectURL)
 		return false, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	// Parse the response
 	body, _ := io.ReadAll(resp.Body)

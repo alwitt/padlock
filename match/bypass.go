@@ -1,3 +1,4 @@
+// Package match - authorization rule match package
 package match
 
 import (

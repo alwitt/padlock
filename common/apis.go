@@ -1,3 +1,4 @@
+// Package common - project wide support code
 package common
 
 import (

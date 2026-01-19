@@ -1,3 +1,4 @@
+// Package main - application entry point
 package main
 
 import (
@@ -132,7 +133,7 @@ func main() {
 	}
 }
 
-func mainApplication(c *cli.Context) error {
+func mainApplication(_ *cli.Context) error {
 	validate := validator.New()
 	// Validate command line argument
 	if err := validate.Struct(&cmdArgs); err != nil {

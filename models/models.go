@@ -606,7 +606,7 @@ func (c *managementDBClientImpl) UpdateUser(
 			return err
 		}
 		// Change the core parameters
-		userEntry.UserInfo.UserConfig = newConfig
+		userEntry.UserConfig = newConfig
 		if err := c.validate.Struct(&userEntry); err != nil {
 			log.WithError(err).WithFields(logTags).Errorf("Updated entry for user %s is invalid", id)
 			return err

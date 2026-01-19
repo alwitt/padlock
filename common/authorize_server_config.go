@@ -18,25 +18,25 @@ func (c AuthorizationServerConfig) Validate() error {
 
 	// Validate the custom regex section first
 	if err := validate.Struct(&c.CustomRegex); err != nil {
-		log.WithError(err).Errorf("Custom validator support not defined")
+		log.WithError(err).Error("Custom validator support not defined")
 		return err
 	}
 
 	// Create a custom validator
 	customValidate, err := c.CustomRegex.DefineCustomFieldValidator()
 	if err != nil {
-		log.WithError(err).Errorf("Unable to define custom validator support")
+		log.WithError(err).Error("Unable to define custom validator support")
 		return err
 	}
 	if err := customValidate.RegisterWithValidator(validate); err != nil {
-		log.WithError(err).Errorf("Unable to update validator with custom tags")
+		log.WithError(err).Error("Unable to update validator with custom tags")
 		return err
 	}
 
 	// Validate the authentication server config
 	if c.Authentication.Enabled {
 		if err := validate.Struct(&c.Authentication); err != nil {
-			log.WithError(err).Errorf("Authentication server config parse failure")
+			log.WithError(err).Error("Authentication server config parse failure")
 			return err
 		}
 	}
@@ -48,7 +48,7 @@ func (c AuthorizationServerConfig) Validate() error {
 
 	// Perform basic validation
 	if err := validate.Struct(&c); err != nil {
-		log.WithError(err).Errorf("General config parse failure")
+		log.WithError(err).Error("General config parse failure")
 		return err
 	}
 
@@ -65,7 +65,7 @@ func (c AuthorizationServerConfig) Validate() error {
 			if _, ok := seenPermission[permission]; ok {
 				msg := fmt.Sprintf("Role %s already assigned permission %s", roleName, permission)
 				log.Error(msg)
-				return fmt.Errorf(msg)
+				return fmt.Errorf("%s", msg)
 			}
 			availablePermissions[permission] = true
 		}
@@ -81,8 +81,8 @@ func (c AuthorizationServerConfig) Validate() error {
 	for _, hostAuthEntry := range c.Authorization.Rules {
 		if _, ok := seenHost[hostAuthEntry.Host]; ok {
 			msg := fmt.Sprintf("Host %s already defined", hostAuthEntry.Host)
-			log.Errorf(msg)
-			return fmt.Errorf(msg)
+			log.Error(msg)
+			return fmt.Errorf("%s", msg)
 		}
 		seenHost[hostAuthEntry.Host] = true
 		// Verify path defined are all unique
@@ -92,8 +92,8 @@ func (c AuthorizationServerConfig) Validate() error {
 				msg := fmt.Sprintf(
 					"Host %s Path %s already defined", hostAuthEntry.Host, pathAuthEntry.PathRegexPattern,
 				)
-				log.Errorf(msg)
-				return fmt.Errorf(msg)
+				log.Error(msg)
+				return fmt.Errorf("%s", msg)
 			}
 			seenPathRegex[pathAuthEntry.PathRegexPattern] = true
 			// Verify method defined are all unique
@@ -106,8 +106,8 @@ func (c AuthorizationServerConfig) Validate() error {
 						hostAuthEntry.Host,
 						pathAuthEntry.PathRegexPattern,
 					)
-					log.Errorf(msg)
-					return fmt.Errorf(msg)
+					log.Error(msg)
+					return fmt.Errorf("%s", msg)
 				}
 				seenMethod[methodEntry.Method] = true
 				seenPermission := map[string]bool{}
@@ -126,8 +126,8 @@ func (c AuthorizationServerConfig) Validate() error {
 							hostAuthEntry.Host,
 							pathAuthEntry.PathRegexPattern,
 						)
-						log.Errorf(msg)
-						return fmt.Errorf(msg)
+						log.Error(msg)
+						return fmt.Errorf("%s", msg)
 					}
 					seenPermission[permission] = true
 				}

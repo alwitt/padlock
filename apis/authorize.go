@@ -131,7 +131,7 @@ func (h AuthorizationHandler) Allow(w http.ResponseWriter, r *http.Request) {
 	if r.Context().Value(common.AccessAuthorizeParamKey{}) == nil {
 		msg := "can't run authorization check"
 		err := fmt.Errorf("missing parameter regarding REST API call to authorize")
-		log.WithError(err).WithFields(logTags).Errorf(msg)
+		log.WithError(err).WithFields(logTags).Error(msg)
 		respCode = http.StatusBadRequest
 		response = h.GetStdRESTErrorMsg(r.Context(), http.StatusBadRequest, msg, err.Error())
 		return
@@ -142,14 +142,14 @@ func (h AuthorizationHandler) Allow(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		msg := "can't run authorization check"
 		err := fmt.Errorf("AuthorizationHandler.paramReadMiddleware() malfunction")
-		log.WithError(err).WithFields(logTags).Errorf(msg)
+		log.WithError(err).WithFields(logTags).Error(msg)
 		respCode = http.StatusInternalServerError
 		response = h.GetStdRESTErrorMsg(r.Context(), http.StatusInternalServerError, msg, err.Error())
 		return
 	}
 	if err := h.validate.Struct(&params); err != nil {
 		msg := "Manditory parameters for REST request to authorize not valid"
-		log.WithError(err).WithFields(logTags).Errorf(msg)
+		log.WithError(err).WithFields(logTags).Error(msg)
 		respCode = http.StatusBadRequest
 		response = h.GetStdRESTErrorMsg(r.Context(), http.StatusBadRequest, msg, err.Error())
 		return
@@ -159,7 +159,7 @@ func (h AuthorizationHandler) Allow(w http.ResponseWriter, r *http.Request) {
 	reqAbsPath, err := match.GetAbsPath(params.Path)
 	if err != nil {
 		msg := "Request path normalization failed"
-		log.WithError(err).WithFields(logTags).Errorf(msg)
+		log.WithError(err).WithFields(logTags).Error(msg)
 		respCode = http.StatusBadRequest
 		response = h.GetStdRESTErrorMsg(r.Context(), http.StatusBadRequest, msg, err.Error())
 		return
@@ -175,7 +175,7 @@ func (h AuthorizationHandler) Allow(w http.ResponseWriter, r *http.Request) {
 		msg := fmt.Sprintf(
 			"Unable to find match for '%s' against defined API authorizations", params.String(),
 		)
-		log.WithError(err).WithFields(logTags).Errorf(msg)
+		log.WithError(err).WithFields(logTags).Error(msg)
 		respCode = http.StatusBadRequest
 		response = h.GetStdRESTErrorMsg(r.Context(), http.StatusBadRequest, msg, err.Error())
 		return
@@ -190,7 +190,7 @@ func (h AuthorizationHandler) Allow(w http.ResponseWriter, r *http.Request) {
 			response = h.GetStdRESTSuccessMsg(r.Context())
 		} else {
 			msg := fmt.Sprintf("User ID %s not allow to '%s'", params.UserID, params.String())
-			log.WithFields(logTags).Errorf(msg)
+			log.WithFields(logTags).Error(msg)
 			respCode = http.StatusForbidden
 			response = h.GetStdRESTErrorMsg(r.Context(), http.StatusForbidden, msg, "")
 		}
@@ -220,21 +220,21 @@ func (h AuthorizationHandler) Allow(w http.ResponseWriter, r *http.Request) {
 			log.WithFields(logTags).Debugf("Recording new user ID %s", params.UserID)
 			if err := h.core.DefineUser(r.Context(), newUserParams, nil); err != nil {
 				msg := fmt.Sprintf("Failed to record user ID %s", params.UserID)
-				log.WithError(err).WithFields(logTags).Errorf(msg)
+				log.WithError(err).WithFields(logTags).Error(msg)
 				respCode = http.StatusInternalServerError
 				response = h.GetStdRESTErrorMsg(
 					r.Context(), http.StatusInternalServerError, msg, err.Error(),
 				)
 			} else {
 				msg := fmt.Sprintf("Recorded new user ID %s with no permissions", params.UserID)
-				log.WithFields(logTags).Errorf(msg)
+				log.WithFields(logTags).Error(msg)
 				respCode = http.StatusForbidden
 				response = h.GetStdRESTErrorMsg(r.Context(), http.StatusForbidden, msg, "")
 			}
 		} else {
 			// User must be manually registered with the system
 			msg := fmt.Sprintf("User ID %s is unknown", params.UserID)
-			log.WithFields(logTags).Errorf(msg)
+			log.WithFields(logTags).Error(msg)
 			respCode = http.StatusForbidden
 			response = h.GetStdRESTErrorMsg(r.Context(), http.StatusForbidden, msg, "")
 		}

@@ -1,3 +1,4 @@
+// Package users - user management package for authorization system
 package users
 
 import (

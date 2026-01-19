@@ -104,7 +104,7 @@ ListAllRoles query for the list of known roles on record
 	@param ctxt context.Context - context calling this API
 	@return the list roles on record
 */
-func (m *managementImpl) ListAllRoles(ctxt context.Context) (
+func (m *managementImpl) ListAllRoles(_ context.Context) (
 	map[string]common.UserRoleConfig, error,
 ) {
 	m.rolesLock.RLock()
@@ -119,7 +119,7 @@ GetRole query for a particular role on record
 	@param role string - the role
 	@return that role
 */
-func (m *managementImpl) GetRole(ctxt context.Context, role string) (common.UserRoleConfig, error) {
+func (m *managementImpl) GetRole(_ context.Context, role string) (common.UserRoleConfig, error) {
 	m.rolesLock.RLock()
 	defer m.rolesLock.RUnlock()
 	roleInfo, ok := m.roles[role]
