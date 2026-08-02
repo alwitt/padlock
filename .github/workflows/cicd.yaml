@@ -17,23 +17,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v6
-
-      - name: Set up Go
-        uses: actions/setup-go@v6
-        with:
-          go-version: "1.26"
+      - uses: actions/checkout@v7
 
       - name: Revive
-        uses: morphy2k/revive-action@v2
-        with:
-          config: revive.toml
+        run: |
+          docker run --rm -v "$(pwd)":/work -w /work \
+            ghcr.io/mgechev/revive:v1.13.0 \
+            -config revive.toml -formatter stylish ./...
 
   golangci-lint:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Set up Go
         uses: actions/setup-go@v6
@@ -43,17 +39,17 @@ jobs:
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v9
         with:
-          version: v2.7.2
+          version: v2.11.4
           args: --timeout 3m0s
 
   test:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7
 
       - name: Set up Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v6
         with:
           go-version: "1.26"
 
