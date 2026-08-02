@@ -13,8 +13,6 @@ import (
 	"github.com/alwitt/padlock/users"
 	"github.com/apex/log"
 	"github.com/gorilla/mux"
-	"golang.org/x/net/http2"
-	"golang.org/x/net/http2/h2c"
 )
 
 /*
@@ -43,8 +41,11 @@ func BuildMetricsCollectionServer(
 		WriteTimeout: time.Second * time.Duration(httpCfg.Timeouts.WriteTimeout),
 		ReadTimeout:  time.Second * time.Duration(httpCfg.Timeouts.ReadTimeout),
 		IdleTimeout:  time.Second * time.Duration(httpCfg.Timeouts.IdleTimeout),
-		Handler:      h2c.NewHandler(router, &http2.Server{}),
+		Handler:      router,
 	}
+	httpSrv.Protocols = new(http.Protocols)
+	httpSrv.Protocols.SetHTTP1(true)
+	httpSrv.Protocols.SetUnencryptedHTTP2(true)
 
 	return httpSrv, nil
 }
@@ -126,8 +127,11 @@ func BuildUserManagementServer(
 		WriteTimeout: time.Second * time.Duration(httpCfg.Server.Timeouts.WriteTimeout),
 		ReadTimeout:  time.Second * time.Duration(httpCfg.Server.Timeouts.ReadTimeout),
 		IdleTimeout:  time.Second * time.Duration(httpCfg.Server.Timeouts.IdleTimeout),
-		Handler:      h2c.NewHandler(router, &http2.Server{}),
+		Handler:      router,
 	}
+	httpSrv.Protocols = new(http.Protocols)
+	httpSrv.Protocols.SetHTTP1(true)
+	httpSrv.Protocols.SetUnencryptedHTTP2(true)
 
 	return httpSrv, nil
 }
@@ -210,8 +214,11 @@ func BuildAuthorizationServer(
 		WriteTimeout: time.Second * time.Duration(httpCfg.Server.Timeouts.WriteTimeout),
 		ReadTimeout:  time.Second * time.Duration(httpCfg.Server.Timeouts.ReadTimeout),
 		IdleTimeout:  time.Second * time.Duration(httpCfg.Server.Timeouts.IdleTimeout),
-		Handler:      h2c.NewHandler(router, &http2.Server{}),
+		Handler:      router,
 	}
+	httpSrv.Protocols = new(http.Protocols)
+	httpSrv.Protocols.SetHTTP1(true)
+	httpSrv.Protocols.SetUnencryptedHTTP2(true)
 
 	return httpSrv, nil
 }
@@ -333,8 +340,11 @@ func BuildAuthenticationServer(
 		WriteTimeout: time.Second * time.Duration(httpCfg.Server.Timeouts.WriteTimeout),
 		ReadTimeout:  time.Second * time.Duration(httpCfg.Server.Timeouts.ReadTimeout),
 		IdleTimeout:  time.Second * time.Duration(httpCfg.Server.Timeouts.IdleTimeout),
-		Handler:      h2c.NewHandler(router, &http2.Server{}),
+		Handler:      router,
 	}
+	httpSrv.Protocols = new(http.Protocols)
+	httpSrv.Protocols.SetHTTP1(true)
+	httpSrv.Protocols.SetUnencryptedHTTP2(true)
 
 	return httpSrv, nil
 }
